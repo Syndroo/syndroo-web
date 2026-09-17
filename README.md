@@ -1,14 +1,27 @@
 # Syndroo website and documentation
 
 Website and documentation source: two independently built static sites plus the
-shared brand assets in `packages/brand/assets/`. Everything runs locally.
-Nothing here deploys or publishes, and the pages call no third-party asset or
-analytics API at runtime; the docs search fetches its own local pages.
+shared brand assets in `packages/brand/assets/`. Everything runs locally, and
+this repository carries no deployment pipeline of its own: Cloudflare Pages
+builds and publishes the sites from the dashboard configuration recorded in the
+deployment guide below. The pages call no third-party asset or analytics API at
+runtime; the docs search fetches its own local pages.
 
 - Design contract: [docs/design.md](docs/design.md)
 - Acceptance record: [docs/acceptance.md](docs/acceptance.md)
+- Deployment guide: [docs/cloudflare-pages.md](docs/cloudflare-pages.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Product repository: <https://github.com/Syndroo/syndroo>
+
+## Hosting
+
+Cloudflare Pages hosts the two sites:
+
+- Website: <https://syndroo-web.pages.dev>
+- Documentation: <https://syndroo-docs.pages.dev>
+
+Build commands, output directories and environment variables are recorded in
+[docs/cloudflare-pages.md](docs/cloudflare-pages.md).
 
 ## Requirements
 
