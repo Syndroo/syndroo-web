@@ -15,12 +15,16 @@ runtime; the docs search fetches its own local pages.
 
 ## Hosting
 
-Cloudflare Pages hosts the two sites:
+Cloudflare Pages hosts the two sites. Each project keeps its own `*.pages.dev`
+project domain, and the custom domains are the primary hostnames:
 
-- Website: <https://syndroo-web.pages.dev>
-- Documentation: <https://syndroo-docs.pages.dev>
+| Site | Primary hostname | Project domain |
+| --- | --- | --- |
+| Website | <https://syndroo.com> | <https://syndroo-web.pages.dev> |
+| Documentation | <https://docs.syndroo.com> | <https://syndroo-docs.pages.dev> |
 
-Build commands, output directories and environment variables are recorded in
+The custom domains are attached in the Pages dashboard. Build commands, output
+directories, environment variables and the custom-domain mapping are recorded in
 [docs/cloudflare-pages.md](docs/cloudflare-pages.md).
 
 ## Requirements
@@ -71,8 +75,8 @@ both origins. The local defaults are the loopback pair above. Point them at the
 hosts you serve from:
 
 ```bash
-WEBSITE_ORIGIN=https://www.example.com \
-DOCS_ORIGIN=https://docs.example.com \
+WEBSITE_ORIGIN=https://syndroo.com \
+DOCS_ORIGIN=https://docs.syndroo.com \
 npm run build
 ```
 

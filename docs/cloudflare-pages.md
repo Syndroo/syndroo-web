@@ -16,7 +16,8 @@ Wrangler configuration and no credentials.
 | Build command | `npm run build && npm run check && npm test` | `npm run build && npm run check && npm test` |
 | Build output directory | `apps/website/dist` | `apps/docs/dist` |
 | Dependency install | automatic (`package-lock.json`) | automatic (`package-lock.json`) |
-| Public URL | <https://syndroo-web.pages.dev> | <https://syndroo-docs.pages.dev> |
+| Custom domain | <https://syndroo.com> | <https://docs.syndroo.com> |
+| Project domain | <https://syndroo-web.pages.dev> | <https://syndroo-docs.pages.dev> |
 
 Leave the root directory empty so Pages installs the npm workspace and runs the
 root build command from the repository root. Shared build entry points live in
@@ -37,9 +38,14 @@ Preview separately:
 
 | Variable | Value |
 | --- | --- |
-| `WEBSITE_ORIGIN` | `https://syndroo-web.pages.dev` |
-| `DOCS_ORIGIN` | `https://syndroo-docs.pages.dev` |
+| `WEBSITE_ORIGIN` | `https://syndroo.com` |
+| `DOCS_ORIGIN` | `https://docs.syndroo.com` |
 | `NODE_VERSION` | `24` |
+
+Both origins carry the custom domains, so production, previews and the check run
+inside the Pages build all reference the primary hostnames. The `*.pages.dev`
+project domains keep serving the same build; they are simply no longer the
+values written into cross-site links.
 
 Each origin must be a bare http(s) origin: scheme, host and optional port, with
 no path, query, fragment or credentials, and the two values must differ. The
@@ -67,6 +73,34 @@ integration authenticates through its own GitHub App installation, which needs
 access to the `Syndroo` organization repository `Syndroo/syndroo-web`; a personal
 installation does not cover an organization repository.
 
+## Custom domains
+
+Each Pages project carries one custom domain:
+
+| Pages project | Custom domain | Project domain |
+| --- | --- | --- |
+| `syndroo-web` | `syndroo.com` | `syndroo-web.pages.dev` |
+| `syndroo-docs` | `docs.syndroo.com` | `syndroo-docs.pages.dev` |
+
+Add each hostname under the project's Custom domains tab in the Pages dashboard.
+In the `syndroo.com` zone the records are:
+
+| Custom domain | Pages project | DNS record |
+| --- | --- | --- |
+| `syndroo.com` | `syndroo-web` | `CNAME` `@` -> `syndroo-web.pages.dev` |
+| `docs.syndroo.com` | `syndroo-docs` | `CNAME` `docs` -> `syndroo-docs.pages.dev` |
+
+Cloudflare flattens the `CNAME` at the apex, so the bare domain works from the
+same record. The certificate is issued automatically and its status appears next
+to the hostname in the dashboard.
+
+The origins are baked into the built HTML, so set `WEBSITE_ORIGIN` and
+`DOCS_ORIGIN` to the custom-domain pair in both projects (Production and
+Preview) before the build that should link to the primary hostnames, then
+trigger a new deployment (push to `main` or a dashboard retry). No source change
+is required: `scripts/lib/origins.ts` rewrites the authored loopback links to
+whatever pair the environment provides.
+
 ## Automatic builds
 
 - A push to `main` starts a production deployment of both projects.
@@ -82,11 +116,11 @@ installation does not cover an organization repository.
 ## Preview links and serving behaviour
 
 Preview deployments are built with the same production origin pair, so a preview
-links to the stable partner host (`syndroo-docs.pages.dev` from a website
-preview and `syndroo-web.pages.dev` from a docs preview) rather than an
-ephemeral preview host. The origins come from environment variables, so a
-preview environment could point at its own host instead; linking two preview
-projects to each other is not configured.
+links to the stable partner host (`docs.syndroo.com` from a website preview and
+`syndroo.com` from a docs preview) rather than an ephemeral preview host. The
+origins come from environment variables, so a preview environment could point at
+its own host instead; linking two preview projects to each other is not
+configured.
 
 The repository ships no `404.html`, `_headers` or `_redirects` file. Per the
 serving documentation
@@ -107,20 +141,32 @@ and 24 passing tests, uploaded 16 files and finished with a successful
 deployment.
 
 The same command chain was run on 2026-09-17 in an isolated copy of `main` at
-`90fd6d6` with the production origins: install, build, check and tests all
-exited 0, the built HTML contained no loopback link, and two consecutive builds
-produced identical output.
+`90fd6d6` with the then-configured `*.pages.dev` origins: install, build, check
+and tests all exited 0, the built HTML contained no loopback link, and two
+consecutive builds produced identical output.
 
-The website rebuild also completed successfully using the configured public
-origins. Public verification covered all 35 output files across both sites:
-every request returned HTTP 200, every response matched the reviewed build
-byte for byte, and no page contained a loopback cross-site link. The live demo
-reached `published`, documentation search opened the matching API section, and
-the website-to-documentation navigation worked.
+The website rebuild also completed successfully using the then-configured
+`*.pages.dev` origins. Public verification covered all 35 output files across
+both sites: every request returned HTTP 200, every response matched the reviewed
+build byte for byte, and no page contained a loopback cross-site link. The live
+demo reached `published`, documentation search opened the matching API section,
+and the website-to-documentation navigation worked.
 
 Unknown paths returned the home document with HTTP 200, confirming the Pages
 fallback described above. Requests for `package.json` and `.env` also returned
 that same home document; they did not expose those files.
+
+The custom-origin build was prepared on 2026-09-17 in a fresh isolated copy of
+`main` at `1ccf054` with `WEBSITE_ORIGIN=https://syndroo.com` and
+`DOCS_ORIGIN=https://docs.syndroo.com` under Node 24.15.0: `npm ci`,
+`npm run build`, `npm run check` and `npm test` all exited 0, the audit reported
+0 issues across 350 local references in 35 output files, all 24 fixtures passed,
+and two consecutive builds produced identical hashes for all 35 files. The built
+HTML carried exactly 35 links to `https://docs.syndroo.com` and 9 links to
+`https://syndroo.com`, with no `localhost:417` reference and no `*.pages.dev`
+reference. That leaves the SVG namespace and the product's own
+`http://localhost:8787` Worker sample on the quickstart page as the only
+remaining `http://` strings in the text output.
 
 ## References
 
@@ -130,3 +176,5 @@ that same home document; they did not expose those files.
   <https://developers.cloudflare.com/pages/configuration/serving-pages/>
 - Git integration:
   <https://developers.cloudflare.com/pages/configuration/git-integration/>
+- Custom domains:
+  <https://developers.cloudflare.com/pages/configuration/custom-domains/>
