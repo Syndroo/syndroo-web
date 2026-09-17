@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog - Syndroo</title>
+    <meta name="description" content="Technical writing about cross-posting, idempotency and self-hosted publishing infrastructure from the Syndroo project." />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <script type="module" src="/js/site.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-menu-open="false">
+      <div class="wrap site-header__inner">
+        <a class="brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="30" height="30" />
+          Syndroo
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="nav-toggle__bars" aria-hidden="true"></span>
+          <span class="nav-toggle__label">Menu</span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Main">
+          <a href="http://localhost:4174/">Docs</a>
+          <a href="/blog/" aria-current="page">Blog</a>
+          <a href="/changelog/">Changelog</a>
+          <a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="page-head">
+        <div class="wrap">
+          <span class="eyebrow">Blog</span>
+          <h1>Notes on publishing infrastructure</h1>
+          <p>
+            Technical articles about the parts of cross-posting that are easy to get wrong: idempotency, ambiguous
+            failures, text limits and the polling loop that ties them together. Everything here describes behaviour that
+            exists in the repository, including the parts that are still unproven.
+          </p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="post-list">
+            <a class="post-card" href="/blog/safe-cross-posting-with-idempotency/">
+              <span class="tag">Tutorial</span>
+              <h2>Safe text cross-posting: idempotency keys, status polling and ambiguous failures</h2>
+              <p>
+                A request that returns <code>202</code> has been accepted, not published. This walkthrough builds a
+                retry-safe cross-posting call that survives a timeout, avoids duplicate posts, and reads the final state
+                back instead of assuming it.
+              </p>
+              <span class="post-card__meta">Engineering &middot; 12 minute read &middot; Covers POST /v1/posts and GET /v1/posts/&#123;id&#125;</span>
+            </a>
+
+            <a class="post-card" href="/changelog/">
+              <span class="tag">Project notes</span>
+              <h2>What changed in the 0.2.0-rc.1 candidate</h2>
+              <p>
+                The changelog tracks prepared work separately from anything published. It lists the released status of the
+                candidate, the retry-timing migration, the local mock end-to-end gate and the platform adapters that are
+                still experimental.
+              </p>
+              <span class="post-card__meta">Release notes &middot; Maintained with the repository</span>
+            </a>
+          </div>
+
+          <div class="note" style="margin-top: 32px">
+            <h3>No sponsored posts, no scheduled content</h3>
+            <p>
+              This list is intentionally short. Articles are written when there is something verified to explain, so the
+              blog will grow slowly and each entry will point at the code or documentation it came from.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="site-footer__grid">
+          <div class="site-footer__brand">
+            <a class="brand" href="/" style="margin-bottom: 12px">
+              <img src="/assets/logo.svg" alt="" width="26" height="26" />
+              Syndroo
+            </a>
+            <p>Open-source publishing infrastructure for the social web. Distributed under the Apache License 2.0.</p>
+          </div>
+          <div>
+            <h2>Product</h2>
+            <ul>
+              <li><a href="http://localhost:4174/">Documentation</a></li>
+              <li><a href="http://localhost:4174/quickstart/">Quickstart</a></li>
+              <li><a href="http://localhost:4174/api/">API reference</a></li>
+              <li><a href="/changelog/">Changelog</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Project</h2>
+            <ul>
+              <li><a href="/about/">About</a></li>
+              <li><a href="/blog/">Blog</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/issues" rel="noreferrer">Contact: GitHub Issues</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Legal</h2>
+            <ul>
+              <li><a href="/privacy/">Privacy</a></li>
+              <li><a href="/terms/">Terms</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE" rel="noreferrer">License (Apache-2.0)</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bottom">
+          <span>Prototype content for review. Release candidate 0.2.0-rc.1 is unpublished.</span>
+          <span>&copy; 2026 Syndroo</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

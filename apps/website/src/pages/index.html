@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Syndroo - Distribution infrastructure for developers, products and AI agents</title>
+    <meta
+      name="description"
+      content="Publish to multiple social platforms through one API. Open source, self-hosted on your own Cloudflare account."
+    />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <script type="module" src="/js/site.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-menu-open="false">
+      <div class="wrap site-header__inner">
+        <a class="brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="30" height="30" />
+          Syndroo
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="nav-toggle__bars" aria-hidden="true"></span>
+          <span class="nav-toggle__label">Menu</span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Main">
+          <a href="http://localhost:4174/">Docs</a>
+          <a href="/blog/">Blog</a>
+          <a href="/changelog/">Changelog</a>
+          <a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="wrap hero__grid">
+          <div>
+            <span class="pill"><span class="dot" aria-hidden="true"></span><strong>0.2.0-rc.1</strong> Unpublished RC</span>
+            <h1>Distribution infrastructure for developers, products and <span class="accent">AI&nbsp;agents</span>.</h1>
+            <p class="hero__subtitle">
+              Publish to multiple social platforms through one API. Open source. Self-hosted.
+            </p>
+            <div class="hero__actions">
+              <a class="button button--primary" href="#demo">See how it works</a>
+              <a class="button button--ghost" href="http://localhost:4174/">Read the docs</a>
+            </div>
+            <p class="hero__proof">
+              <span>Apache-2.0</span>
+              <span>Runs on your Cloudflare account</span>
+              <span>HTTP API &middot; self-hosted</span>
+            </p>
+          </div>
+
+          <div class="workflow" aria-label="Publishing workflow">
+            <div class="workflow__art">
+              <img
+                src="/assets/droo-publishing.png"
+                alt="Droo, the Syndroo mascot, jumping as one post fans out to three platform cards"
+                width="300"
+                height="300"
+                fetchpriority="high"
+                decoding="async"
+              />
+            </div>
+
+            <div class="workflow__request">
+              <div><span class="k">POST</span> /v1/posts</div>
+              <div><span class="k">Authorization:</span> <span class="v">Bearer $SYNDROO_API_KEY</span></div>
+              <div>{"<span class="k">content</span>": <span class="v">"Shipping the 0.2.0-rc.1 candidate."</span>,</div>
+              <div>&nbsp;"<span class="k">platforms</span>": <span class="v">["threads", "bluesky"]</span>}</div>
+            </div>
+
+            <div class="workflow__hub">
+              <img src="/assets/logo.svg" alt="" width="26" height="26" />
+              <div>
+                <strong>Syndroo Worker</strong>
+                <small>D1 &middot; Queues &middot; Cron</small>
+              </div>
+            </div>
+
+            <div class="workflow__fan">
+              <div class="workflow__dest">
+                <span class="platform-icon platform-icon--threads platform-icon--sm" aria-hidden="true"></span>
+                <span class="name">Threads</span>
+                <span class="kind">text only &middot; mock-tested</span>
+              </div>
+              <div class="workflow__dest">
+                <span class="platform-icon platform-icon--bluesky platform-icon--sm" aria-hidden="true"></span>
+                <span class="name">Bluesky</span>
+                <span class="kind">text only &middot; mock-tested</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="platform-strip" aria-labelledby="platforms-title">
+        <div class="wrap">
+          <p class="platform-strip__title" id="platforms-title">Supported in the 0.2.0-rc.1 candidate</p>
+          <ul class="platform-tiles">
+            <li class="platform-tile">
+              <span class="platform-icon platform-icon--threads" aria-hidden="true"></span>
+              <span class="platform-tile__name">Threads</span>
+              <span class="status-tag status-tag--tested">Mock-tested</span>
+            </li>
+            <li class="platform-tile">
+              <span class="platform-icon platform-icon--bluesky" aria-hidden="true"></span>
+              <span class="platform-tile__name">Bluesky</span>
+              <span class="status-tag status-tag--tested">Mock-tested</span>
+            </li>
+            <li class="platform-tile">
+              <span class="platform-icon platform-icon--x" aria-hidden="true"></span>
+              <span class="platform-tile__name">X</span>
+              <span class="status-tag status-tag--experimental">Experimental</span>
+            </li>
+            <li class="platform-tile">
+              <span class="platform-icon platform-icon--tumblr" aria-hidden="true"></span>
+              <span class="platform-tile__name">Tumblr</span>
+              <span class="status-tag status-tag--experimental">Experimental</span>
+            </li>
+            <li class="platform-tile">
+              <span class="platform-icon platform-icon--linkedin" aria-hidden="true"></span>
+              <span class="platform-tile__name">LinkedIn</span>
+              <span class="status-tag status-tag--experimental">Experimental</span>
+            </li>
+          </ul>
+          <p class="legend">Text only. Live validation pending.</p>
+        </div>
+      </section>
+
+      <section class="section" id="demo">
+        <div class="wrap">
+          <div class="section-head section-head--with-art">
+            <div class="section-head__text">
+              <span class="eyebrow">Interactive demo</span>
+              <h2>One request. More places to connect.</h2>
+              <p class="lead">
+                Pick a use case and watch the documented states move from accepted to published. Everything runs locally
+                in your browser.
+              </p>
+            </div>
+            <div class="section-head__art">
+              <img
+                src="/assets/droo-queueing.png"
+                alt="Droo, the Syndroo mascot, filing post cards into a blue queue bin"
+                width="300"
+                height="300"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+
+          <div class="demo" data-demo>
+            <div class="console demo__request">
+              <div class="console__bar">
+                <span class="console__method">POST</span>
+                <span class="tag">/v1/posts</span>
+              </div>
+              <div class="picker" data-demo-picker role="group" aria-label="Demo use case">
+                <button type="button" class="picker__option" data-index="0" aria-pressed="true">Product update</button>
+                <button type="button" class="picker__option" data-index="1" aria-pressed="false">Agent workflow update</button>
+              </div>
+              <div class="console__body">
+                <p class="muted" data-demo-summary style="font-size: 14px; margin: 4px 0 12px"></p>
+                <pre><code data-demo-request></code></pre>
+              </div>
+              <div class="console__foot">
+                <button class="button button--primary" type="button" data-demo-run>Run demo</button>
+                <button class="button button--ghost" type="button" data-demo-reset>Reset</button>
+                <button class="copy-button" type="button" data-demo-copy>Copy request</button>
+                <span class="copy-feedback" data-demo-copy-feedback role="status" aria-live="polite"></span>
+              </div>
+            </div>
+
+            <div class="flow">
+              <div class="flow__head">
+                <h3>Publication flow</h3>
+                <span class="simulated">Simulated response</span>
+              </div>
+              <p class="flow__lead">Each accepted post becomes one queued publication per platform, and a worker picks it up from there.</p>
+              <p class="flow__state" data-demo-status role="status" aria-live="polite">Ready. Nothing has been sent.</p>
+              <ol class="steps" data-demo-steps></ol>
+            </div>
+
+            <div class="demo__support">
+              <details class="demo__response" data-demo-response-panel>
+                <summary>Show the status response</summary>
+                <div class="console">
+                  <div class="console__bar">
+                    <span class="console__method console__method--get">GET</span>
+                    <span class="tag">/v1/posts/{id}</span>
+                    <span class="tag tag--muted">Simulated query</span>
+                  </div>
+                  <div class="console__body">
+                    <p class="demo__note">Selected fields - response excerpt</p>
+                    <pre><code data-demo-response></code></pre>
+                  </div>
+                </div>
+                <details class="demo__acceptance">
+                  <summary>Initial acceptance response</summary>
+                  <div class="console">
+                    <div class="console__bar">
+                      <span class="console__method">POST</span>
+                      <span class="tag">/v1/posts</span>
+                    </div>
+                    <div class="console__body">
+                      <p class="demo__note">Selected fields - response excerpt</p>
+                      <pre><code data-demo-acceptance></code></pre>
+                    </div>
+                  </div>
+                </details>
+              </details>
+
+              <div class="note">
+                <h3>Simulated run</h3>
+                <p>
+                  Nothing is sent from this page. Request shapes follow the
+                  <a href="http://localhost:4174/api/">API reference</a>; the
+                  <a href="/blog/safe-cross-posting-with-idempotency/">tutorial</a> covers retry-safe cross-posting.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--tight">
+        <div class="wrap">
+          <div class="section-head">
+            <span class="eyebrow">Use cases</span>
+            <h2>Built for the moments when one post needs three destinations</h2>
+          </div>
+          <div class="grid grid--3">
+            <article class="card">
+              <span class="card__step">01</span>
+              <h3>Ship a product update</h3>
+              <p>
+                Post a release note from your pipeline, with a tighter first line for Bluesky and the longer version on
+                Threads.
+              </p>
+            </article>
+            <article class="card">
+              <span class="card__step">02</span>
+              <h3>Connect your workflow</h3>
+              <p>
+                Call the HTTP API from a CI job or internal tool, then track each publication through the API.
+              </p>
+            </article>
+            <article class="card">
+              <span class="card__step">03</span>
+              <h3>Give an agent a publishing endpoint</h3>
+              <p>
+                Give an agent one authenticated HTTP call. Reuse the same
+                <code>Idempotency-Key</code> and the API replays the original result.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="section-head">
+            <span class="eyebrow">Infrastructure</span>
+            <h2>Cloudflare primitives, wired explicitly</h2>
+            <p class="lead">
+              Syndroo is a Worker with three Cloudflare bindings you configure yourself, and each platform needs its own
+              credentials before it publishes.
+            </p>
+          </div>
+
+          <div class="infra">
+            <div class="infra__row">
+              <h3>D1 stores the aggregate</h3>
+              <p>
+                One post row plus one publication row per platform. State transitions commit with the claim read, so a
+                failed statement rolls back.
+              </p>
+            </div>
+            <div class="infra__row">
+              <h3>Queues dispatch the work</h3>
+              <p>
+                Accepted posts return <code>202</code> before any platform call, and duplicate queue messages cannot start
+                an early retry.
+              </p>
+            </div>
+            <div class="infra__row">
+              <h3>Cron finds scheduled work</h3>
+              <p>
+                A Cron Trigger scans every 15 minutes, so a scheduled post can land up to roughly 15 minutes after the
+                requested time.
+              </p>
+            </div>
+            <div class="infra__row">
+              <h3>Publisher selection is a switch, not a guess</h3>
+              <p>
+                Adding a platform means one adapter package and one explicit switch. Anything unconfigured returns
+                <code>422</code> with <code>PLATFORM_NOT_CONFIGURED</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--tight">
+        <div class="wrap grid grid--3">
+          <article class="card">
+            <h3>Ownership stays with you</h3>
+            <p>
+              You deploy the Worker into your own Cloudflare account and choose <code>SYNDROO_API_KEY</code>. Platform
+              credentials stay in your secrets.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Idempotency keeps retries honest</h3>
+            <p>
+              An optional <code>Idempotency-Key</code> ties one key to one logical post: a replay returns the original
+              result, while the same key with different content returns <code>409</code>.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Ambiguous outcomes stay ambiguous</h3>
+            <p>
+              A timed-out platform call is marked ambiguous and never resent automatically; you decide whether it goes out
+              again.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="faq">
+        <div class="wrap">
+          <div class="section-head">
+            <span class="eyebrow">FAQ</span>
+            <h2>A few things to know</h2>
+          </div>
+          <div class="faq">
+            <details>
+              <summary>Is 0.2.0-rc.1 released?</summary>
+              <p>
+                No. It is prepared in the repository but not published, tagged, deployed or accepted as a release.
+              </p>
+            </details>
+            <details>
+              <summary>Do I need a Syndroo account?</summary>
+              <p>
+                No. You deploy the Worker to your own Cloudflare account, set your own
+                <code>SYNDROO_API_KEY</code>, and add platform credentials as secrets.
+              </p>
+            </details>
+            <details>
+              <summary>Which platforms work right now?</summary>
+              <p>
+                Threads and Bluesky are mock-tested locally with live acceptance still pending; X, Tumblr and LinkedIn are
+                experimental. Unconfigured platforms return <code>PLATFORM_NOT_CONFIGURED</code>.
+              </p>
+            </details>
+            <details>
+              <summary>Can I publish images or video?</summary>
+              <p>
+                No. Every installed adapter is text only, with per-platform length limits enforced before publishing.
+              </p>
+            </details>
+            <details>
+              <summary>Is there an SDK or an MCP server?</summary>
+              <p>
+                No. The interface is the documented HTTP API; this version ships no SDK package and no MCP server.
+              </p>
+            </details>
+            <details>
+              <summary>What happens if a platform call fails?</summary>
+              <p>
+                Retryable failures wait at least 60 seconds, then 120, up to three attempts; ambiguous outcomes are never
+                retried automatically.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--tight">
+        <div class="wrap">
+          <div class="cta">
+            <div>
+              <h2>Start with the quickstart</h2>
+              <p>
+                Deploy the Worker, set your secrets, run the local migration, then send an authenticated post.
+              </p>
+              <div class="cta__actions" style="margin-top: 22px">
+                <a class="button button--primary" href="http://localhost:4174/quickstart/">Read the quickstart</a>
+                <a class="button button--ghost" href="https://github.com/Syndroo/syndroo" rel="noreferrer">View on GitHub</a>
+              </div>
+            </div>
+            <div class="cta__mascot">
+              <img
+                src="/assets/droo-success.png"
+                alt="Droo, the Syndroo mascot, smiling beside a green confirmation check"
+                width="300"
+                height="300"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="site-footer__grid">
+          <div class="site-footer__brand">
+            <a class="brand" href="/" style="margin-bottom: 12px">
+              <img src="/assets/logo.svg" alt="" width="26" height="26" />
+              Syndroo
+            </a>
+            <p>Open-source publishing infrastructure for the social web, under the Apache License 2.0.</p>
+          </div>
+          <div>
+            <h2>Product</h2>
+            <ul>
+              <li><a href="http://localhost:4174/">Documentation</a></li>
+              <li><a href="http://localhost:4174/quickstart/">Quickstart</a></li>
+              <li><a href="http://localhost:4174/api/">API reference</a></li>
+              <li><a href="/changelog/">Changelog</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Project</h2>
+            <ul>
+              <li><a href="/about/">About</a></li>
+              <li><a href="/blog/">Blog</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/issues" rel="noreferrer">Contact: GitHub Issues</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Legal</h2>
+            <ul>
+              <li><a href="/privacy/">Privacy</a></li>
+              <li><a href="/terms/">Terms</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE" rel="noreferrer">License (Apache-2.0)</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bottom">
+          <span>Prototype content for review. Release candidate 0.2.0-rc.1 is unpublished.</span>
+          <span>&copy; 2026 Syndroo</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

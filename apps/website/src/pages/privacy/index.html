@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy - Syndroo</title>
+    <meta name="description" content="Draft privacy page for the Syndroo project site. Pending operational and legal review." />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <script type="module" src="/js/site.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" data-menu-open="false">
+      <div class="wrap site-header__inner">
+        <a class="brand" href="/">
+          <img src="/assets/logo.svg" alt="" width="30" height="30" />
+          Syndroo
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="nav-toggle__bars" aria-hidden="true"></span>
+          <span class="nav-toggle__label">Menu</span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Main">
+          <a href="http://localhost:4174/">Docs</a>
+          <a href="/blog/">Blog</a>
+          <a href="/changelog/">Changelog</a>
+          <a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="page-head">
+        <div class="wrap">
+          <span class="eyebrow">Legal</span>
+          <h1>Privacy</h1>
+          <p>This page is a structural draft. Its statements have not been reviewed against the project's operational reality.</p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="wrap prose">
+          <div class="draft-banner" role="note">
+            <strong>Draft &mdash; pending operational and legal review</strong>
+            <p>
+              Nothing on this page has been approved. It exists so a reviewer can see the intended shape and depth of the
+              privacy page. Any statement about data collection, retention, processors or legal bases must be replaced
+              with verified operational fact before publication.
+            </p>
+          </div>
+
+          <h2 id="summary">What this page will cover</h2>
+          <ul>
+            <li>What the project website itself collects, if anything, and why.</li>
+            <li>What the Syndroo software processes when a self-hoster runs it on their own account.</li>
+            <li>Where data is stored, who processes it, and for how long.</li>
+            <li>How to request access, correction or deletion of personal data.</li>
+            <li>How changes to the policy are announced and dated.</li>
+          </ul>
+
+          <h2 id="website">The project website</h2>
+          <p>
+            This site is a static prototype. As built, the pages load local files only, and the interactive demonstration
+            runs in the browser without sending anything to a server. No account system, newsletter form or analytics
+            script is included in this prototype.
+          </p>
+          <p>
+            If the published site later adds analytics, hosting logs with retention, or an email form, this section must
+            describe them explicitly, including purpose, legal basis and retention period. Until then, no such statement
+            should be inferred from this draft.
+          </p>
+
+          <h2 id="software">The Syndroo software</h2>
+          <p>
+            Syndroo is self-hosted software. When you deploy it, the Worker runs in your own Cloudflare account and stores
+            post and publication records in your own D1 database. Platform credentials are Worker secrets that you
+            configure. The project does not operate a hosted service in this version, does not receive a copy of your
+            database, and cannot read your credentials.
+          </p>
+          <p>
+            Because the deployment belongs to the person running it, the operator of that deployment is responsible for the
+            data it holds, including any personal data in post content, API keys and platform credentials.
+          </p>
+
+          <h2 id="third-parties">Platforms and third parties</h2>
+          <p>
+            Publishing sends content and credentials to the social platform you configured. Each platform applies its own
+            terms and privacy policy to that data. A self-hoster who enables a platform should tell their users what is sent
+            and to whom.
+          </p>
+
+          <h2 id="contact">Contact</h2>
+          <p>
+            Privacy questions about the project itself belong in GitHub Issues, alongside bug reports and feature requests.
+            A dedicated contact route and a controller address have not been decided, and neither is invented here.
+          </p>
+
+          <h2 id="status">Status of this draft</h2>
+          <p>
+            This draft carries no effective date and no approval. Operational details and legal review are required before
+            this page is published as an approved policy, and it should not be relied on for compliance purposes in the
+            meantime.
+          </p>
+
+          <div class="in-page-nav">
+            <a href="/terms/">Terms (draft)</a>
+            <a href="/about/">About</a>
+            <a href="https://github.com/Syndroo/syndroo/issues" rel="noreferrer">GitHub Issues</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="site-footer__grid">
+          <div class="site-footer__brand">
+            <a class="brand" href="/" style="margin-bottom: 12px">
+              <img src="/assets/logo.svg" alt="" width="26" height="26" />
+              Syndroo
+            </a>
+            <p>Open-source publishing infrastructure for the social web. Distributed under the Apache License 2.0.</p>
+          </div>
+          <div>
+            <h2>Product</h2>
+            <ul>
+              <li><a href="http://localhost:4174/">Documentation</a></li>
+              <li><a href="http://localhost:4174/quickstart/">Quickstart</a></li>
+              <li><a href="http://localhost:4174/api/">API reference</a></li>
+              <li><a href="/changelog/">Changelog</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Project</h2>
+            <ul>
+              <li><a href="/about/">About</a></li>
+              <li><a href="/blog/">Blog</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/issues" rel="noreferrer">Contact: GitHub Issues</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo" rel="noreferrer">GitHub</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Legal</h2>
+            <ul>
+              <li><a href="/privacy/">Privacy</a></li>
+              <li><a href="/terms/">Terms</a></li>
+              <li><a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE" rel="noreferrer">License (Apache-2.0)</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bottom">
+          <span>Prototype content for review. Release candidate 0.2.0-rc.1 is unpublished.</span>
+          <span>&copy; 2026 Syndroo</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

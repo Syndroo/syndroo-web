@@ -1,0 +1,23 @@
+{
+  "name": "syndroo-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sources and build tooling for the Syndroo website and documentation site.",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "build:website": "npm run build --workspace apps/website",
+    "build:docs": "npm run build --workspace apps/docs",
+    "dev": "node scripts/dev.ts",
+    "preview": "node scripts/preview.ts",
+    "check": "node scripts/check.ts",
+    "test": "node --test \"tests/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

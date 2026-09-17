@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="78 176 832 789" fill="none" role="img" aria-labelledby="title"><title id="title">Branch symbol</title>
+<defs>
+    <linearGradient id="upper" gradientUnits="userSpaceOnUse" x1="471" y1="480" x2="846" y2="224"><stop stop-color="#2864FF"/><stop offset=".52" stop-color="#2299F5"/><stop offset="1" stop-color="#29BBEC"/></linearGradient>
+    <linearGradient id="lower" gradientUnits="userSpaceOnUse" x1="483" y1="812" x2="847" y2="726"><stop stop-color="#2860FF"/><stop offset=".56" stop-color="#218FFA"/><stop offset="1" stop-color="#27B5EF"/></linearGradient>
+    <linearGradient id="orb" gradientUnits="userSpaceOnUse" x1="89" y1="500" x2="320" y2="640"><stop stop-color="#9341F5"/><stop offset=".5" stop-color="#6745FA"/><stop offset="1" stop-color="#403AFF"/></linearGradient>
+    <linearGradient id="web" gradientUnits="userSpaceOnUse" x1="221" y1="574" x2="564" y2="574"><stop stop-color="#ACA0F7" stop-opacity=".48"/><stop offset=".60" stop-color="#9FBAF9" stop-opacity=".53"/><stop offset="1" stop-color="#D8F1FF" stop-opacity=".22"/></linearGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="522" cy="575" r="175"><stop stop-color="#FFFFFF" stop-opacity=".72"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+  </defs>
+<g id="connector"><path d="M 210,447 C 306,476 406,412 494,346 L 598,518 C 522,537 519,598 585,629 L 495,801 C 398,719 310,676 217,697 Z" fill="url(#web)"/><path d="M 210,447 C 306,476 406,412 494,346 L 598,518 C 522,537 519,598 585,629 L 495,801 C 398,719 310,676 217,697 Z" fill="url(#glow)"/></g>
+<path id="upper-arm" d="M 494,346 L 694,205 C 755,160 824,170 867,215 C 936,286 922,389 837,431 C 820,439 804,445 786,452 L 582,525 C 520,547 473,513 457,472 C 440,430 459,378 494,346 Z" fill="url(#upper)"/>
+<path id="lower-arm" d="M 584,625 L 808,701 C 880,725 920,809 889,879 C 858,953 769,988 699,946 C 689,940 681,935 672,928 L 494,798 C 449,765 440,710 468,666 C 493,626 538,608 584,625 Z" fill="url(#lower)"/>
+<path id="node" d="M 329,574 C 329,644 274,700 204,700 C 134,700 78,646 78,574 C 78,505 133,447 204,447 C 273,447 329,503 329,574 Z" fill="url(#orb)"/>
+</svg>

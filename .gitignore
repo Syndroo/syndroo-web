@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output: regenerate with `npm run build`
+apps/*/dist/
+
+# Editor and OS noise
+.DS_Store
+*.log
+
+# Local environment and secret files. Copy `.env.example` instead of committing
+# a real one; the example is the only environment file that belongs in git.
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*

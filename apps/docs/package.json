@@ -1,0 +1,16 @@
+{
+  "name": "@syndroo/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Syndroo documentation site: authored HTML, CSS and TypeScript with its own static build.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "node build.ts",
+    "dev": "node dev.ts",
+    "preview": "node preview.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
