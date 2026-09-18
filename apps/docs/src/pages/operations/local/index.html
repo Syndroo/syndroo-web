@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local development - Syndroo Docs</title>
+  <meta name="description" content="Run the Syndroo 0.2.0-rc.1 Worker on your own machine with a local D1 database, local secrets and the local test gates. No Cloudflare account required.">
+  <link rel="canonical" href="http://localhost:4174/operations/local/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Syndroo">
+  <meta property="og:title" content="Local development - Syndroo Docs">
+  <meta property="og:description" content="Run the Syndroo 0.2.0-rc.1 Worker on your own machine with a local D1 database, local secrets and the local test gates. No Cloudflare account required.">
+  <meta property="og:url" content="http://localhost:4174/operations/local/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/doc.js"></script>
+</head>
+<body>
+  <!-- docs:head -->
+    <main class="content" id="main">
+      <article>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Operations</span>
+          <span aria-hidden="true">/</span>
+          <span>Local development</span>
+        </nav>
+        <h1 id="local-development">Run Syndroo locally</h1>
+        <p class="lede">The local path builds the Worker from source and runs it on your machine against a local database. You need Node.js and npm, not a Cloudflare account, and none of these steps deploys anything.</p>
+
+        <h2 id="prerequisites">Prerequisites</h2>
+        <ul>
+          <li><strong>Node.js 22 or newer and npm.</strong> The repository declares <code>"node": "&gt;=22"</code> and uses npm workspaces.</li>
+          <li><strong>git</strong>, if you clone the repository rather than using an existing checkout.</li>
+          <li><strong>Platform credentials, only for the platforms you will publish to.</strong> Local development reads them from <code>.dev.vars</code>.</li>
+        </ul>
+
+        <h2 id="steps">Steps</h2>
+        <ol class="steps">
+          <li>
+            <h3 id="install-source">Install the source</h3>
+            <pre data-label="terminal"><code>git clone https://github.com/Syndroo/syndroo.git
+cd syndroo
+npm install</code></pre>
+          </li>
+          <li>
+            <h3 id="configure-secrets">Create your local secrets file</h3>
+            <p>Copy the example file and fill in only what you need. It is never committed, and it never reaches a deployment.</p>
+            <pre data-label="terminal"><code>cp .dev.vars.example .dev.vars</code></pre>
+            <p>The example file lists all five platforms with placeholder values. Delete or comment out the platforms you are not publishing to: a placeholder that looks like a credential still counts as a configured-but-wrong one, and you want a missing platform to fail loudly with <code>PLATFORM_NOT_CONFIGURED</code> rather than silently attempting a call with a fake value.</p>
+            <pre data-label=".dev.vars"><code>SYNDROO_API_KEY=choose-a-long-random-secret
+BLUESKY_IDENTIFIER=your-handle.bsky.social
+BLUESKY_PASSWORD=your-bluesky-app-password
+BLUESKY_HOST=bsky.social</code></pre>
+            <p><code>SYNDROO_API_KEY</code> is the Bearer token your client sends. <code>BLUESKY_PASSWORD</code> must be an app password, not the account password. Credentials for other platforms are optional and independent.</p>
+          </li>
+          <li>
+            <h3 id="migrate-local">Create the local database</h3>
+            <pre data-label="terminal"><code>npm run db:migrate:local</code></pre>
+            <p>This applies the migrations to the local Miniflare database. It has no effect on anything in Cloudflare.</p>
+          </li>
+          <li>
+            <h3 id="start-worker">Start the Worker</h3>
+            <p>Build the workspace first. A clean checkout has no compiled output for the workspace packages yet, and Wrangler needs those built adapter dependencies; <code>npm run dev</code> itself serves the Worker source entry (<code>packages/cloudflare-worker/src/index.ts</code> from <code>wrangler.jsonc</code>) rather than compiling the workspace.</p>
+            <pre data-label="terminal"><code>npm run build</code></pre>
+            <p>Then start it:</p>
+            <pre data-label="terminal"><code>npm run dev</code></pre>
+            <p>The local Worker listens on <code>http://localhost:8787</code> and loads the optional platform secrets from <code>.dev.vars</code>. Warnings about unused platform secrets are expected.</p>
+          </li>
+          <li>
+            <h3 id="check-health">Check it answers</h3>
+            <pre data-label="terminal"><code>export SYNDROO_URL="http://localhost:8787"
+export SYNDROO_API_KEY="the-same-secret-from-dev-vars"
+curl "$SYNDROO_URL/health"</code></pre>
+            <p>Expected: <code>{"status":"ok"}</code>. Publishing from here works exactly as in <a href="/quickstart/">Publish your first post</a>, and it posts to the real platform when credentials are configured.</p>
+          </li>
+          <li>
+            <h3 id="local-gates">Run the local test gates</h3>
+            <pre data-label="terminal"><code>npm test        # workspace unit tests
+npm run check   # builds and type-checks the workspaces
+npm run test:e2e  # Mock SNS end-to-end gate</code></pre>
+            <div class="callout success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg>
+              <div>
+                <span class="callout-title">The end-to-end gate needs no credentials.</span>
+                <p>It injects fake bindings, replaces the network boundary with a loopback Mock SNS server, and fails closed on any outbound attempt outside its allowlist. It exercises wiring, persistence, idempotency, ambiguity handling and scheduling. It cannot prove provider permissions, API compatibility or rate limits.</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <h2 id="what-local-does-not-do">What the local path does not do</h2>
+        <ul>
+          <li><strong>It does not deploy.</strong> A local run is an isolated process with its own database.</li>
+          <li><strong>It does not validate a platform.</strong> A mock-tested adapter is still mock-tested: no live-account acceptance record exists for this candidate.</li>
+          <li><strong>It does not prove the platform's current rules.</strong> Text limits are enforced locally, but permissions, rate limits and API access are decided by the platform. Check the platform's own documentation through its guide.</li>
+          <li><strong>It does not include a dashboard, SDK or MCP server.</strong> The interface is the HTTP API.</li>
+        </ul>
+
+        <h2 id="applies-to">Applies to</h2>
+        <p>Syndroo 0.2.0-rc.1 (unpublished release candidate). For the production path instead, see <a href="/operations/cloudflare/">Deploy the Worker to Cloudflare</a>.</p>
+      </article>
+    </main>
+
+    <nav class="toc" id="page-toc" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#steps">Steps</a></li>
+        <li><a class="is-sub" href="#install-source">Install the source</a></li>
+        <li><a class="is-sub" href="#configure-secrets">Local secrets</a></li>
+        <li><a class="is-sub" href="#migrate-local">Local database</a></li>
+        <li><a class="is-sub" href="#start-worker">Start the Worker</a></li>
+        <li><a class="is-sub" href="#check-health">Check it answers</a></li>
+        <li><a class="is-sub" href="#local-gates">Test gates</a></li>
+        <li><a href="#what-local-does-not-do">What it does not do</a></li>
+        <li><a href="#applies-to">Applies to</a></li>
+      </ul>
+    </nav>
+
+  <!-- docs:foot -->
+</body>
+</html>

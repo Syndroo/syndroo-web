@@ -3,287 +3,146 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quickstart: run Syndroo locally - Syndroo Docs</title>
-  <meta name="description" content="Run the Syndroo 0.2.0-rc.1 Worker locally: install, configure secrets, migrate D1, publish a post, poll its status, and schedule work.">
+  <title>First Bluesky post - Syndroo Docs</title>
+  <meta name="description" content="Publish your first post with Syndroo 0.2.0-rc.1: one platform, one credential set, one authenticated request, and how to read the result back.">
+  <link rel="canonical" href="http://localhost:4174/quickstart/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Syndroo">
+  <meta property="og:title" content="First Bluesky post - Syndroo Docs">
+  <meta property="og:description" content="Publish your first post with Syndroo 0.2.0-rc.1: one platform, one credential set, one authenticated request, and how to read the result back.">
+  <meta property="og:url" content="http://localhost:4174/quickstart/">
+  <meta name="twitter:card" content="summary">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <script type="module" src="/doc.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <header class="topbar">
-    <div class="topbar-inner">
-      <button class="icon-btn" id="menu-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar" aria-label="Open documentation navigation">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
-      </button>
-      <a class="brand" href="/">
-        <img src="/assets/logo.svg" alt="" width="26" height="26">
-        <span class="brand-name">Syndroo</span>
-        <span class="brand-suffix">docs</span>
-      </a>
-      <div class="topbar-actions">
-        <button class="search-trigger" type="button" data-search-open aria-haspopup="dialog" aria-controls="search-modal" aria-label="Search docs">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
-          <span>Search docs</span>
-          <kbd>/</kbd>
-        </button>
-        <label class="version-field">
-          <span class="sr-only">Documentation version</span>
-          <select id="version-select">
-            <option value="0.2.0-rc.1" selected>0.2.0-rc.1 (candidate)</option>
-            <option value="interaction-sample">Interaction sample</option>
-          </select>
-        </label>
-        <a class="text-link" href="http://localhost:4173/">Website</a>
-        <a class="text-link" href="https://github.com/Syndroo/syndroo">GitHub</a>
-      </div>
-    </div>
-    <div class="version-notice" id="version-notice" role="status" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
-      <span><strong>Interaction sample.</strong> No historical documentation exists here. These pages describe the current 0.2.0-rc.1 candidate only.</span>
-    </div>
-  </header>
-
-  <div class="layout">
-    <aside class="sidebar" id="docs-sidebar" aria-label="Documentation navigation">
-      <div class="sidebar-group">
-        <p class="sidebar-title">Overview</p>
-        <ul>
-          <li><a href="/">Documentation home</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">Get started</p>
-        <ul>
-          <li><a href="/quickstart/" aria-current="page">Quickstart</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">API reference</p>
-        <ul>
-          <li><a href="/api/">HTTP API</a></li>
-          <li><a class="is-sub" href="/api/#create-a-post">Create a post</a></li>
-          <li><a class="is-sub" href="/api/#get-a-post">Check a post</a></li>
-          <li><a class="is-sub" href="/api/#errors">Errors</a></li>
-          <li><a class="is-sub" href="/api/#limits">Limits</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">Concepts</p>
-        <ul>
-          <li><a href="/concepts/">Delivery and guarantees</a></li>
-          <li><a class="is-sub" href="/concepts/#idempotency">Idempotency</a></li>
-          <li><a class="is-sub" href="/concepts/#ambiguous-outcomes">Ambiguous outcomes</a></li>
-        </ul>
-      </div>
-    </aside>
-    <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
-
+  <!-- docs:head -->
     <main class="content" id="main">
       <article>
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="/">Docs</a>
           <span aria-hidden="true">/</span>
-          <span>Quickstart</span>
+          <span>First Bluesky post</span>
         </nav>
-        <h1 id="quickstart">Quickstart</h1>
-        <p class="lede">Run the Syndroo Worker on your machine, publish a post to your own accounts, and read its stored status. This path needs Node.js 22 or newer and npm; a Cloudflare account is only needed when you deploy.</p>
+        <h1 id="quickstart">Publish your first post</h1>
+        <p class="lede">This path uses one platform (Bluesky) and one credential set. It ends with a published post whose per-platform status you have read back from the API. The commands below publish for real once credentials are configured, so use an account you are happy to post from.</p>
 
         <div class="callout warn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
           <div>
             <span class="callout-title">These commands publish for real.</span>
-            <p>Once platform credentials are configured, a copied <code>POST /v1/posts</code> request creates a live post on every selected platform. The interactive demo on the marketing site is simulated; this page is not. Use a test account or an unpublished draft workflow of your own.</p>
+            <p>Once Bluesky credentials are configured, a copied <code>POST /v1/posts</code> request creates a live post. The demo on the marketing site is simulated; this page is not. Nothing on this page runs until you paste it into your own terminal.</p>
           </div>
         </div>
 
-        <h2 id="prerequisites">Prerequisites</h2>
+        <h2 id="before-you-start">Before you start</h2>
         <ul>
-          <li><strong>Node.js 22 or newer.</strong> The repository declares <code>"node": "&gt;=22"</code> for the workspace and the Worker package.</li>
-          <li><strong>npm.</strong> The repository is an npm-workspaces monorepo.</li>
-          <li><strong>git.</strong> Used to clone the source repository.</li>
-          <li><strong>Platform credentials.</strong> Only for the platforms you want to publish to. Local development loads optional platform secrets from the <code>local</code> Wrangler environment.</li>
+          <li><strong>A Worker that answers requests.</strong> Either a deployment in your own Cloudflare account (<a href="/operations/cloudflare/">Cloudflare deployment</a>) or a local instance (<a href="/operations/local/">Local development</a>). The two paths are separate: deployment does not require the local steps, and local development does not require a Cloudflare account.</li>
+          <li><strong>A Bluesky account and an app password.</strong> Use an app password, never your account password. The <a href="/platforms/bluesky/">Bluesky guide</a> lists the exact secret names.</li>
+          <li><strong>The API key you chose.</strong> <code>SYNDROO_API_KEY</code> is the Bearer token every client sends. Treat it as a password: anyone who has it can publish through your Worker.</li>
         </ul>
 
-        <h2 id="steps">Run it locally</h2>
+        <h2 id="steps">Steps</h2>
         <ol class="steps">
           <li>
-            <h3 id="install-source">Install the source</h3>
-            <p>Clone the repository and install the workspace dependencies.</p>
-            <pre data-label="terminal"><code>git clone https://github.com/Syndroo/syndroo.git
-cd syndroo
-npm install</code></pre>
-          </li>
-
-          <li>
-            <h3 id="configure-secrets">Create your local secrets file</h3>
-            <p>Copy the example file, then put only the credentials you use into <code>.dev.vars</code>. Do not commit it.</p>
-            <pre data-label="terminal"><code>cp .dev.vars.example .dev.vars</code></pre>
-            <p>The publish example later on this page targets Bluesky and Threads together, so the local file below configures both. <code>SYNDROO_API_KEY</code> is a long random secret you choose; clients send it as the Bearer token. <code>BLUESKY_PASSWORD</code> must be a Bluesky app password, not your account password. The Threads value must be a long-lived user access token that carries <code>threads_basic</code> and <code>threads_content_publish</code>.</p>
-            <pre data-label=".dev.vars"><code>SYNDROO_API_KEY=choose-a-long-random-secret
-BLUESKY_IDENTIFIER=alice.bsky.social
+            <h3 id="configure-bluesky">Configure the platform credentials</h3>
+            <p>Add the Bluesky values next to <code>SYNDROO_API_KEY</code> in the place your runtime reads secrets from: Worker secrets for a deployment, <code>.dev.vars</code> for local development. The names are the same in both places.</p>
+            <pre data-label="Bluesky credentials"><code>BLUESKY_IDENTIFIER=your-handle.bsky.social
 BLUESKY_PASSWORD=your-bluesky-app-password
-BLUESKY_HOST=bsky.social
-THREADS_ACCESS_TOKEN=your-long-lived-threads-user-token</code></pre>
-            <p>If you only want to test Bluesky first, omit the Threads line and change the publish request below to <code>"platforms": ["bluesky"]</code>. Selecting a platform without its credentials fails with HTTP <code>422</code> before anything is stored, so the two-platform example needs both credential sets.</p>
+BLUESKY_HOST=bsky.social</code></pre>
+            <p><code>BLUESKY_HOST</code> is optional and defaults to <code>bsky.social</code>. Only Bluesky is needed for this page; leave every other platform's credentials unset.</p>
             <div class="callout info">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-5"></path><path d="M12 8h.01"></path></svg>
               <div>
-                <span class="callout-title">Optional secrets are validated per platform.</span>
-                <p>Platforms are enabled independently. A missing or incomplete credential set returns HTTP <code>422</code> with <code>PLATFORM_NOT_CONFIGURED</code> before persistence or Queue delivery. A deployment with no platform credentials can still serve health checks, but it cannot accept posts.</p>
+                <span class="callout-title">Platforms are enabled independently.</span>
+                <p>A missing or incomplete credential set returns HTTP <code>422</code> with <code>PLATFORM_NOT_CONFIGURED</code> before anything is stored or queued. A deployment with no platform credentials can still answer health checks, but it cannot accept posts.</p>
               </div>
             </div>
           </li>
 
           <li>
-            <h3 id="migrate-local">Create the local database</h3>
-            <p>Apply the D1 migrations to the local Miniflare database.</p>
-            <pre data-label="terminal"><code>npm run db:migrate:local</code></pre>
-            <p>The candidate ships three migrations. Migration <code>0003_retry_timing.sql</code> adds the nullable <code>publications.retry_at</code> column used to enforce strict retry deadlines.</p>
-          </li>
-
-          <li>
-            <h3 id="start-worker">Start the local Worker</h3>
-            <pre data-label="terminal"><code>npm run dev</code></pre>
-            <p><code>npm run dev</code> selects the <code>local</code> Wrangler environment so optional platform secrets are loaded. Warnings about unused platform secrets are expected. The local Worker defaults to <code>http://localhost:8787</code>.</p>
-          </li>
-
-          <li>
             <h3 id="check-health">Check the service</h3>
-            <p>The health endpoint does not require authentication. Set the two variables in the terminal that will call Syndroo.</p>
-            <pre data-label="terminal"><code>export SYNDROO_URL="http://localhost:8787"
-export SYNDROO_API_KEY="the-same-secret-from-dev-vars"
+            <p>The health endpoint needs no authentication. Set the two variables in the terminal that will call Syndroo.</p>
+            <pre data-label="terminal"><code>export SYNDROO_URL="https://your-worker.your-subdomain.workers.dev"
+export SYNDROO_API_KEY="the-same-secret-your-worker-has"
 curl "$SYNDROO_URL/health"</code></pre>
             <p>Expected response:</p>
             <pre data-label="response"><code>{"status":"ok"}</code></pre>
+            <p>For a local instance the URL is <code>http://localhost:8787</code>. <code>/health</code> always answers <code>200</code> with that body, even while maintenance mode is on: it needs no API key and is checked before anything else. Maintenance mode affects only <code>POST /v1/posts</code>, which then returns <code>503</code> with <code>SERVICE_UNAVAILABLE</code>; reads keep working.</p>
           </li>
 
           <li>
-            <h3 id="publish-post">Publish a post</h3>
-            <p>Send one shared body with per-platform overrides. This example targets Threads and Bluesky and uses a stable idempotency key.</p>
+            <h3 id="publish">Publish one Bluesky post</h3>
+            <p>Send one request with a stable idempotency key. The key ties this one logical post to this one request, so a retry cannot publish twice.</p>
             <div data-code-scope="publish">
               <pre data-label="POST /v1/posts"><code>curl -X POST "$SYNDROO_URL/v1/posts" \
   -H "Authorization: Bearer $SYNDROO_API_KEY" \
   -H "Content-Type: application/json" \
-  -H "Idempotency-Key: example-post-001" \
+  -H "Idempotency-Key: first-post-001" \
   --data '{
-    "content": "Hello from Syndroo on Threads",
-    "platforms": ["threads", "bluesky"],
-    "overrides": {
-      "bluesky": { "content": "Hello from Syndroo on Bluesky" }
-    }
+    "content": "First post through my own Syndroo Worker.",
+    "platforms": ["bluesky"]
   }'</code></pre>
             </div>
-            <p>Syndroo accepts the request before the Queue finishes publishing, so the response uses HTTP <code>202</code>:</p>
+            <p>The reply is an acceptance receipt rather than a delivery report, so it is HTTP <code>202</code>:</p>
             <pre data-label="202 Accepted"><code>{
   "id": "post_...",
   "status": "queued"
 }</code></pre>
-            <p>Copy the returned <code>id</code>. <code>queued</code> means accepted for processing, not yet confirmed by either platform.</p>
+            <p><code>queued</code> means the post was accepted and still has publications waiting. It does not confirm
+              Bluesky's outcome, and it is not proof that Bluesky has not published already: read <code>publications</code>
+              to see what each platform actually did.</p>
           </li>
 
           <li>
-            <h3 id="poll-status">Check the result</h3>
-            <p>Request the same post until it reaches a terminal status.</p>
+            <h3 id="read-the-result">Read the result</h3>
+            <p>Request the post until it reaches a terminal status. <code>published</code> and <code>failed</code> are terminal; <code>queued</code> and <code>publishing</code> are not.</p>
             <pre data-label="terminal"><code>curl \
   -H "Authorization: Bearer $SYNDROO_API_KEY" \
   "$SYNDROO_URL/v1/posts/post_..."</code></pre>
-            <p>A successful two-platform publication eventually looks like this, with one publication entry per selected platform. The Threads adapter returns an <code>externalId</code>; Bluesky returns both an <code>externalId</code> and a usable <code>externalUrl</code>.</p>
+            <p>A successful publication looks like this. The aggregate status is <code>published</code> only when every selected platform succeeded.</p>
             <pre data-label="200 OK"><code>{
   "id": "post_...",
-  "content": "Hello from Syndroo on Threads",
-  "platforms": ["threads", "bluesky"],
+  "content": "First post through my own Syndroo Worker.",
+  "platforms": ["bluesky"],
   "status": "published",
-  "createdAt": "2030-01-02T03:04:05.000Z",
-  "overrides": {
-    "bluesky": { "content": "Hello from Syndroo on Bluesky" }
-  },
   "publications": [
     {
-      "id": "pub_...",
-      "postId": "post_...",
-      "platform": "threads",
-      "provider": "threads-native",
-      "content": "Hello from Syndroo on Threads",
-      "status": "published",
-      "attempts": 1,
-      "externalId": "1784...",
-      "errorAmbiguous": false,
-      "createdAt": "2030-01-02T03:04:05.000Z",
-      "publishedAt": "2030-01-02T03:04:07.000Z"
-    },
-    {
-      "id": "pub_...",
-      "postId": "post_...",
       "platform": "bluesky",
       "provider": "bluesky-native",
-      "content": "Hello from Syndroo on Bluesky",
       "status": "published",
       "attempts": 1,
-      "externalId": "bafyre...",
+      "externalId": "at://did:plc:.../app.bsky.feed.post/...",
       "externalUrl": "https://bsky.app/profile/.../post/...",
-      "errorAmbiguous": false,
-      "createdAt": "2030-01-02T03:04:05.000Z",
-      "publishedAt": "2030-01-02T03:04:06.000Z"
+      "errorAmbiguous": false
     }
   ]
 }</code></pre>
-            <p>The aggregate status is <code>published</code> only when every platform succeeded. If it is still <code>queued</code> or <code>publishing</code>, wait briefly and request the same URL again. If it is <code>partial</code>, at least one platform already published and at least one did not: inspect each publication entry's <code>status</code>, <code>errorCode</code>, <code>errorMessage</code>, and <code>errorAmbiguous</code> before retrying anything by hand. If it is <code>failed</code>, no platform succeeded, and the same fields explain why.</p>
-            <p>Polling is also how you list recent work. <code>limit</code> is optional, defaults to <code>50</code>, and must be an integer from <code>1</code> to <code>100</code>.</p>
-            <pre data-label="terminal"><code>curl \
-  -H "Authorization: Bearer $SYNDROO_API_KEY" \
-  "$SYNDROO_URL/v1/posts?limit=50"</code></pre>
-          </li>
-
-          <li>
-            <h3 id="schedule-post">Schedule a post</h3>
-            <p><code>scheduledAt</code> must be an ISO date-time. Use an explicit timezone, preferably UTC with <code>Z</code>.</p>
-            <div data-code-scope="publish">
-              <pre data-label="POST /v1/posts"><code>curl -X POST "$SYNDROO_URL/v1/posts" \
-  -H "Authorization: Bearer $SYNDROO_API_KEY" \
-  -H "Content-Type: application/json" \
-  --data '{
-    "content": "Shared fallback",
-    "platforms": ["bluesky"],
-    "overrides": {
-      "bluesky": { "content": "Scheduled Bluesky post" }
-    },
-    "scheduledAt": "2030-01-02T03:04:05.000Z"
-  }'</code></pre>
+            <p>Other outcomes you can meet here:</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th scope="col">Status</th><th scope="col">What it means</th><th scope="col">What to do</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row"><code>publishing</code></th><td>Claimed by a Queue consumer; the platform call is still running.</td><td>Poll again shortly. Do not send a new request.</td></tr>
+                  <tr><th scope="row"><code>published</code></th><td>Bluesky confirmed the post and returned an identifier.</td><td>Nothing. If an <code>externalUrl</code> is present, that is the post link the platform returned.</td></tr>
+                  <tr><th scope="row"><code>failed</code>, <code>errorAmbiguous: false</code></th><td>Stopped after a terminal failure, or after the retry budget was exhausted. Read <code>errorCode</code>, <code>errorMessage</code> and <code>attempts</code>.</td><td>Only after confirming <code>errorAmbiguous</code> is <code>false</code>, fix the cause and send a new request with a new key. That decision is yours; Syndroo resends nothing.</td></tr>
+                  <tr><th scope="row"><code>failed</code> with <code>errorAmbiguous: true</code></th><td>The write may have reached the platform; the outcome is unknown.</td><td>Check the account by hand first. Syndroo never resends an ambiguous publication automatically.</td></tr>
+                </tbody>
+              </table>
             </div>
-            <p>Expected response:</p>
-            <pre data-label="202 Accepted"><code>{
-  "id": "post_...",
-  "status": "scheduled",
-  "scheduledAt": "2030-01-02T03:04:05.000Z"
-}</code></pre>
-            <p>Cron scans every 15 minutes, so scheduled publication can occur up to roughly 15 minutes after the requested time. A <code>scheduledAt</code> value in the past is handled as an immediate post.</p>
           </li>
         </ol>
 
-        <h2 id="local-gates">Run the local test gates</h2>
-        <p>The repository ships unit tests, type checks, and a Mock SNS end-to-end gate that drives the bundled Worker, D1, Queue, Cron handler, and real adapters against loopback servers.</p>
-        <pre data-label="terminal"><code>npm test
-npm run check
-npm run test:e2e</code></pre>
-        <div class="callout success">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg>
-          <div>
-            <span class="callout-title">The end-to-end gate needs no credentials.</span>
-            <p>It injects fake bindings, replaces the network boundary with a loopback Mock SNS server, and fails closed on any outbound attempt outside its allowlist. It proves wiring, persistence, idempotency, ambiguity handling, and scheduling; it cannot prove provider permissions, API compatibility, or rate limits.</p>
-          </div>
-        </div>
-        <p>Bluesky and Threads live-account acceptance remains a separate release requirement. X, Tumblr, and LinkedIn are experimental in this candidate.</p>
-
-        <h2 id="deploying">Deploying later</h2>
-        <p>Deployment is not part of this prototype. When you are ready, the repository README documents the Cloudflare path: the Deploy to Cloudflare button creates an independent repository in your account, prompts for <code>SYNDROO_API_KEY</code>, provisions D1 and Queue resources, applies migrations, configures the Cron Trigger, and deploys the Worker.</p>
+        <h2 id="next">Where to go next</h2>
         <ul>
-          <li>Production requires only <code>SYNDROO_API_KEY</code>. Configure platform secrets after deployment, only for the platforms you use.</li>
-          <li>The thin <code>syndroo-deploy-template</code> passed isolated local installation, migration, build, and startup checks. Registry installation and live deployment remain pending, and the button is not yet wired to it.</li>
-          <li>Never deploy using the <code>local</code> Wrangler environment.</li>
+          <li><strong>Add a second platform.</strong> Configure that platform's credentials and add its name to <code>platforms</code>. Each guide lists its own secret names and limits.</li>
+          <li><strong>Schedule instead of posting now.</strong> Add <code>"scheduledAt": "2030-01-02T03:04:05.000Z"</code> with an explicit timezone. Cron scans for due posts on a 15-minute cadence, and queue and platform time are added on top, so the requested time is not an exact publication time and no end-to-end bound is promised.</li>
+          <li><strong>Let an agent drive it.</strong> <a href="/agent-setup/">Agent setup</a> explains the exact HTTP workflow, including the preview and confirmation step that belongs to your client rather than the API.</li>
+          <li><strong>Automate it.</strong> <a href="/recipes/api-automation/">Call Syndroo from CI or a script</a> shows keys derived from a commit and polling until a terminal state.</li>
         </ul>
-        <p>Read the <a href="https://github.com/Syndroo/syndroo#cloudflare-deployment">Cloudflare deployment section in the repository README</a> for the current procedure.</p>
 
         <h2 id="troubleshooting">Common failures</h2>
         <div class="table-wrap">
@@ -293,74 +152,48 @@ npm run test:e2e</code></pre>
             </thead>
             <tbody>
               <tr><th scope="row">HTTP <code>401</code></th><td>Missing or incorrect Bearer token.</td><td>Send <code>Authorization: Bearer $SYNDROO_API_KEY</code> with the same value the Worker has.</td></tr>
-              <tr><th scope="row">HTTP <code>415</code></th><td>Body is not sent as JSON.</td><td>Add <code>Content-Type: application/json</code>.</td></tr>
-              <tr><th scope="row">HTTP <code>413</code></th><td>Request body exceeds 64 KiB.</td><td>Shorten the request. Per-platform text limits are much smaller than this ceiling.</td></tr>
-              <tr><th scope="row">HTTP <code>422</code></th><td>Selected platform is not installed or its credentials are missing.</td><td>Configure that platform's secrets in <code>.dev.vars</code> and restart <code>npm run dev</code>.</td></tr>
-              <tr><th scope="row">HTTP <code>409</code></th><td>An <code>Idempotency-Key</code> was reused with a different request.</td><td>Use a new key for a genuinely different post, or resend the original body.</td></tr>
-              <tr><th scope="row">Publication <code>failed</code> with <code>INVALID_CONTENT</code></th><td>Text passed the API but exceeded the platform's own limit.</td><td>Shorten the per-platform override. Threads allows 500 characters, Bluesky 300 characters and 3,000 UTF-8 bytes, X 280 weighted characters.</td></tr>
-              <tr><th scope="row"><code>errorAmbiguous: true</code></th><td>A timeout or post-stage 5xx left the remote outcome unknown.</td><td>Check the platform manually. Syndroo does not resend ambiguous publications automatically.</td></tr>
+              <tr><th scope="row">HTTP <code>415</code></th><td>The body is not sent as JSON.</td><td>Add <code>Content-Type: application/json</code>.</td></tr>
+              <tr><th scope="row">HTTP <code>413</code></th><td>The request body exceeds 64 KiB.</td><td>Shorten the request. Platform text limits are far smaller than this ceiling.</td></tr>
+              <tr><th scope="row">HTTP <code>422</code></th><td>Bluesky is not configured, or a credential is missing.</td><td>Add <code>BLUESKY_IDENTIFIER</code> and <code>BLUESKY_PASSWORD</code>, then restart or redeploy.</td></tr>
+              <tr><th scope="row">HTTP <code>409</code></th><td>The <code>Idempotency-Key</code> was used with different content.</td><td>Use a new key for a genuinely different post, or resend the original body to get the original result back.</td></tr>
+              <tr><th scope="row">Publication <code>failed</code> with <code>INVALID_CONTENT</code></th><td>The text passed the API but exceeded the platform's own limit.</td><td>Shorten the text. The candidate enforces 300 Unicode code points and 3,000 UTF-8 bytes for Bluesky before the network call.</td></tr>
+              <tr><th scope="row"><code>errorAmbiguous: true</code></th><td>A timeout or a post-stage 5xx left the remote outcome unknown.</td><td>Check the account manually. Syndroo does not resend ambiguous publications automatically.</td></tr>
             </tbody>
           </table>
         </div>
+
+        <h2 id="moved-anchors">Where older links land now</h2>
+        <p>This page replaced an earlier quickstart that covered a local checkout as well as publishing. The historical anchors still resolve here, and each one points at the page that now owns that step.</p>
+        <ul>
+          <li id="prerequisites">Prerequisites: <a href="#before-you-start">Before you start</a> above, or <a href="/operations/local/">Local development</a> for the Node.js and git requirements.</li>
+          <li id="install-source">Install the source: <a href="/operations/local/#install-source">Local development</a>.</li>
+          <li id="configure-secrets">Create the local secrets file: <a href="/operations/local/#configure-secrets">Local development</a>.</li>
+          <li id="migrate-local">Create the local database: <a href="/operations/local/#migrate-local">Local development</a>.</li>
+          <li id="start-worker">Start the local Worker: <a href="/operations/local/#start-worker">Local development</a>.</li>
+          <li id="publish-post">Publish a post: <a href="#publish">Publish one Bluesky post</a> above.</li>
+          <li id="poll-status">Check the result: <a href="#read-the-result">Read the result</a> above.</li>
+          <li id="schedule-post">Schedule a post: <a href="#next">Where to go next</a> above.</li>
+          <li id="local-gates">Run the local test gates: <a href="/operations/local/#local-gates">Local development</a>.</li>
+          <li id="deploying">Deploying later: <a href="/operations/cloudflare/">Deploy the Worker to Cloudflare</a>.</li>
+        </ul>
       </article>
     </main>
 
     <nav class="toc" id="page-toc" aria-label="On this page">
       <p class="toc-title">On this page</p>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#steps">Run it locally</a></li>
-        <li><a class="is-sub" href="#install-source">Install the source</a></li>
-        <li><a class="is-sub" href="#configure-secrets">Create secrets</a></li>
-        <li><a class="is-sub" href="#migrate-local">Local database</a></li>
-        <li><a class="is-sub" href="#start-worker">Start the Worker</a></li>
-        <li><a class="is-sub" href="#check-health">Check health</a></li>
-        <li><a class="is-sub" href="#publish-post">Publish a post</a></li>
-        <li><a class="is-sub" href="#poll-status">Check the result</a></li>
-        <li><a class="is-sub" href="#schedule-post">Schedule a post</a></li>
-        <li><a href="#local-gates">Run the test gates</a></li>
-        <li><a href="#deploying">Deploying later</a></li>
+        <li><a href="#before-you-start">Before you start</a></li>
+        <li><a href="#steps">Steps</a></li>
+        <li><a class="is-sub" href="#configure-bluesky">Configure Bluesky</a></li>
+        <li><a class="is-sub" href="#check-health">Check the service</a></li>
+        <li><a class="is-sub" href="#publish">Publish a post</a></li>
+        <li><a class="is-sub" href="#read-the-result">Read the result</a></li>
+        <li><a href="#next">Where to go next</a></li>
         <li><a href="#troubleshooting">Common failures</a></li>
+        <li><a href="#moved-anchors">Where older links land now</a></li>
       </ul>
     </nav>
-  </div>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <span>Syndroo 0.2.0-rc.1 docs. Apache-2.0. Copyright 2026 Syndroo.</span>
-      <nav aria-label="Footer">
-        <a href="/quickstart/">Quickstart</a>
-        <a href="/api/">API reference</a>
-        <a href="/concepts/">Concepts</a>
-        <a href="http://localhost:4173/">Website</a>
-        <a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE">License</a>
-        <a href="https://github.com/Syndroo/syndroo/issues">Contact</a>
-      </nav>
-    </div>
-  </footer>
-
-  <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" hidden>
-    <div class="search-panel">
-      <div class="search-head">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
-        <label class="sr-only" for="search-input" id="search-title">Search documentation</label>
-        <input id="search-input" type="search" placeholder="Search docs" autocomplete="off" spellcheck="false">
-        <button class="search-close" id="search-close" type="button" aria-label="Close search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"></path></svg>
-        </button>
-      </div>
-      <p class="search-meta" id="search-meta">Search every section of the local docs. Try "idempotency", "scheduledAt" or "64 KiB".</p>
-      <div class="search-empty" id="search-empty" hidden>
-        <strong>No results</strong>
-        <span>Try a shorter term, or search for an API field such as <code>overrides</code>.</span>
-      </div>
-      <ul class="search-results" id="search-results"></ul>
-      <div class="search-foot">
-        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
-        <span><kbd>Enter</kbd> open</span>
-        <span><kbd>Esc</kbd> close</span>
-      </div>
-    </div>
-  </div>
+  <!-- docs:foot -->
 </body>
 </html>

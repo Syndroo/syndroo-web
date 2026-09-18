@@ -91,7 +91,13 @@ apps/website/     marketing site: pages in src/pages/, CSS in src/static/css/,
                   browser TypeScript in src/js/, plus its own build output
 apps/docs/        documentation site: pages in src/pages/, styles.css in
                   src/static/, browser TypeScript in src/js/, plus its own
-                  build output
+                  build output; src/chrome.ts owns the navigation, footer and
+                  search dialog that the build injects into every page
+packages/content/ the maintained content source: versions, platform
+                  capability facts, agent access methods, navigation, the page
+                  registries and the simulated demo fixtures. Both builds
+                  compile these modules into their own output, so the two sites
+                  and the tests cannot disagree about them
 packages/brand/assets/  the only home of the shared marks: logo, favicon, the
                   three mascot artworks and the five platform SVGs, documented
                   in packages/brand/PROVENANCE.md
@@ -104,11 +110,17 @@ Each app builds a self-contained output directory holding its own HTML, CSS,
 generated browser JavaScript and copies of the shared brand assets it uses, so
 either site can be served from its own output without the other. The brand
 assets package remains the single source for every shared mark, and both builds
-copy those files unchanged.
+copy those files unchanged. Each build also generates `robots.txt` and
+`sitemap.xml` from the page registry and the configured origins.
 
 Page sources are authored HTML and CSS, with TypeScript for browser behaviour.
 Built output is generated: change the source and rebuild instead of editing
 built files.
+
+Documentation pages declare two markers, `<!-- docs:head -->` and
+`<!-- docs:foot -->`, which the build replaces with the shared topbar, sidebar,
+footer and search dialog. A page that loses a marker fails the build rather than
+shipping without navigation, and each page stays authored HTML between them.
 
 ## Content status
 
@@ -116,8 +128,13 @@ The product candidate is `0.2.0-rc.1`: prepared, unpublished, untagged and
 undeployed. Threads and Bluesky are exercised against local mock servers with
 live acceptance still pending; X, Tumblr and LinkedIn are experimental. The
 interactive publish demo on the marketing site is simulated in the browser and
-performs no network request. Privacy and Terms are drafts pending operational
-and legal review. See [docs/design.md](docs/design.md) for the full contract.
+performs no network request. The website's `0.3.0` is a design iteration of this
+repository, not a product version, and no platform has a live-account acceptance
+record. Agent setup means wiring your own client to the documented HTTP API:
+there is no Syndroo skill, plugin, SDK or MCP server. Privacy and Terms are drafts
+pending operational and legal review. See [docs/design.md](docs/design.md) for the
+full contract and [docs/acceptance.md](docs/acceptance.md) for what has actually
+been verified.
 
 ## License
 

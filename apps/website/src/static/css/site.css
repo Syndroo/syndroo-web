@@ -1,5 +1,9 @@
-/* Syndroo marketing prototype stylesheet.
-   Owned by the marketing site; the documentation origin keeps its own CSS. */
+/* Syndroo marketing stylesheet.
+   Owned by the marketing site; the documentation origin keeps its own CSS.
+   The palette, logo and mascot artworks are unchanged from the accepted
+   prototype. What changed in the 0.3.0 design iteration is the composition:
+   one hero-sized demo instead of a hero diagram plus a second demo, mascot
+   sizes per role, and result rows that carry a label next to every state. */
 
 :root {
   --canvas: #fbfbfe;
@@ -19,6 +23,7 @@
   --console-muted: #9aa3c2;
   --ok: #1f8a5f;
   --warn: #9a6412;
+  --danger: #a53131;
   --radius-button: 10px;
   --radius-panel: 18px;
   --radius-panel-lg: 22px;
@@ -27,8 +32,9 @@
   --font-sans: "Avenir Next", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: Menlo, Consolas, "Liberation Mono", monospace;
   --gutter: 40px;
-  /* One shared mascot size for the hero, the demo heading and the closing CTA. */
-  --mascot-size: 300px;
+  /* Mascot sizes are per role: an accent in the hero, a small mark in the CTA. */
+  --mascot-hero: 160px;
+  --mascot-cta: 96px;
 }
 
 *,
@@ -50,7 +56,22 @@ body {
   font-size: 17px;
   line-height: 1.62;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+}
+
+/* Grid and flex children hold their own width. Nothing relies on hiding a
+   broken layout with `overflow-x: hidden`; the only horizontal scrolling is
+   inside a code block or a wide table. */
+main,
+section,
+div,
+ul,
+ol,
+li,
+p,
+h1,
+h2,
+h3 {
+  min-width: 0;
 }
 
 img,
@@ -111,7 +132,7 @@ h4 {
 }
 
 h1 {
-  font-size: 60px;
+  font-size: 58px;
 }
 
 h2 {
@@ -170,6 +191,7 @@ code {
 pre {
   margin: 0;
   overflow-x: auto;
+  max-width: 100%;
 }
 
 pre code {
@@ -179,6 +201,7 @@ pre code {
   line-height: 1.7;
 }
 
+/* Header */
 .site-header {
   position: sticky;
   top: 0;
@@ -220,7 +243,7 @@ pre code {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .site-nav a {
@@ -230,6 +253,7 @@ pre code {
   font-weight: 500;
   padding: 9px 12px;
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 .site-nav a:hover {
@@ -282,6 +306,7 @@ pre code {
   bottom: 1px;
 }
 
+/* Layout blocks */
 main {
   display: block;
 }
@@ -294,10 +319,6 @@ main {
   padding: 54px 0;
 }
 
-.section--lavender {
-  background: var(--lavender);
-}
-
 .section-head {
   max-width: 720px;
   margin-bottom: 38px;
@@ -305,24 +326,6 @@ main {
 
 .section-head h2 {
   margin-bottom: 12px;
-}
-
-/* Shared demo heading: copy on the left, mascot art on the right. */
-.section-head--with-art {
-  max-width: none;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 32px;
-}
-
-.section-head__text {
-  max-width: 720px;
-}
-
-.section-head__art {
-  display: flex;
-  justify-content: center;
 }
 
 .pill {
@@ -350,34 +353,34 @@ main {
   flex: none;
 }
 
-/* Breathing room between the version chip and the headline. */
-.hero .pill {
-  display: flex;
-  width: fit-content;
-  margin-bottom: 28px;
-}
-
+/* Hero: a short intro beside the single interactive demo. */
 .hero {
-  padding: 66px 0 58px;
+  padding: 62px 0 56px;
 }
 
 .hero__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 56px;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: 52px;
   align-items: start;
 }
 
+.hero__intro .pill {
+  display: flex;
+  width: fit-content;
+  margin-bottom: 26px;
+}
+
 .hero h1 {
-  max-width: 12ch;
-  margin-bottom: 22px;
+  max-width: 14ch;
+  margin-bottom: 20px;
 }
 
 .hero__subtitle {
   font-size: 19px;
   color: var(--muted);
   max-width: 46ch;
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
 
 .hero__actions {
@@ -390,7 +393,11 @@ main {
 .hero__proof {
   font-size: 14px;
   color: var(--muted);
-  margin: 0;
+  margin: 0 0 18px;
+}
+
+.hero__proof span {
+  display: inline-block;
 }
 
 .hero__proof span + span::before {
@@ -399,6 +406,21 @@ main {
   color: var(--border-strong);
 }
 
+.hero__boundary {
+  font-size: 14.5px;
+  color: var(--muted);
+  background: var(--lavender);
+  border: 1px solid var(--lavender-deep);
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 0;
+}
+
+.hero__boundary strong {
+  color: var(--ink);
+}
+
+/* Buttons */
 .button {
   display: inline-flex;
   align-items: center;
@@ -439,306 +461,262 @@ main {
 }
 
 .button[disabled],
-.button[aria-disabled="true"] {
+.button[aria-disabled="true"],
+.picker__option.is-inactive,
+.copy-button[aria-disabled="true"] {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-/* Workflow diagram in the hero */
-.workflow {
-  position: relative;
-  background-color: var(--surface);
-  background-image: radial-gradient(var(--lavender-deep) 1.1px, transparent 1.1px);
-  background-size: 17px 17px;
+/* The single demo: agent conversation and API responses share one scenario. */
+.demo {
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-panel-lg);
-  padding: 20px 22px;
+  padding: 20px;
   box-shadow: var(--shadow-soft);
 }
 
-/* Hero art sits on a soft lavender-to-blue wash rather than a decorative orb. */
-.workflow__art {
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto 10px;
+.demo__head {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.demo__mascot {
+  width: var(--mascot-hero);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  flex: none;
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    rgba(100, 70, 237, 0.15),
-    rgba(38, 124, 248, 0.08) 60%,
-    rgba(251, 251, 254, 0) 78%
+    rgba(100, 70, 237, 0.16),
+    rgba(38, 124, 248, 0.08) 62%,
+    rgba(251, 251, 254, 0) 80%
   );
 }
 
-/* One shared mascot size for hero, demo heading and closing CTA. `height: auto`
-   with a square aspect ratio keeps the mark square even if a container is
-   narrower than --mascot-size, instead of squashing only the width. */
-.workflow__art img,
-.section-head__art img,
-.cta__mascot img {
-  width: var(--mascot-size);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  max-width: 100%;
-  object-fit: contain;
-  display: block;
+.demo__title {
+  font-size: 20px;
+  margin: 0 0 6px;
 }
 
-.workflow__request {
-  background: var(--console);
-  color: var(--console-text);
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  line-height: 1.6;
-  overflow-x: auto;
-}
-
-.workflow__request .k {
-  color: #b9a5ff;
-}
-
-.workflow__request .v {
-  color: #8fd0ff;
-}
-
-.workflow__hub {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 14px;
-  padding: 10px 14px;
-  margin-top: 10px;
-  box-shadow: var(--shadow-card);
-}
-
-.workflow__hub img {
-  width: 26px;
-  height: 26px;
-  flex: none;
-}
-
-.workflow__hub strong {
-  display: block;
-  font-size: 15px;
-  line-height: 1.3;
-}
-
-.workflow__hub small {
+.demo__subtitle {
+  font-size: 14.5px;
   color: var(--muted);
-  font-size: 12.5px;
+  margin: 0;
 }
 
-.workflow__fan {
-  margin-top: 8px;
-  display: grid;
-  gap: 8px;
-}
-
-.workflow__dest {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 8px 13px;
-  font-size: 13.5px;
-  box-shadow: 0 1px 1px rgba(23, 32, 56, 0.03);
-}
-
-.workflow__dest .name {
-  font-weight: 600;
-}
-
-.workflow__dest .kind {
-  color: var(--muted);
-  font-size: 12.5px;
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-.platform-strip {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  padding: 26px 0;
-}
-
-.platform-strip__title {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 16px;
-}
-
-/* Icon-led platform tiles. Icons are drawn as CSS masks so the stored SVG files
-   stay byte-identical and render in the single ink colour. */
-.platform-tiles {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-  margin: 0 0 14px;
-  padding: 0;
-}
-
-.platform-tile {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 10px;
-  row-gap: 6px;
-  background: var(--canvas);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-
-.platform-tile .platform-icon {
-  grid-row: 1;
-  grid-column: 1;
-}
-
-.platform-tile__name {
-  grid-row: 1;
-  grid-column: 2;
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.platform-tile .status-tag {
-  grid-row: 2;
-  grid-column: 1 / -1;
-  justify-self: start;
-}
-
-.platform-icon {
-  display: block;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  background-color: var(--ink);
-  -webkit-mask-image: var(--platform-icon-src);
-  mask-image: var(--platform-icon-src);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-
-.platform-icon--sm {
-  width: 18px;
-  height: 18px;
-  background-color: var(--muted);
-}
-
-.platform-icon--threads {
-  --platform-icon-src: url("/assets/platform-threads.svg");
-}
-
-.platform-icon--bluesky {
-  --platform-icon-src: url("/assets/platform-bluesky.svg");
-}
-
-.platform-icon--x {
-  --platform-icon-src: url("/assets/platform-x.svg");
-}
-
-.platform-icon--tumblr {
-  --platform-icon-src: url("/assets/platform-tumblr.svg");
-}
-
-.platform-icon--linkedin {
-  --platform-icon-src: url("/assets/platform-linkedin.svg");
-}
-
-.status-tag {
+.simulated {
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--violet);
+  background: var(--lavender);
   border-radius: 999px;
-  padding: 3px 9px;
-  border: 1px solid;
+  padding: 3px 10px;
   white-space: nowrap;
 }
 
-.status-tag--tested {
-  color: var(--ok);
-  border-color: #bfe3d1;
-  background: #f0faf5;
+.demo__simulated {
+  display: inline-block;
+  margin: 0 0 14px;
 }
 
-.status-tag--experimental {
-  color: var(--warn);
-  border-color: #ecd9b0;
-  background: #fdf7ea;
-}
-
-.legend {
-  font-size: 13.5px;
+/* Without JavaScript the demo controls stay inert, so the page explains where
+   the same workflow is written out as text instead. */
+.demo__noscript {
+  font-size: 14px;
   color: var(--muted);
-  margin: 16px 0 0;
-  max-width: 78ch;
+  background: var(--lavender);
+  border: 1px solid var(--lavender-deep);
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 0 0 14px;
 }
 
-.platform-strip .legend {
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.picker__option {
+  font: inherit;
+  font-size: 13.5px;
+  min-height: 38px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.picker__option[aria-pressed="true"] {
+  background: var(--lavender);
+  border-color: var(--violet);
+  color: var(--violet-dark);
+  font-weight: 600;
+}
+
+.viewswitcher {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--canvas);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.viewswitcher__option {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 38px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.viewswitcher__option[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+
+.demo__summary {
+  font-size: 14.5px;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.demo__view {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.demo__view-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+/* Agent conversation */
+.conversation {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.turn {
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 14.5px;
+}
+
+.turn--you {
+  background: var(--canvas);
+  border: 1px solid var(--border);
+}
+
+.turn--agent {
+  background: var(--lavender);
+  border: 1px solid var(--lavender-deep);
+}
+
+.turn--idle {
+  background: var(--canvas);
+  border: 1px dashed var(--border-strong);
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.turn__who {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 4px;
+}
+
+.turn--you .turn__who {
+  color: var(--muted);
+}
+
+.turn__text {
+  display: block;
+}
+
+.previews {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 13.5px;
+}
+
+.preview__platform {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.preview__text {
+  display: block;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.demo__boundary {
+  font-size: 13px;
+  color: var(--muted);
+  border-left: 3px solid var(--lavender-deep);
+  padding-left: 12px;
   margin: 0;
 }
 
-/* Demo */
-.demo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 28px;
-  /* Both main cards share one row, so they stretch to the same top and bottom edge. */
-  align-items: stretch;
-}
-
-/* The request card grows with the row and keeps its action row at the bottom. */
-.demo__request {
-  display: flex;
-  flex-direction: column;
-}
-
-.demo__request .console__body {
-  flex: 1 1 auto;
-}
-
-/* Response details and the simulated-run note sit below the paired cards. */
-.demo__support {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
-}
-
+/* API panels */
 .console {
   background: var(--console);
-  border-radius: var(--radius-panel);
+  border-radius: 14px;
   border: 1px solid var(--console-line);
   overflow: hidden;
-  box-shadow: var(--shadow-soft);
+  max-width: 100%;
 }
 
 .console__bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--console-line);
   background: #1a2138;
 }
@@ -747,6 +725,7 @@ main {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--console-muted);
+  margin: 0;
 }
 
 .console__method {
@@ -771,274 +750,312 @@ main {
 }
 
 .console__body {
-  padding: 16px 18px;
+  padding: 14px 16px;
   color: var(--console-text);
+}
+
+.console__body pre code {
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .console__body pre {
-  color: var(--console-text);
+  overflow-x: auto;
 }
 
-.console__body .k {
-  color: #b9a5ff;
+.demo__receipt {
+  margin-top: 12px;
 }
 
-.console__body .s {
-  color: #8fd0ff;
+[data-demo-response][data-state="conflict"] {
+  color: #ffc9c9;
 }
 
-.console__body .n {
-  color: #ffd6a0;
+.demo__status-panel {
+  margin-top: 12px;
 }
 
-.console__body .c {
-  color: var(--console-muted);
-}
-
-.console__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-top: 1px solid var(--console-line);
-  background: #1a2138;
-}
-
-.console__foot .button--primary {
-  background: var(--violet);
-}
-
-.console__foot .button--ghost {
-  background: transparent;
-  border-color: #3a4465;
-  color: var(--console-text);
-}
-
-.console__foot .button--ghost:hover {
-  border-color: #6a76a0;
-  color: #fff;
-}
-
-.picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 14px 16px 0;
-}
-
-.picker__option {
-  font: inherit;
-  font-size: 13.5px;
-  min-height: 38px;
-  padding: 7px 13px;
-  border-radius: 999px;
-  border: 1px solid #3a4465;
-  background: transparent;
-  color: var(--console-muted);
+.demo__status-panel summary {
   cursor: pointer;
-}
-
-.picker__option[aria-pressed="true"] {
-  background: rgba(100, 70, 237, 0.3);
-  border-color: #6f5ad9;
-  color: #fff;
-}
-
-.flow {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-panel);
-  padding: 20px 22px;
-  box-shadow: var(--shadow-soft);
-}
-
-.flow__lead {
-  margin: 0 0 14px;
-  font-size: 15px;
-  color: var(--muted);
-}
-
-.flow__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  row-gap: 8px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 12px;
-  margin-bottom: 14px;
-}
-
-.flow__head h3 {
-  margin: 0;
-  font-size: 17px;
-}
-
-.simulated {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--violet);
-  background: var(--lavender);
-  border-radius: 999px;
-  padding: 3px 10px;
-  white-space: nowrap;
-}
-
-.flow__state {
   font-size: 14px;
-  color: var(--muted);
-  margin: 0 0 14px;
-  min-height: 22px;
+  font-weight: 600;
+  color: var(--violet);
 }
 
-.steps {
+.demo__status-panel .console {
+  margin-top: 10px;
+}
+
+/* Per-platform results: glyph plus a written label, never colour alone. */
+.results {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
-.step {
+.result {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
+  grid-template-columns: 18px minmax(0, auto) minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
+  background: var(--canvas);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 11px 14px;
-  background: #fdfdff;
-}
-
-.step__mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.6px solid var(--border-strong);
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-}
-
-.step strong {
-  display: block;
-  font-size: 15px;
-}
-
-.step small {
-  display: block;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.step[data-state="done"] {
-  border-color: #c7e6d6;
-  background: #f5fcf8;
-}
-
-.step[data-state="done"] .step__mark {
-  border-color: var(--ok);
-  color: var(--ok);
-}
-
-.step[data-state="active"] {
-  border-color: var(--violet);
-  background: var(--lavender);
-}
-
-.step[data-state="active"] .step__mark {
-  border-color: var(--violet);
-  color: var(--violet);
-}
-
-.demo__response {
-  margin-top: 0;
-}
-
-.demo__acceptance {
-  margin-top: 12px;
-}
-
-.demo__note {
-  margin: 0 0 10px;
-  font-size: 12.5px;
-  color: var(--console-muted);
-}
-
-.demo__response summary {
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--violet);
-}
-
-.demo__acceptance summary {
-  cursor: pointer;
+  border-radius: 10px;
+  padding: 9px 12px;
   font-size: 13.5px;
+}
+
+.result__name {
   font-weight: 600;
-  color: var(--muted);
 }
 
-/* Narrow viewports: let the response chips wrap onto their own line instead of
-   being squeezed or clipped. Scoped to the demo response bars only. */
-.demo__response .console__bar,
-.demo__acceptance .console__bar {
-  flex-wrap: wrap;
-  row-gap: 6px;
-}
-
-.demo__response .console__bar > *,
-.demo__acceptance .console__bar > * {
-  flex: 0 0 auto;
+.result__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.demo__response .console {
-  margin-top: 10px;
+.result__mark {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.result__detail {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.result[data-state="published"] .result__state {
+  color: var(--ok);
+}
+
+.result[data-state="failed"] .result__state {
+  color: var(--danger);
+}
+
+.result[data-state="publishing"] .result__state {
+  color: var(--blue);
+}
+
+.result[data-state="pending"] .result__state {
+  color: var(--warn);
+}
+
+.result[data-state="idle"] .result__state {
+  color: var(--muted);
+}
+
+.demo__caution {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+.demo__state {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 14px;
+  min-height: 34px;
+}
+
+.demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.demo__controls .button {
+  padding: 9px 14px;
+  font-size: 14.5px;
 }
 
 .copy-button {
   font: inherit;
-  font-size: 13px;
-  min-height: 36px;
+  font-size: 13.5px;
+  min-height: 40px;
   padding: 6px 13px;
   border-radius: 8px;
-  border: 1px solid #3a4465;
-  background: transparent;
-  color: var(--console-text);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
   cursor: pointer;
 }
 
 .copy-button:hover {
-  border-color: #6a76a0;
-  color: #fff;
+  border-color: var(--violet);
+  color: var(--violet-dark);
 }
 
 .copy-feedback {
   font-size: 13px;
-  color: var(--console-muted);
+  color: var(--muted);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  * {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
+/* Platform icons are CSS masks, so the stored SVG files stay byte-identical. */
+.platform-icon {
+  display: inline-block;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  background-color: var(--ink);
+  -webkit-mask-image: var(--platform-icon-src);
+  mask-image: var(--platform-icon-src);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
-/* Cards and grids */
+.platform-icon--sm {
+  width: 17px;
+  height: 17px;
+  background-color: var(--muted);
+}
+
+.platform-icon--threads {
+  --platform-icon-src: url("/assets/platform-threads.svg");
+}
+
+.platform-icon--bluesky {
+  --platform-icon-src: url("/assets/platform-bluesky.svg");
+}
+
+.platform-icon--x {
+  --platform-icon-src: url("/assets/platform-x.svg");
+}
+
+.platform-icon--tumblr {
+  --platform-icon-src: url("/assets/platform-tumblr.svg");
+}
+
+.platform-icon--linkedin {
+  --platform-icon-src: url("/assets/platform-linkedin.svg");
+}
+
+.status-tag {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 3px 9px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.status-tag--tested {
+  color: var(--ok);
+  border-color: #bfe3d1;
+  background: #f0faf5;
+}
+
+.status-tag--experimental {
+  color: var(--warn);
+  border-color: #ecd9b0;
+  background: #fdf7ea;
+}
+
+.card .status-tag {
+  margin-bottom: 10px;
+}
+
+/* Platform strip */
+.platform-strip {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 26px 0;
+}
+
+.platform-strip__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 24px;
+  margin-bottom: 16px;
+}
+
+.platform-strip__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+.platform-strip__note {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.platform-tiles {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+/* Each tile is one link to that platform's guide, so the whole card is the
+   target and the icon stays decorative. */
+.platform-tile {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 6px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.platform-tile:hover {
+  border-color: var(--violet);
+  color: inherit;
+  box-shadow: var(--shadow-card);
+}
+
+.platform-tile__name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.platform-tile .status-tag {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.legend {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 14px 0 0;
+  max-width: 78ch;
+}
+
+.platform-strip .legend {
+  margin: 0;
+}
+
+/* Cards, infrastructure rows, notes */
 .grid {
   display: grid;
   gap: 20px;
@@ -1078,6 +1095,10 @@ main {
   display: block;
 }
 
+.card__link {
+  font-size: 14.5px;
+}
+
 .card code {
   overflow-wrap: anywhere;
 }
@@ -1106,6 +1127,28 @@ main {
   font-size: 15.5px;
 }
 
+.tech-note {
+  margin-top: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 4px 20px;
+}
+
+.tech-note summary {
+  cursor: pointer;
+  font-size: 15.5px;
+  font-weight: 600;
+  padding: 14px 0;
+}
+
+.tech-note p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 86ch;
+}
+
 .note {
   border-left: 3px solid var(--violet);
   background: var(--lavender);
@@ -1124,6 +1167,7 @@ main {
   font-size: 15.5px;
 }
 
+/* FAQ and closing call to action */
 .faq {
   display: grid;
   gap: 12px;
@@ -1210,9 +1254,17 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
 }
 
+.cta__mascot img {
+  width: var(--mascot-cta);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  display: block;
+}
+
+/* Footer */
 .site-footer {
   border-top: 1px solid var(--border);
   background: var(--surface);
@@ -1271,7 +1323,7 @@ main {
   font-size: 14px;
 }
 
-/* Inner page hero */
+/* Inner pages */
 .page-head {
   padding: 56px 0 34px;
   border-bottom: 1px solid var(--border);
@@ -1357,8 +1409,7 @@ main {
   color: var(--muted);
 }
 
-/* A table cannot wrap, so it scrolls inside its own focusable region rather
-   than widening the document on narrow screens. */
+/* A table cannot wrap, so it scrolls inside its own focusable region. */
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;
@@ -1525,18 +1576,25 @@ main {
   font-size: 15px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 1040px) {
   .hero__grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
+    gap: 36px;
   }
 
-  .demo {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .demo__support {
-    grid-template-columns: minmax(0, 1fr);
+  .hero h1 {
+    max-width: 20ch;
   }
 
   .platform-tiles {
@@ -1603,22 +1661,8 @@ main {
 @media (max-width: 720px) {
   :root {
     --gutter: 22px;
-    --mascot-size: 224px;
-  }
-
-  .hero .pill {
-    margin-bottom: 24px;
-  }
-
-  .platform-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  /* Keep the secondary status chip readable inside a half-width tile. */
-  .platform-tile .status-tag {
-    font-size: 11px;
-    letter-spacing: 0.02em;
-    padding: 3px 8px;
+    --mascot-hero: 120px;
+    --mascot-cta: 80px;
   }
 
   body {
@@ -1626,20 +1670,7 @@ main {
   }
 
   h1 {
-    font-size: 41px;
-  }
-
-  .hero h1 {
     font-size: 40px;
-    max-width: 100%;
-  }
-
-  .hero {
-    padding: 44px 0 42px;
-  }
-
-  .page-head h1 {
-    font-size: 36px;
   }
 
   h2 {
@@ -1650,8 +1681,37 @@ main {
     font-size: 25px;
   }
 
+  .hero {
+    padding: 40px 0 40px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+    max-width: 100%;
+  }
+
+  .hero__subtitle {
+    font-size: 17.5px;
+  }
+
+  .hero__actions .button {
+    width: 100%;
+  }
+
+  .hero__proof span {
+    display: block;
+  }
+
+  .hero__proof span + span::before {
+    content: none;
+  }
+
+  .page-head h1 {
+    font-size: 34px;
+  }
+
   .section {
-    padding: 54px 0;
+    padding: 52px 0;
   }
 
   .section--tight {
@@ -1662,49 +1722,42 @@ main {
     padding: 28px 24px;
   }
 
-  .hero__actions .button {
-    width: 100%;
+  .demo {
+    padding: 16px;
   }
 
-  .console__foot .button {
+  .demo__head {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .demo__title {
+    font-size: 18px;
+  }
+
+  .platform-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platform-tile .status-tag {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    padding: 3px 8px;
+  }
+
+  .result {
+    grid-template-columns: 18px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+
+  .result__state,
+  .result__detail {
+    grid-column: 2;
+  }
+
+  .demo__controls .button,
+  .demo__controls .copy-button {
     flex: 1 1 auto;
-  }
-
-  .workflow {
-    padding: 20px 18px;
-  }
-
-  .workflow__art {
-    max-width: 260px;
-    margin-bottom: 12px;
-  }
-
-  .section-head--with-art {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-
-  .section-head__art {
-    justify-content: flex-start;
-  }
-
-  .flow__lead {
-    font-size: 14.5px;
-  }
-
-  .simulated {
-    white-space: normal;
-  }
-
-  /* Keep the mock-tested label readable on small screens; drop it to its own line. */
-  .workflow__dest {
-    flex-wrap: wrap;
-    gap: 2px 10px;
-  }
-
-  .workflow__dest .kind {
-    margin-left: 0;
-    width: 100%;
   }
 
   .site-footer__grid {
@@ -1719,13 +1772,9 @@ main {
   }
 }
 
-@media (max-width: 360px) {
-  :root {
-    --mascot-size: 208px;
-  }
-
+@media (max-width: 420px) {
   .hero h1 {
-    font-size: 34px;
+    font-size: 32px;
   }
 
   .brand {
@@ -1734,5 +1783,14 @@ main {
 
   .pill {
     font-size: 12.5px;
+  }
+
+  .viewswitcher {
+    width: 100%;
+  }
+
+  .viewswitcher__option {
+    flex: 1 1 auto;
+    padding: 7px 10px;
   }
 }

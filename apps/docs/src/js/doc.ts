@@ -1,12 +1,12 @@
 /*
  * Syndroo docs interactions: search over real local page content, keyboard
- * accessible modal, version sample notice, mobile sidebar drawer, on-page TOC,
- * and copy buttons.
+ * accessible modal, mobile sidebar drawer, on-page TOC, and copy buttons.
  *
  * Authored in TypeScript. The shared Node 24 build strips types into the
  * same-directory doc.js; this file intentionally avoids TypeScript-only runtime
  * syntax (enums, namespaces, parameter properties) so stripping is exact.
  */
+import { docsPages } from "./site-data.js";
 
 type PageDef = {
   fetchPath: string;
@@ -29,12 +29,11 @@ type Match = {
   titleHit: boolean;
 };
 
-const DOC_PAGES: PageDef[] = [
-  { fetchPath: "/index.html", url: "/", label: "Overview" },
-  { fetchPath: "/quickstart/index.html", url: "/quickstart/", label: "Quickstart" },
-  { fetchPath: "/api/index.html", url: "/api/", label: "API reference" },
-  { fetchPath: "/concepts/index.html", url: "/concepts/", label: "Concepts" },
-];
+// The search corpus is the page registry itself, so a new page is indexed as
+// soon as it is registered and cannot fall out of search.
+const DOC_PAGES: PageDef[] = docsPages.map(function toPageDef(page): PageDef {
+  return { fetchPath: "/" + page.file, url: page.path, label: page.label };
+});
 
 const MAX_RESULTS = 12;
 
@@ -296,7 +295,7 @@ function renderResults(query: string): void {
   activeResultIndex = -1;
 
   if (!query.trim()) {
-    meta.textContent = "Search every section of the local docs. Try \"idempotency\", \"scheduledAt\" or \"64 KiB\".";
+    meta.textContent = "Search every page of the local docs. Try \"idempotency\", \"scheduledAt\" or \"64 KiB\".";
     empty.hidden = true;
     return;
   }
@@ -530,23 +529,6 @@ function wireSearch(): void {
       event.preventDefault();
       openSearch();
     }
-  });
-}
-
-/* ------------------------------------------------------------------ */
-/* Version sample notice                                               */
-/* ------------------------------------------------------------------ */
-
-function wireVersionSelect(): void {
-  const select = byId<HTMLSelectElement>("version-select");
-  const notice = byId<HTMLDivElement>("version-notice");
-  if (!select || !notice) {
-    return;
-  }
-
-  select.addEventListener("change", function onChange(): void {
-    const isSample = select.value === "interaction-sample";
-    notice.hidden = !isSample;
   });
 }
 
@@ -868,7 +850,6 @@ function wireTopbarOffset(): void {
 function boot(): void {
   wireTopbarOffset();
   wireSearch();
-  wireVersionSelect();
   wireSidebar();
   wireToc();
   wireCopyButtons();

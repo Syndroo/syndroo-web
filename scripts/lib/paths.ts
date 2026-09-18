@@ -9,3 +9,10 @@ export const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "
  * five platform marks. Both builds copy it to their own `/assets/` directory.
  */
 export const brandAssetsDir = resolve(repoRoot, "packages/brand/assets");
+
+/**
+ * Shared content modules. Both app builds compile the same sources into their
+ * own output, so the two sites and the tests cannot disagree about versions,
+ * platform status, navigation or demo fixtures.
+ */
+export const contentDir = resolve(repoRoot, "packages/content");

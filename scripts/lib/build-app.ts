@@ -1,7 +1,8 @@
 // Builds one app into its own self-contained `dist/`:
 //   * page HTML with the cross-site origins rewritten,
 //   * the shared brand assets copied to `/assets/`,
-//   * authored TypeScript compiled with Node's built-in type stripping.
+//   * authored TypeScript compiled with Node's built-in type stripping,
+//   * generated files such as a sitemap, rendered from the configured origins.
 //
 // Type stripping is not a type check: it removes annotations and fails only on
 // syntax that cannot be erased. Nothing outside the extension allowlist is ever
@@ -33,6 +34,20 @@ export type ScriptCompile = {
   to: string;
 };
 
+/** Generate one text file from the configured origins, such as a sitemap. */
+export type GeneratedFile = {
+  to: string;
+  render: (origins: Origins) => string;
+};
+
+/**
+ * Rewrite one authored page before the origins are applied. Used for the
+ * documentation chrome so fifteen pages share one navigation module. It is not
+ * a template engine: pages stay authored HTML and the hook only fills the two
+ * markers a page declares.
+ */
+export type PageTransform = (relativePath: string, text: string) => string;
+
 export type AppBuild = {
   /** Workspace package name, used in build output. */
   name: string;
@@ -41,6 +56,8 @@ export type AppBuild = {
   pages: SourceCopy;
   copies: SourceCopy[];
   scripts: ScriptCompile[];
+  generated?: GeneratedFile[];
+  transformPage?: PageTransform;
   origins: Origins;
   /** Pages that must exist after a build, as `dist`-relative paths. */
   expectedPages: string[];
@@ -70,7 +87,11 @@ export async function buildApp(config: AppBuild): Promise<BuildResult> {
     }
     const rel = toPosix(relative(config.pages.from, source));
     const target = join(config.distRoot, config.pages.to, rel);
-    const text = applyOrigins(await readFile(source, "utf8"), config.origins);
+    const authored = await readFile(source, "utf8");
+    // The page transform runs before origin rewriting so injected cross-site
+    // links carry the placeholder origins and are rewritten like any other.
+    const expanded = config.transformPage ? config.transformPage(rel, authored) : authored;
+    const text = applyOrigins(expanded, config.origins);
     await writeTextFile(target, text);
     files.push({ path: toPosix(join(config.pages.to, rel)), bytes: Buffer.byteLength(text) });
     pages.push(toPosix(join(config.pages.to, rel)));
@@ -90,16 +111,30 @@ export async function buildApp(config: AppBuild): Promise<BuildResult> {
     }
   }
 
+  for (const generated of config.generated ?? []) {
+    const text = generated.render(config.origins);
+    await writeTextFile(generated.to, text);
+    files.push({
+      path: toPosix(relative(config.distRoot, generated.to)),
+      bytes: Buffer.byteLength(text),
+    });
+  }
+
   for (const script of config.scripts) {
     const source = await readFile(script.from, "utf8");
     // Point the emitted `sourceURL` at the served path so generated browser code
     // never records a machine-specific source location.
     const sourceUrl = `/${toPosix(relative(config.distRoot, script.to))}`;
     const compiled = stripTypeScriptTypes(source, { mode: "strip", sourceUrl });
-    await writeTextFile(script.to, compiled);
+    // Shared content modules carry the placeholder origins inside string
+    // literals, so the same single-pass rewrite applies to generated browser
+    // code. Without it a custom-origin build would ship loopback links in its
+    // own bundle, and the build audit would report them.
+    const text = applyOrigins(compiled, config.origins);
+    await writeTextFile(script.to, text);
     files.push({
       path: toPosix(relative(config.distRoot, script.to)),
-      bytes: Buffer.byteLength(compiled),
+      bytes: Buffer.byteLength(text),
     });
   }
 

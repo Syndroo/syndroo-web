@@ -144,7 +144,9 @@ test("docs build is independent from the website build and keeps product sample 
   const docsFiles = await relativeFiles(docs.distRoot);
   const websiteFiles = await relativeFiles(website.distRoot);
 
-  assert.equal(docsFiles.filter((file) => file.endsWith("index.html")).length, 4);
+  // Every registered documentation page is built, whatever the current count is.
+  assert.equal(docsFiles.filter((file) => file.endsWith("index.html")).length, docs.expectedPages.length);
+  assert.ok(docsFiles.includes("platforms/bluesky/index.html"), "platform guides should be built");
   assert.ok(docsFiles.includes("doc.js"));
   assert.ok(docsFiles.includes("styles.css"));
   assert.ok(
@@ -194,10 +196,14 @@ test("a build whose marketing origin is the original docs origin stays clean", a
     docsHome.includes(`href="${DEFAULT_DOCS_ORIGIN}/"`),
     "the website link should keep the configured marketing origin",
   );
+  // The page itself legitimately carries the configured docs origin in its own
+  // canonical and og:url metadata; the marketing link must not have taken it.
   assert.ok(
-    !docsHome.includes("https://docs.example.com"),
-    "the configured docs origin must not replace the marketing origin",
+    docsHome.includes('<link rel="canonical" href="https://docs.example.com/">'),
+    "canonical metadata should use the configured docs origin",
   );
+  const websiteLinks = docsHome.match(/href="http:\/\/localhost:4174\/"/g) ?? [];
+  assert.ok(websiteLinks.length > 0, "cross-site website links should use the configured marketing origin");
 
   const summary = await auditDist({
     distRoot: docs.distRoot,

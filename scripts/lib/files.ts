@@ -23,6 +23,7 @@ export const PUBLISHABLE_EXTENSIONS: ReadonlySet<string> = new Set([
   ".webp",
   ".woff",
   ".woff2",
+  ".xml",
 ]);
 
 export const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -41,6 +42,7 @@ export const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".webp": "image/webp",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
+  ".xml": "application/xml; charset=utf-8",
 };
 
 /** Extensions the build audit reads as UTF-8 text. */
@@ -52,6 +54,7 @@ export const TEXT_EXTENSIONS: ReadonlySet<string> = new Set([
   ".mjs",
   ".svg",
   ".txt",
+  ".xml",
 ]);
 
 export function toPosix(path: string): string {

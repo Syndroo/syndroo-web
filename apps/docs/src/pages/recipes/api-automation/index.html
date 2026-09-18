@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recipe: call Syndroo from CI or a script - Syndroo Docs</title>
+  <meta name="description" content="Call the Syndroo 0.2.0-rc.1 HTTP API from a pipeline: one runnable Node script, a commit-derived idempotency key, top-level status polling, and bounded failure handling.">
+  <link rel="canonical" href="http://localhost:4174/recipes/api-automation/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Syndroo">
+  <meta property="og:title" content="Recipe: call Syndroo from CI or a script - Syndroo Docs">
+  <meta property="og:description" content="Call the Syndroo 0.2.0-rc.1 HTTP API from a pipeline: one runnable Node script, a commit-derived idempotency key, top-level status polling, and bounded failure handling.">
+  <meta property="og:url" content="http://localhost:4174/recipes/api-automation/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/doc.js"></script>
+</head>
+<body>
+  <!-- docs:head -->
+    <main class="content" id="main">
+      <article>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Recipes</span>
+          <span aria-hidden="true">/</span>
+          <span>CI and script calls</span>
+        </nav>
+        <h1 id="api-automation">Recipe: call Syndroo from CI or a script</h1>
+        <p class="lede">A pipeline step publishes one post and then waits for the real per-platform outcome, instead of treating an accepted request as a finished job. The key is derived from the change, so a repeated run with the same key and the same body is answered from the stored result instead of publishing again.</p>
+
+        <div class="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+          <div>
+            <span class="callout-title">This publishes for real.</span>
+            <p>The script below sends a real post to the platforms you configure. Run it against your own Worker first, and keep the API key in the pipeline's secret store: pass it through the environment, never on the command line, and never with shell tracing enabled.</p>
+          </div>
+        </div>
+
+        <h2 id="inputs">Inputs</h2>
+        <ul>
+          <li><strong><code>SYNDROO_URL</code> and <code>SYNDROO_API_KEY</code></strong> as pipeline secrets. The key can publish, so it needs the same handling as a password.</li>
+          <li><strong><code>GIT_COMMIT</code> or another reproducible identifier.</strong> It becomes the idempotency key, so the same logical post always produces the same key. The API accepts 1-128 characters from letters, digits, dot, underscore, colon and hyphen.</li>
+          <li><strong>The text</strong>, already assembled by the pipeline and inside each platform's limit.</li>
+          <li><strong>A decision for <code>partial</code></strong>: the script fails the job by default, and a person decides what happens next.</li>
+          <li><strong>Node.js 22 or newer</strong> - the same floor as the Worker - and network access to your deployment. No packages to install: the script uses <code>fetch</code> and <code>JSON</code>.</li>
+        </ul>
+
+        <h2 id="steps">Steps</h2>
+        <ol class="steps">
+          <li>
+            <h3 id="create-the-script">Create the script</h3>
+            <p>Save this as <code>publish.mjs</code> next to your pipeline configuration.</p>
+            <pre data-label="publish.mjs"><code>// Node.js 22 or newer, no dependencies.
+// Environment: SYNDROO_URL, SYNDROO_API_KEY, GIT_COMMIT (optional POLL_INTERVAL_MS).
+const { SYNDROO_URL: base, SYNDROO_API_KEY: apiKey, GIT_COMMIT: commit } = process.env;
+
+const KEY_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
+const REQUEST_TIMEOUT_MS = 15000;
+const MAX_POLLS = 10;
+
+if (!base || !apiKey) {
+  console.error("SYNDROO_URL and SYNDROO_API_KEY must be set");
+  process.exit(2);
+}
+if (!commit) {
+  console.error("GIT_COMMIT must be set");
+  process.exit(2);
+}
+
+// Validate the value that is actually sent as the idempotency key.
+const postKey = `deploy-${commit}`;
+if (!KEY_PATTERN.test(postKey)) {
+  console.error("the idempotency key must be 1-128 characters of letters, digits, dot, underscore, colon or hyphen");
+  process.exit(2);
+}
+
+const intervalMs = Number(process.env.POLL_INTERVAL_MS ?? 15000);
+if (!Number.isInteger(intervalMs) || intervalMs &lt; 0 || intervalMs &gt; 60000) {
+  console.error("POLL_INTERVAL_MS must be an integer between 0 and 60000");
+  process.exit(2);
+}
+
+const terminal = new Set(["published", "partial", "failed"]);
+const waiting = new Set(["queued", "scheduled", "publishing"]);
+
+// Diagnostics stay bounded: a status and an error code, never a response body,
+// which can echo request content straight back into a CI log.
+function describe(status, json) {
+  const code = json?.error?.code;
+  const safe = typeof code === "string" && /^[A-Z][A-Z0-9_]{0,63}$/.test(code) ? code : "no error code";
+  return `HTTP ${status} (${safe})`;
+}
+
+async function requestJson(url, init) {
+  let response;
+  try {
+    response = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  } catch (error) {
+    console.error(`request ended without a response (${error?.name ?? "network error"}); nothing was resubmitted`);
+    process.exit(2);
+  }
+
+  let json = null;
+  try {
+    json = JSON.parse(await response.text());
+  } catch {
+    json = null;
+  }
+  return { response, json };
+}
+
+// Only the post's own status and each publication's own status are read here.
+function printResult(post) {
+  console.log(`post status: ${post.status}`);
+  for (const publication of post.publications ?? []) {
+    const code = publication.errorCode ?? "-";
+    const attempts = publication.attempts ?? "?";
+    console.log(`  ${publication.platform}  ${publication.status}  ${code}  attempts ${attempts}  ambiguous ${publication.errorAmbiguous ?? false}`);
+  }
+}
+
+const accepted = await requestJson(`${base}/v1/posts`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": postKey,
+  },
+  body: JSON.stringify({
+    content: `Deploy ${commit} is live: queue retries now respect an explicit deadline.`,
+    platforms: ["bluesky"],
+  }),
+});
+
+if (!accepted.response.ok) {
+  console.error(`POST rejected: ${describe(accepted.response.status, accepted.json)}`);
+  process.exit(2);
+}
+
+const postId = accepted.json?.id;
+if (typeof postId !== "string" || postId.length === 0) {
+  console.error("POST answered without a usable post id; not polling");
+  process.exit(2);
+}
+console.log(`accepted post: ${postId}`);
+
+for (let attempt = 1; attempt &lt;= MAX_POLLS; attempt += 1) {
+  const poll = await requestJson(`${base}/v1/posts/${encodeURIComponent(postId)}`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+
+  if (!poll.response.ok) {
+    console.error(`GET failed: ${describe(poll.response.status, poll.json)}`);
+    process.exit(2);
+  }
+
+  const status = typeof poll.json?.status === "string" ? poll.json.status : null;
+  if (status === null) {
+    console.error("GET response carried no usable status; stopping instead of polling blindly");
+    process.exit(2);
+  }
+  if (terminal.has(status)) {
+    printResult(poll.json);
+    process.exit(status === "published" ? 0 : 1);
+  }
+  if (!waiting.has(status)) {
+    console.error("GET response carried an unrecognised status; stopping without echoing it");
+    process.exit(2);
+  }
+
+  await new Promise((resolve) =&gt; setTimeout(resolve, intervalMs));
+}
+
+console.error(`still waiting after ${MAX_POLLS} checks: ${base}/v1/posts/${postId}`);
+console.error("not resubmitting automatically; check the post before sending anything again");
+process.exit(1);</code></pre>
+          </li>
+          <li>
+            <h3 id="what-the-script-does">What the script guarantees</h3>
+            <ul>
+              <li><strong>The body is built as JSON, not as text.</strong> <code>JSON.stringify</code> escapes the commit id, so a quote or a backslash in the environment cannot break the request.</li>
+              <li><strong>The final key and the poll interval are validated before anything is sent.</strong> An unusable key or interval exits with code 2 without contacting the Worker.</li>
+              <li><strong>Every request has a deadline and log lines stay bounded.</strong> Requests time out after 15 seconds, and failures print an HTTP status and an error code rather than a response body, which could echo request content into the log.</li>
+              <li><strong>Non-2xx answers stop the run.</strong> <code>401</code>, <code>409</code>, <code>503</code> and every other failure exit with code 2; a request that ends without a response also stops the run and says nothing was resubmitted.</li>
+              <li><strong>No usable post id, no polling.</strong> A response without a non-empty <code>id</code> fails the job rather than polling a guessed URL.</li>
+              <li><strong>Only the top-level status drives the loop.</strong> A publication that is already <code>published</code> or <code>failed</code> never stands in for the post's own status, and an unparsable or unrecognised status stops the run instead of polling blindly.</li>
+              <li><strong>Per-platform results are printed.</strong> The job log says which platform failed, with its error code, attempt count and ambiguity flag.</li>
+              <li><strong>Nothing is resubmitted.</strong> If the poll budget runs out, the script exits non-zero and says so.</li>
+            </ul>
+          </li>
+          <li>
+            <h3 id="run-it">Run it from the pipeline</h3>
+            <pre data-label="pipeline step"><code>export SYNDROO_URL="https://your-worker.your-subdomain.workers.dev"
+export SYNDROO_API_KEY="$SYNDROO_API_KEY_SECRET"
+export GIT_COMMIT="$GIT_COMMIT"
+node publish.mjs</code></pre>
+            <p>A repeated run of the same commit sends the same key and the same body, so the API answers with the original post and <code>replayed: true</code> instead of publishing a second time.</p>
+          </li>
+        </ol>
+
+        <h2 id="expected-output">Expected output</h2>
+        <pre data-label="success"><code>accepted post: post_01J9ZK5D8R
+post status: published
+  bluesky  published  -  attempts 1  ambiguous false</code></pre>
+        <pre data-label="partial failure"><code>accepted post: post_01J9ZK9F1B
+post status: partial
+  bluesky  published  -  attempts 1  ambiguous false
+  threads  failed  RATE_LIMIT  attempts 3  ambiguous false</code></pre>
+
+        <h2 id="failure-handling">Failure handling</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Situation</th><th scope="col">Exit</th><th scope="col">Correct behaviour in a pipeline</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">HTTP <code>202</code> with <code>status: queued</code></th>
+                <td>continues</td>
+                <td>Keep the id and poll. Acceptance is not delivery.</td>
+              </tr>
+              <tr>
+                <th scope="row">HTTP <code>200</code> with <code>replayed: true</code></th>
+                <td>continues</td>
+                <td>The pipeline retried an identical request; the original post is reused.</td>
+              </tr>
+              <tr>
+                <th scope="row">HTTP <code>401</code> <code>UNAUTHORIZED</code></th>
+                <td>2</td>
+                <td>Stop. Fix the secret. Never loop on authentication failures.</td>
+              </tr>
+              <tr>
+                <th scope="row">HTTP <code>409</code> <code>IDEMPOTENCY_CONFLICT</code></th>
+                <td>2</td>
+                <td>The key already belongs to different text. Decide by hand whether this is the same post; use a new key only for genuinely new content.</td>
+              </tr>
+              <tr>
+                <th scope="row">HTTP <code>503</code> <code>SERVICE_UNAVAILABLE</code></th>
+                <td>2</td>
+                <td>Maintenance mode is refusing new posts. Retry later with the same key and the same body; reads keep working.</td>
+              </tr>
+              <tr>
+                <th scope="row">Post status <code>partial</code></th>
+                <td>1</td>
+                <td>Fail the job and report per platform. There is no retry endpoint: do not create a new request or a new key that targets the platforms which already published, because that would post again. Re-sending the identical key and body is safe and returns the stored result.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>errorAmbiguous: true</code> on a publication</th>
+                <td>1</td>
+                <td>Never auto-retry. Mark the job as needing a person and check the platform by hand.</td>
+              </tr>
+              <tr>
+                <th scope="row">Poll budget exhausted</th>
+                <td>1</td>
+                <td>Report the post URL and stop. Do not resubmit; a slow publication is still a publication.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="applies-to">Applies to</h2>
+        <p>Syndroo 0.2.0-rc.1 (unpublished candidate). The script uses only the documented API: <a href="/api/#create-a-post">create a post</a>, <a href="/api/#get-a-post">check a post</a>, and the <a href="/concepts/#idempotency">idempotency</a> rules. It was exercised against a local stub in this repository's test suite, not against a live platform.</p>
+      </article>
+    </main>
+
+    <nav class="toc" id="page-toc" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <ul>
+        <li><a href="#inputs">Inputs</a></li>
+        <li><a href="#steps">Steps</a></li>
+        <li><a class="is-sub" href="#create-the-script">Create the script</a></li>
+        <li><a class="is-sub" href="#what-the-script-does">What it guarantees</a></li>
+        <li><a class="is-sub" href="#run-it">Run it from the pipeline</a></li>
+        <li><a href="#expected-output">Expected output</a></li>
+        <li><a href="#failure-handling">Failure handling</a></li>
+        <li><a href="#applies-to">Applies to</a></li>
+      </ul>
+    </nav>
+
+  <!-- docs:foot -->
+</body>
+</html>

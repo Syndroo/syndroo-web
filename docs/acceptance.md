@@ -1,9 +1,90 @@
 # Acceptance record
 
 This file separates what was accepted for the static prototype from what has
-been verified in this repository. The two records are not interchangeable.
+been verified in this repository. The two records are not interchangeable, and
+the newest record comes first.
 
-## Current migration verification
+## Website design iteration 0.3.0 (2026-09-18)
+
+Scope: the website and documentation sources in this repository, at design
+iteration `0.3.0`. The product version is unchanged at `0.2.0-rc.1`, an
+unpublished release candidate. No deployment, no publish and no live platform
+call formed any part of this work.
+
+What was executed, and what it produced:
+
+- `npm run build` from the repository root: website 23 files / 7 pages; docs 30
+  files / 15 pages, including a generated `robots.txt` and `sitemap.xml` per
+  site. Both builds completed with no error.
+- `npm run check`: website 228 local references and docs 858 local references
+  resolved inside their own output, 0 issues for either site, and all five
+  generated browser scripts parsed with `node --check` (website: `site.js`,
+  `site-data.js`, `demo-data.js`; docs: `doc.js`, `site-data.js`).
+- `npm test`: 44 tests passed, 0 failed - `tests/build.test.ts` (12),
+  `tests/content.test.ts` (20) and `tests/server.test.ts` (12).
+- `WEBSITE_ORIGIN=https://syndroo.com DOCS_ORIGIN=https://docs.syndroo.com npm run
+  build` and `npm run check` with the same origins: 0 issues for both sites, no
+  loopback origin left anywhere in either output, and canonical URLs, Open Graph
+  URLs, `sitemap.xml` and `robots.txt` all carrying those configured origins.
+  This is a build-time origin check only; nothing was deployed.
+- `tests/content.test.ts` is new. It builds both apps with a custom origin pair
+  and checks the shared page registry, the injected documentation chrome
+  (exactly one layout grid, main region, sidebar, page contents and search
+  dialog per page, one `aria-current` and no leftover markers), the full
+  documentation navigation including every fragment, the marketing navigation
+  and footer against the registry on all seven pages, canonical and Open Graph
+  URLs against each page's configured origin, cross-site links resolved inside
+  the other built output (including the hero calls to action and the ten
+  historical quickstart anchors), `robots.txt` and `sitemap.xml` against the
+  registry, version-claim drift, the absence of the removed version selector and
+  of install commands for the unpublished package, the simulated-demo fixture
+  contract, and the assertion that the generated demo script contains no
+  `fetch`, `XMLHttpRequest`, `sendBeacon` or `WebSocket` call.
+- The CI recipe script is extracted from the built documentation page and run
+  against a loopback stub, not a real API: a successful publication, a partial
+  post whose publication statuses differ from the post status, an HTTP `401`,
+  an unusable idempotency key, an invalid poll interval, a hostile error code, an
+  unrecognised status value, a non-JSON poll response, a poll response without a
+  status, an unreachable Worker and poll exhaustion. It exits with the documented
+  codes, keeps its log lines bounded, and never resubmits.
+- Root independently ran `tests/build.test.ts` and `tests/content.test.ts`
+  (32/32 passing) and `tests/server.test.ts` (12/12 passing) against an isolated
+  temporary build output, matching the 44 passing tests above.
+- Root independently rebuilt both sites in disposable directories with the
+  default loopback origins and with `https://syndroo.com` /
+  `https://docs.syndroo.com`. Each pair passed the artifact audit and all five
+  generated scripts passed syntax checking. Source hashes confirmed that the
+  67 build, application and test files were unchanged after the passing tests.
+
+Implementation used native subagents explicitly assigned to
+`opencode-go/deepseek-v4.1-flash`; GPT-6 Astra owned architecture, security review
+and final acceptance. No model or provider substitution was made.
+
+What was **not** executed, and may not be claimed:
+
+- No browser-rendered visual check. The 360, 390, 768, 1280 and 1440px viewport
+  checks, the keyboard walkthrough, text zoom and the reduced-motion rendering
+  were **not** performed: browser access was unavailable while this iteration was
+  written, and no alternative automation was used to bypass it. The responsive
+  and motion rules were inspected in source only: the structural checks above
+  prove that the pages, navigation and generated scripts are consistent, but they
+  do not exercise actual viewport behaviour, keyboard order, zoom or
+  reduced-motion rendering in a browser.
+- No production-origin deployment, no npm publish, no tag and no real platform
+  publication. Platform statuses remain `mock-tested` (Bluesky, Threads) and
+  `experimental` (X, Tumblr, LinkedIn); no live-account acceptance record exists.
+- The documentation deployment steps are recorded from the product repository
+  and were not executed.
+- Official platform documentation was checked where retrievable. The Bluesky
+  app-password page and X's app-permission naming page could not be read in this
+  environment; those setup details retain the candidate repository's recorded
+  requirements and still need a provider-side check before live acceptance.
+
+Environment limits worth recording: loopback binding is blocked inside the
+agent's default sandbox, so the fixture suites (and the CI recipe stub) were run
+with an approved escalation; the production-origin build is a separate check.
+
+## Earlier record: static prototype migration (2026-09-17)
 
 Accepted locally on 2026-09-17 by GPT-6 Astra. Production deployment and real
 publishing were not performed. The GitHub workflow is configured; its remote

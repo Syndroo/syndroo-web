@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloudflare deployment - Syndroo Docs</title>
+  <meta name="description" content="Deploy the Syndroo 0.2.0-rc.1 Worker into your own Cloudflare account: what gets provisioned, which secrets you set, and what has not been verified yet.">
+  <link rel="canonical" href="http://localhost:4174/operations/cloudflare/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Syndroo">
+  <meta property="og:title" content="Cloudflare deployment - Syndroo Docs">
+  <meta property="og:description" content="Deploy the Syndroo 0.2.0-rc.1 Worker into your own Cloudflare account: what gets provisioned, which secrets you set, and what has not been verified yet.">
+  <meta property="og:url" content="http://localhost:4174/operations/cloudflare/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/doc.js"></script>
+</head>
+<body>
+  <!-- docs:head -->
+    <main class="content" id="main">
+      <article>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Operations</span>
+          <span aria-hidden="true">/</span>
+          <span>Cloudflare deployment</span>
+        </nav>
+        <h1 id="cloudflare-deployment">Deploy the Worker to Cloudflare</h1>
+        <p class="lede">This is the production path: the Worker runs in your own Cloudflare account, with your database, your queue and your credentials. It shares no steps with local development, and it does not need a checkout on your machine.</p>
+
+        <div class="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+          <div>
+            <span class="callout-title">Status of this path</span>
+            <p>The steps below are the deployment procedure recorded in the product repository for the 0.2.0-rc.1 candidate. They were <strong>not executed</strong> while writing this page: this candidate has not been deployed or accepted as a release, and no live account has been exercised. Where the procedure says "pending", treat it as pending.</p>
+          </div>
+        </div>
+
+        <h2 id="what-you-own">What you own after deploying</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Resource</th><th scope="col">Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Worker</th><td>The Bearer-authenticated HTTP API. It is the only runtime.</td></tr>
+              <tr><th scope="row">D1 database</th><td>Stores one post row and one publication row per selected platform.</td></tr>
+              <tr><th scope="row">Queue</th><td>Carries immediate delivery jobs to the Queue consumer.</td></tr>
+              <tr><th scope="row">Cron Trigger</th><td>Scans every 15 minutes for scheduled posts and stale jobs.</td></tr>
+              <tr><th scope="row">Secrets</th><td><code>SYNDROO_API_KEY</code> plus the credentials of each platform you enable.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="steps">Steps</h2>
+        <ol class="steps">
+          <li>
+            <h3 id="deploy">Deploy from the repository</h3>
+            <p>Follow the deploy section of the product README: <a href="https://github.com/Syndroo/syndroo/blob/main/README.md">Syndroo README (deploy procedure)</a>. It links a <strong>Deploy to Cloudflare</strong> button, whose documented behaviour is to create an independent repository in your account, ask for <code>SYNDROO_API_KEY</code>, provision the D1 database and Queue, apply the migrations, configure the Cron Trigger, and deploy the Worker.</p>
+            <p>Two limits are recorded for this candidate: the button still deploys <em>this source repository</em>, and the thin deployment template passed isolated local installation, migration, build and startup checks but is not wired to the button and is not published to a registry. There is no <code>npm install syndroo</code> path in this candidate.</p>
+          </li>
+          <li>
+            <h3 id="api-key">Choose the API key at deploy time</h3>
+            <p><code>SYNDROO_API_KEY</code> is a long random secret that you invent. It is the Bearer token every client sends, and it can publish. Store it in your own secret manager as well; the Worker cannot show it back to you.</p>
+          </li>
+          <li>
+            <h3 id="platform-secrets">Add platform secrets after the deployment</h3>
+            <p>Open the deployed Worker, then <strong>Settings &rarr; Variables and Secrets</strong>, and add only the credentials for the platforms you intend to publish to. Each <a href="/platforms/bluesky/">platform guide</a> lists the exact names and what the platform requires.</p>
+            <ul>
+              <li>Platforms are enabled independently; a platform without credentials returns HTTP <code>422</code> and <code>PLATFORM_NOT_CONFIGURED</code>.</li>
+              <li>A deployment with no platform credentials can still answer health checks, but it cannot accept posts.</li>
+              <li>Keep platform secrets out of any template's required-secret list; they are optional per deployment.</li>
+            </ul>
+          </li>
+          <li>
+            <h3 id="verify">Verify the deployment</h3>
+            <pre data-label="terminal"><code>curl "https://your-worker.your-subdomain.workers.dev/health"
+# {"status":"ok"}</code></pre>
+            <p>Then publish one post to one platform, exactly as in <a href="/quickstart/">Publish your first post</a>. If the API key is missing or wrong, the request fails with HTTP <code>401</code>; if a platform is not configured, it fails with <code>422</code> before anything is stored.</p>
+          </li>
+        </ol>
+
+        <h2 id="boundaries">Boundaries and cautions</h2>
+        <ul>
+          <li><strong>Never deploy using the local Wrangler environment.</strong> Local runs read <code>.dev.vars</code> and a local database; production reads Worker secrets.</li>
+          <li><strong>No dashboard.</strong> Everything after deployment goes through the HTTP API, <code>wrangler</code> or the Cloudflare dashboard's own secret and log views.</li>
+          <li><strong>Migrations are part of deployment.</strong> Local development applies migrations to a local database; that does not migrate production.</li>
+          <li><strong>You maintain the credentials.</strong> Renew, rotate and revoke each platform credential according to that provider's own rules, and replace the Worker secret when you do. Syndroo has no automatic token refresh.</li>
+          <li><strong>Scheduling has a scan cadence, not a completion guarantee.</strong> Cron looks for due posts every 15 minutes, then queue and platform time are added on top. The requested <code>scheduledAt</code> is the earliest intended time, and no upper bound is promised.</li>
+        </ul>
+
+        <h2 id="applies-to">Applies to</h2>
+        <p>Syndroo 0.2.0-rc.1 (unpublished release candidate). For the local path instead, see <a href="/operations/local/">Local development</a>.</p>
+      </article>
+    </main>
+
+    <nav class="toc" id="page-toc" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <ul>
+        <li><a href="#what-you-own">What you own</a></li>
+        <li><a href="#steps">Steps</a></li>
+        <li><a class="is-sub" href="#deploy">Deploy</a></li>
+        <li><a class="is-sub" href="#api-key">Choose the API key</a></li>
+        <li><a class="is-sub" href="#platform-secrets">Platform secrets</a></li>
+        <li><a class="is-sub" href="#verify">Verify</a></li>
+        <li><a href="#boundaries">Boundaries and cautions</a></li>
+        <li><a href="#applies-to">Applies to</a></li>
+      </ul>
+    </nav>
+
+  <!-- docs:foot -->
+</body>
+</html>

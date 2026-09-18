@@ -5,81 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HTTP API reference - Syndroo Docs</title>
   <meta name="description" content="Syndroo 0.2.0-rc.1 HTTP API reference: create posts, read status, idempotency, error codes, limits, scheduling, and maintenance mode.">
+  <link rel="canonical" href="http://localhost:4174/api/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Syndroo">
+  <meta property="og:title" content="HTTP API reference - Syndroo Docs">
+  <meta property="og:description" content="Syndroo 0.2.0-rc.1 HTTP API reference: create posts, read status, idempotency, error codes, limits, scheduling, and maintenance mode.">
+  <meta property="og:url" content="http://localhost:4174/api/">
+  <meta name="twitter:card" content="summary">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <script type="module" src="/doc.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <header class="topbar">
-    <div class="topbar-inner">
-      <button class="icon-btn" id="menu-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar" aria-label="Open documentation navigation">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
-      </button>
-      <a class="brand" href="/">
-        <img src="/assets/logo.svg" alt="" width="26" height="26">
-        <span class="brand-name">Syndroo</span>
-        <span class="brand-suffix">docs</span>
-      </a>
-      <div class="topbar-actions">
-        <button class="search-trigger" type="button" data-search-open aria-haspopup="dialog" aria-controls="search-modal" aria-label="Search docs">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
-          <span>Search docs</span>
-          <kbd>/</kbd>
-        </button>
-        <label class="version-field">
-          <span class="sr-only">Documentation version</span>
-          <select id="version-select">
-            <option value="0.2.0-rc.1" selected>0.2.0-rc.1 (candidate)</option>
-            <option value="interaction-sample">Interaction sample</option>
-          </select>
-        </label>
-        <a class="text-link" href="http://localhost:4173/">Website</a>
-        <a class="text-link" href="https://github.com/Syndroo/syndroo">GitHub</a>
-      </div>
-    </div>
-    <div class="version-notice" id="version-notice" role="status" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
-      <span><strong>Interaction sample.</strong> No historical documentation exists here. These pages describe the current 0.2.0-rc.1 candidate only.</span>
-    </div>
-  </header>
-
-  <div class="layout">
-    <aside class="sidebar" id="docs-sidebar" aria-label="Documentation navigation">
-      <div class="sidebar-group">
-        <p class="sidebar-title">Overview</p>
-        <ul>
-          <li><a href="/">Documentation home</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">Get started</p>
-        <ul>
-          <li><a href="/quickstart/">Quickstart</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">API reference</p>
-        <ul>
-          <li><a href="/api/" aria-current="page">HTTP API</a></li>
-          <li><a class="is-sub" href="/api/#create-a-post">Create a post</a></li>
-          <li><a class="is-sub" href="/api/#get-a-post">Check a post</a></li>
-          <li><a class="is-sub" href="/api/#errors">Errors</a></li>
-          <li><a class="is-sub" href="/api/#limits">Limits</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-group">
-        <p class="sidebar-title">Concepts</p>
-        <ul>
-          <li><a href="/concepts/">Delivery and guarantees</a></li>
-          <li><a class="is-sub" href="/concepts/#idempotency">Idempotency</a></li>
-          <li><a class="is-sub" href="/concepts/#ambiguous-outcomes">Ambiguous outcomes</a></li>
-        </ul>
-      </div>
-    </aside>
-    <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
-
+  <!-- docs:head -->
     <main class="content" id="main">
       <article>
         <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -120,7 +58,7 @@
 Authorization: Bearer $SYNDROO_API_KEY
 Content-Type: application/json
 Idempotency-Key: example-post-001</code></pre>
-        <p>Syndroo accepts the request before the Queue finishes publishing, so a new post returns HTTP <code>202</code> with <code>status</code> set to <code>queued</code> or <code>scheduled</code>. <code>queued</code> means accepted for processing, not yet confirmed by any platform.</p>
+        <p>A new post returns HTTP <code>202</code> with <code>status</code> set to <code>queued</code> or <code>scheduled</code>. The reply is an acceptance receipt: it does not confirm platform success, and <code>queued</code> means the stored post still has publications waiting. Read <code>publications</code> to see which platforms are already done.</p>
 
         <h3 id="request-fields">Request body fields</h3>
         <div class="table-wrap">
@@ -346,13 +284,13 @@ Idempotency-Key: example-post-001</code></pre>
               <tr><th scope="row">Request body</th><td>64 KiB.</td></tr>
               <tr><th scope="row">Shared content</th><td>10,000 code points at the API layer.</td></tr>
               <tr><th scope="row">Threads</th><td>500 Unicode characters. Text only.</td></tr>
-              <tr><th scope="row">Bluesky</th><td>300 Unicode characters and 3,000 UTF-8 bytes. HTTP(S) URLs receive link facets.</td></tr>
+              <tr><th scope="row">Bluesky</th><td>The candidate enforces 300 Unicode code points and 3,000 UTF-8 bytes before the network call; the official lexicon counts 300 graphemes, so the guard can be stricter for text built from combining marks or multi-code-point emoji. HTTP(S) URLs receive link facets.</td></tr>
               <tr><th scope="row">X</th><td>280 weighted characters, validated with <code>twitter-text</code> before network access. Premium long posts are outside this version.</td></tr>
               <tr><th scope="row">Tumblr</th><td>One NPF text block, limited to 4,096 Unicode code points. HTML and Markdown are plain text; media, tags, drafts, and reblogs are not supported.</td></tr>
               <tr><th scope="row">LinkedIn</th><td>At most 3,000 UTF-16 units after little-text escaping. Nothing is truncated; an over-limit publication fails with <code>INVALID_CONTENT</code> before network access.</td></tr>
               <tr><th scope="row">List page</th><td><code>limit</code> from 1 to 100, default 50.</td></tr>
               <tr><th scope="row">Retries</th><td>Maximum three application attempts. Minimum waits are 60 seconds after the first failure and 120 seconds after the second. Ambiguous outcomes are never retried automatically.</td></tr>
-              <tr><th scope="row">Scheduling cadence</th><td>Cron scans every 15 minutes, so a scheduled post can publish up to roughly 15 minutes after its requested time.</td></tr>
+              <tr><th scope="row">Scheduling cadence</th><td>Cron looks for due posts every 15 minutes. Queue and platform time are added on top, so <code>scheduledAt</code> is the earliest intended publication time and no completion bound is promised.</td></tr>
             </tbody>
           </table>
         </div>
@@ -415,44 +353,6 @@ Idempotency-Key: example-post-001</code></pre>
         <li><a href="#maintenance">Maintenance mode</a></li>
       </ul>
     </nav>
-  </div>
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <span>Syndroo 0.2.0-rc.1 docs. Apache-2.0. Copyright 2026 Syndroo.</span>
-      <nav aria-label="Footer">
-        <a href="/quickstart/">Quickstart</a>
-        <a href="/api/">API reference</a>
-        <a href="/concepts/">Concepts</a>
-        <a href="http://localhost:4173/">Website</a>
-        <a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE">License</a>
-        <a href="https://github.com/Syndroo/syndroo/issues">Contact</a>
-      </nav>
-    </div>
-  </footer>
-
-  <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" hidden>
-    <div class="search-panel">
-      <div class="search-head">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
-        <label class="sr-only" for="search-input" id="search-title">Search documentation</label>
-        <input id="search-input" type="search" placeholder="Search docs" autocomplete="off" spellcheck="false">
-        <button class="search-close" id="search-close" type="button" aria-label="Close search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"></path></svg>
-        </button>
-      </div>
-      <p class="search-meta" id="search-meta">Search every section of the local docs. Try "idempotency", "scheduledAt" or "64 KiB".</p>
-      <div class="search-empty" id="search-empty" hidden>
-        <strong>No results</strong>
-        <span>Try a shorter term, or search for an API field such as <code>overrides</code>.</span>
-      </div>
-      <ul class="search-results" id="search-results"></ul>
-      <div class="search-foot">
-        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span>
-        <span><kbd>Enter</kbd> open</span>
-        <span><kbd>Esc</kbd> close</span>
-      </div>
-    </div>
-  </div>
+  <!-- docs:foot -->
 </body>
 </html>

@@ -4,7 +4,10 @@ Two Cloudflare Pages projects publish this repository. Both are connected to
 `Syndroo/syndroo-web` through the Pages Git integration, build from `main`, and
 rebuild automatically when the repository changes. This document records the
 dashboard configuration. The repository itself holds no deployment pipeline, no
-Wrangler configuration and no credentials.
+Wrangler configuration and no credentials. The current configuration is
+described first and the dated verification records are kept below. The
+verification sections record pre-deployment checks; verify the deployed bytes
+after each push.
 
 ## Projects
 
@@ -27,9 +30,18 @@ The build command builds both sites even though each project publishes one of
 them. `npm run check` audits `apps/website/dist` and `apps/docs/dist` together
 (`scripts/check.ts`), so the focused `npm run build:website` and
 `npm run build:docs` scripts leave the other app without output and make the
-check fail with `no build output found`. `npm test` then runs the 24 build and
-static-server fixtures. Building both in one run is cheap for two small static
-sites and keeps the published output gated by the same check and test run.
+check fail with `no build output found`. `npm test` then runs the 44 fixtures:
+build and origin handling, the shared content and navigation contract for both
+sites, and the static-server behaviour. Building both in one run is cheap for two
+small static sites and keeps the published output gated by the same check and
+test run.
+
+Each build writes one self-contained output directory. Besides the pages, CSS,
+assets and generated browser JavaScript, every build now emits
+`robots.txt` and `sitemap.xml` from the page registry and the configured origin,
+and every page carries a canonical URL plus Open Graph title, description and
+URL for its own origin. The current output is 23 files across 7 marketing pages
+and 30 files across 15 documentation pages.
 
 ## Environment variables
 
@@ -51,18 +63,31 @@ Each origin must be a bare http(s) origin: scheme, host and optional port, with
 no path, query, fragment or credentials, and the two values must differ. The
 build fails with a clear error otherwise (`scripts/lib/origins.ts`).
 
-Neither site links to its own origin: the marketing pages carry 35 absolute
-links to the documentation origin and the documentation pages carry 9 links back
-to the marketing origin. `DOCS_ORIGIN` therefore shapes the published website
-output and `WEBSITE_ORIGIN` shapes the published documentation output, while
-both are validated as a pair on every build.
+Each site now uses both origins, and the check enforces both sides:
+
+- its own origin appears in the HTML metadata: one canonical URL and one Open
+  Graph URL per page, so 14 references across the 7 marketing pages and 30 across
+  the 15 documentation pages. Those two counts cover HTML only; the generated
+  files are counted separately, with the origin in every `sitemap.xml` entry (7
+  and 15 URLs) and once in each `robots.txt`;
+- the other site's origin appears in real cross-site links - 64 links from the
+  marketing pages to `https://docs.syndroo.com` and 31 links from the
+  documentation pages back to `https://syndroo.com`, covering the shared
+  navigation, the footer, the hero calls to action and the platform guides.
+
+`DOCS_ORIGIN` therefore shapes the website's cross-site links, and
+`WEBSITE_ORIGIN` shapes the documentation's, while each site's own origin shapes
+its metadata and sitemap. Both values are validated as a pair on every build, and
+a fixture test fails if a canonical URL or an Open Graph URL does not match the
+configured origin of the page it belongs to.
 
 The variables are load-bearing and a missing value fails silently. With them
 unset, `npm run build` and `npm run check` both exit 0 while the output ships
 loopback links: `scripts/lib/origins.ts` falls back to `http://localhost:4173`
 and `http://localhost:4174`, and the audit skips a default that is itself
-configured. After changing either project, confirm the published HTML contains
-no `localhost:417` reference.
+configured - the same fallback would reach the canonical URLs, the Open Graph
+URLs, `sitemap.xml` and `robots.txt`. After changing either project, confirm the
+published HTML, sitemap and robots file contain no `localhost:417` reference.
 
 `NODE_VERSION=24` matches `.nvmrc` and the `engines` field. The build image
 selects the Node version through `NODE_VERSION` or `.nvmrc`
@@ -134,6 +159,37 @@ extensionless `_headers` file in the build output currently fails the
 publishable-type rule.
 
 ## Verified
+
+### Current verification, design iteration 0.3.0 (2026-09-18, local only)
+
+Run in this repository against the sources described above; nothing was deployed
+and no dashboard setting was changed.
+
+- `npm run build` and `npm run check` with the production origin pair
+  (`WEBSITE_ORIGIN=https://syndroo.com`, `DOCS_ORIGIN=https://docs.syndroo.com`)
+  exited 0: website 23 files / 7 pages with 228 local references, documentation
+  30 files / 15 pages with 858 local references, and 0 issues for either site.
+  All five generated browser scripts parsed.
+- `npm test` reported 44 passing tests: 12 build fixtures, 20 content fixtures
+  for the shared registry, navigation, chrome, metadata, generated files and the
+  CI recipe script, and 12 static-server fixtures.
+- The production-origin output contains no `localhost:417` reference and no
+  `*.pages.dev` reference. Each page's canonical and Open Graph URLs, both
+  `sitemap.xml` files (7 and 15 URLs) and both `robots.txt` files carry the
+  configured custom-domain origins. The only remaining `http://` strings in the
+  HTML output are the product's own `http://localhost:8787` Worker sample on the
+  quickstart, API and local-development pages, which is content rather than a
+  cross-site link.
+- A per-file verification record of that production-origin build is kept with the
+  review evidence: all 23 website and 30 documentation output paths with their
+  SHA256 digests and byte sizes, plus the origins and per-site counts used here.
+
+This section records pre-deployment checks only, and it stays accurate as each
+push is deployed: after a deployment, re-fetch both custom domains and compare
+the served bytes against the per-file record above. A successful `npm run build`
+is a statement about the build, not about what a host is serving.
+
+### Earlier deployment and verification records (before design iteration 0.3.0)
 
 The documentation project's Cloud build log ran on Node 24.13.1 with a clean
 install, built both sites, reported 0 audit issues across 350 local references
