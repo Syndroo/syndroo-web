@@ -10,15 +10,19 @@ Four facts stay separate, and the tests fail if a page mixes them up:
 
 | Fact | Value |
 | --- | --- |
-| Product version | `0.2.0-rc.1`, an unpublished release candidate |
+| Service candidate (`@syndroo/cloudflare-worker`) | `0.2.0-rc.1`, an unpublished release candidate |
+| Client library candidate (`@syndroo/sdk`) | `0.4.0-rc.1`, an unpublished release candidate |
+| Terminal command candidate (`@syndroo/cli`) | `0.4.0-rc.1`, an unpublished release candidate |
 | Website design iteration | `0.4.0` |
 | Documentation version | `0.2.0-rc.1` |
 | Platform status | `mock-tested` for Bluesky and Threads, `experimental` for X, Tumblr and LinkedIn |
 
 The design iteration is a change to this repository's website, never a product
-release, and no page may present `0.4.0` as the product version. A platform's
-status changes only with a real acceptance record; a configured instance is a
-separate fact.
+release, and no page may present `0.4.0` as a product version. The SDK and CLI
+candidates share its `0.4.0` prefix, so the version fixture strips those full
+candidate strings before it asks whether a bare `0.4.0` is explained as the
+design iteration. A platform's status changes only with a real acceptance
+record; a configured instance is a separate fact.
 
 ## Deliverable
 
@@ -28,7 +32,7 @@ output:
 - `apps/website` at the marketing origin, default `http://localhost:4173/`,
   7 pages
 - `apps/docs` at the documentation origin, default `http://localhost:4174/`,
-  15 pages
+  18 pages
 
 The origins are architecture, not a cloud deployment. Both preview servers bind
 loopback only and answer `GET` and `HEAD`; requests resolve inside their own
@@ -164,18 +168,37 @@ The documentation site keeps its own layout: a sticky topbar with the mark and
 badge replaced the old version selector: there is no historical documentation, so
 the page states the version it documents instead of offering a fake choice.
 
-The sidebar groups Start here, Platform setup, Recipes, API reference, Concepts
-and Operations, all with real destinations. Only the unfragmented entry that owns
-a page carries `aria-current="page"`; chapter anchors do not claim to be the
-current page. The reading column stays about 760px wide with in-page contents on
-desktop, a pale lavender active state, and a full-height mobile drawer.
+The sidebar groups Start here, Quickstarts, Platform setup, Get an instance,
+Recipes, API reference and Concepts, all with real destinations. Only the
+unfragmented entry that owns a page carries `aria-current="page"`; chapter
+anchors do not claim to be the current page. The reading column stays about 760px
+wide with in-page contents on desktop, a pale lavender active state, and a
+full-height mobile drawer.
 
-The fifteen pages are: overview with a `Choose your path` section, first Bluesky
-post, agent setup, five platform guides, three recipes, the HTTP API reference,
-delivery and guarantees, Cloudflare deployment and local development. The
-quickstart covers one platform end to end and keeps deployment and local
-development in separate guides; the historical anchors of the previous quickstart
-still resolve on the page and point at wherever that step now lives.
+The eighteen pages are: overview, a packages overview, four quickstarts, five
+platform guides, three recipes, the HTTP API reference, delivery and guarantees,
+Cloudflare deployment and local development. The overview separates getting an
+instance from choosing a client, because nothing else works before the first
+question is answered; the same split is visible in the navigation, where the
+deployment guides sit under `Get an instance` rather than among the quickstarts.
+
+The four quickstarts are the agent-and-Skill path (still at `/agent-setup/`, so
+the marketing funnel and every existing link keep resolving), the CLI path, the
+SDK path, and the original HTTP path. The first three each install a candidate
+tarball, publish one post to one platform, read the result back, and close on the
+same `#acceptance` table: accepted, delivered, failed or unknown. The packages
+overview states which package deploys and runs the service, which is the client
+library, which provides the terminal command, the candidate version of each, the
+minimum Node runtime, and that none of them is published. The HTTP API reference
+stays complete and is no longer the only starting point; the historical anchors
+of the previous quickstart still resolve and point at wherever that step lives
+now.
+
+No page tells a reader to install a Syndroo package by name: every install
+instruction builds a tarball in a checkout and installs that file, and the CLI is
+installed after the SDK so its pinned dependency resolves locally. The
+documented `syndroo` commands and flags are checked against the real CLI, so a
+drifted option fails the check instead of reaching a reader.
 
 Search indexes the site's own page registry, so a new page is searchable as soon
 as it is registered. It opens an accessible modal, filters as typed, supports
@@ -215,6 +238,12 @@ design iteration.
 - Version claims use only the configured version facts, no page offers an install
   command for the unpublished package, and no page shows the removed
   `Interaction sample` option.
+- Every `syndroo` command, `--flag` and CLI version the documentation introduces
+  exists in the real CLI, checked against its own `--help` and `version` output
+  by `node scripts/check-docs-commands.ts` and by `tests/docs-commands.test.ts`.
+- Each of the three client quickstarts reaches the same `#acceptance` section and
+  names all four outcomes, and the packages page states each package's job,
+  candidate version and minimum runtime.
 - The demo fixtures cover success, partial, ambiguous and replay; a 202 receipt
   is never presented as delivery; an ambiguous publication keeps
   `errorAmbiguous: true` and is never presented as safe to resend; a replay keeps

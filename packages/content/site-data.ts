@@ -44,26 +44,92 @@ export const ORIGIN_PLACEHOLDERS: OriginPlaceholders = {
 };
 
 /**
- * Four distinct version facts. The design iteration version is not the product
- * version and must never be substituted for it.
+ * The version facts stay separate. The design iteration version is not a
+ * product version, and the Worker candidate is not the SDK or CLI candidate.
  */
 export type Versions = {
-  /** Product candidate version reported by the Worker and the docs. */
+  /** Candidate version of `@syndroo/cloudflare-worker`, which runs the service. */
   product: string;
-  /** Publication state of the product candidate. */
+  /** Publication state shared by every product candidate; none is published. */
   releaseStage: string;
+  /** Candidate version of `@syndroo/sdk`. */
+  sdk: string;
+  /** Candidate version of `@syndroo/cli`, whose only dependency is the SDK above. */
+  cli: string;
   /** Website design iteration described by this repository. */
   design: string;
-  /** Version the documentation describes. */
+  /** Version the HTTP documentation describes; the Worker candidate. */
   docs: string;
 };
 
 export const versions: Versions = {
   product: "0.2.0-rc.1",
   releaseStage: "unpublished release candidate",
+  sdk: "0.4.0-rc.1",
+  cli: "0.4.0-rc.1",
   design: "0.4.0",
   docs: "0.2.0-rc.1",
 };
+
+/** Minimum runtime every public package declares in its `engines` field. */
+export const PUBLIC_NODE_RUNTIME = "Node.js 22 or newer";
+
+/**
+ * The three public packages in the product repository, and which job each one
+ * does for a reader. None of them is published to npm for these candidates, so
+ * every install instruction has to consume a local artifact.
+ */
+export type PublicPackage = {
+  /** Package name as it appears in `package.json`. */
+  name: string;
+  /** Candidate version in the product repository. */
+  version: string;
+  /** The job this package does, in the words the documentation uses. */
+  kind: "service" | "client library" | "terminal command";
+  /** One sentence on what it is for. */
+  role: string;
+  /** Minimum Node.js runtime declared by the package. */
+  nodeRuntime: string;
+  /** Runtime dependencies as declared, stated plainly. */
+  runtimeDependencies: string;
+  /** Product repository path. */
+  sourcePath: string;
+  /** The installable contents of the published tarball. */
+  ships: string;
+};
+
+export const publicPackages: PublicPackage[] = [
+  {
+    name: "@syndroo/cloudflare-worker",
+    version: versions.product,
+    kind: "service",
+    role: "Deploys and runs the service: the Bearer-authenticated HTTP API, the D1 schema, the Queue consumer and the Cron Trigger.",
+    nodeRuntime: PUBLIC_NODE_RUNTIME,
+    runtimeDependencies: "one runtime dependency, `jsonc-parser`",
+    sourcePath: "packages/cloudflare-worker",
+    ships: "the bundled Worker entry point, the D1 migrations, the generated third-party licence file, and the `syndroo-deploy` command",
+  },
+  {
+    name: "@syndroo/sdk",
+    version: versions.sdk,
+    kind: "client library",
+    role: "Calls one deployed instance from your own application: health, create, read, list, and a bounded poll for a terminal status.",
+    nodeRuntime: PUBLIC_NODE_RUNTIME,
+    runtimeDependencies: "no runtime dependencies; it uses the runtime's global `fetch`, `AbortSignal` and Web Streams",
+    sourcePath: "packages/sdk",
+    ships: "the compiled client and its type declarations",
+  },
+  {
+    name: "@syndroo/cli",
+    version: versions.cli,
+    kind: "terminal command",
+    role: "Puts the same operations in a terminal, a script or a CI job, and ships the official Syndroo Skill alongside them.",
+    nodeRuntime: PUBLIC_NODE_RUNTIME,
+    runtimeDependencies: "one runtime dependency, `@syndroo/sdk` pinned to " + versions.sdk,
+    sourcePath: "packages/cli",
+    ships: "the `syndroo` command and the bundled `skills/syndroo` Skill directory",
+  },
+];
 
 /**
  * Public capability status. No live-account acceptance record exists for this
@@ -213,9 +279,9 @@ export const platforms: Platform[] = [
 ];
 
 /**
- * Agent access methods. Nothing here is shipped or verified: the HTTP workflow
- * is the only path that exists today, and no Syndroo-owned skill, plugin or
- * client integration has been built or tested.
+ * Agent access methods. The Skill and the CLI it ships with exist as candidate
+ * artifacts, but no client-specific installation or behaviour evaluation has
+ * been recorded, so nothing here is described as verified.
  */
 export type AgentClient = {
   id: string;
@@ -228,22 +294,22 @@ export type AgentClient = {
 
 export const agentClients: AgentClient[] = [
   {
+    id: "syndroo-skill",
+    name: "Syndroo Skill with the Syndroo CLI",
+    method: "Skill -> CLI -> SDK -> HTTP API",
+    status: "documented",
+    statusLabel: "Shipped in the CLI package, not verified in any specific client",
+    note:
+      "The Skill is part of the `@syndroo/cli` tarball and is installed with it. The workflow, guardrails and exit codes are written out in the Agent and Skill quickstart, but no agent client has been evaluated against them in this repository.",
+  },
+  {
     id: "http-workflow",
     name: "Client-managed HTTP workflow",
     method: "Manual HTTP workflow",
     status: "documented",
     statusLabel: "Documented, not verified end to end",
     note:
-      "The agent sends the same authenticated request shown in the API reference, and a person confirms the text before it goes out.",
-  },
-  {
-    id: "syndroo-skill",
-    name: "Syndroo skill or plugin",
-    method: "Packaged skill",
-    status: "not-verified",
-    statusLabel: "Not built",
-    note:
-      "No Syndroo-authored skill, plugin or tool package exists for this candidate, so there is nothing to install.",
+      "The agent sends the same authenticated request shown in the API reference, and a person confirms the text before it goes out. Direct HTTP is the fallback when the CLI cannot run, not a second attempt after a CLI failure.",
   },
   {
     id: "mcp-server",
@@ -326,8 +392,17 @@ export const docsNav: DocsNavGroup[] = [
     items: [
       { label: "Overview", href: "/" },
       { label: "Choose your path", href: "/#choose-a-path" },
-      { label: "First Bluesky post", href: "/quickstart/" },
-      { label: "Agent setup", href: "/agent-setup/" },
+      { label: "Packages overview", href: "/packages/" },
+      { label: "Getting an instance", href: "/#get-an-instance" },
+    ],
+  },
+  {
+    title: "Quickstarts",
+    items: [
+      { label: "Agent and Skill", href: "/agent-setup/" },
+      { label: "CLI", href: "/quickstart/cli/" },
+      { label: "SDK", href: "/quickstart/sdk/" },
+      { label: "First post over HTTP", href: "/quickstart/" },
     ],
   },
   {
@@ -338,6 +413,13 @@ export const docsNav: DocsNavGroup[] = [
       { label: "X", href: "/platforms/x/" },
       { label: "Tumblr", href: "/platforms/tumblr/" },
       { label: "LinkedIn", href: "/platforms/linkedin/" },
+    ],
+  },
+  {
+    title: "Get an instance",
+    items: [
+      { label: "Cloudflare deployment", href: "/operations/cloudflare/" },
+      { label: "Local development", href: "/operations/local/" },
     ],
   },
   {
@@ -364,13 +446,6 @@ export const docsNav: DocsNavGroup[] = [
       { label: "Delivery and guarantees", href: "/concepts/" },
       { label: "Idempotency", href: "/concepts/#idempotency", sub: true },
       { label: "Ambiguous outcomes", href: "/concepts/#ambiguous-outcomes", sub: true },
-    ],
-  },
-  {
-    title: "Operations",
-    items: [
-      { label: "Cloudflare deployment", href: "/operations/cloudflare/" },
-      { label: "Local development", href: "/operations/local/" },
     ],
   },
 ];
@@ -401,8 +476,27 @@ export const websitePages: PageEntry[] = [
 
 export const docsPages: PageEntry[] = [
   { file: "index.html", path: "/", label: "Overview" },
-  { file: "quickstart/index.html", path: "/quickstart/", label: "First Bluesky post" },
-  { file: "agent-setup/index.html", path: "/agent-setup/", label: "Agent setup" },
+  { file: "packages/index.html", path: "/packages/", label: "Packages overview" },
+  {
+    file: "quickstart/index.html",
+    path: "/quickstart/",
+    label: "Quickstart: first post over HTTP",
+  },
+  {
+    file: "quickstart/cli/index.html",
+    path: "/quickstart/cli/",
+    label: "Quickstart: CLI",
+  },
+  {
+    file: "quickstart/sdk/index.html",
+    path: "/quickstart/sdk/",
+    label: "Quickstart: SDK",
+  },
+  {
+    file: "agent-setup/index.html",
+    path: "/agent-setup/",
+    label: "Quickstart: agent and Skill",
+  },
   {
     file: "platforms/bluesky/index.html",
     path: "/platforms/bluesky/",

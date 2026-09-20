@@ -27,6 +27,7 @@ import {
   footerNav,
   platforms,
   primaryNav,
+  publicPackages,
   versions,
   websitePages,
 } from "../packages/content/site-data.ts";
@@ -317,8 +318,18 @@ test("robots.txt and sitemap.xml come from the registry and the configured origi
 test("version claims stay consistent and no placeholder interface ships", async () => {
   // Third-party version strings quoted in the changelog are allowed; a Syndroo
   // product version is not.
-  const allowedVersions = new Set([versions.product, versions.docs, versions.design, "0.6.6"]);
-  const versionPattern = /\b0\.\d+\.\d+(?:-[0-9A-Za-z.]+)?\b/g;
+  const allowedVersions = new Set([
+    versions.product,
+    versions.docs,
+    versions.design,
+    versions.sdk,
+    versions.cli,
+    "0.6.6",
+  ]);
+  // The lookbehind keeps a version out of a dotted quad such as `127.0.0.1`.
+  // The lookahead allows a sentence-ending period but still rejects a longer
+  // version or a file extension.
+  const versionPattern = /(?<![\w.])0\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?(?!\w|\.[\w])/g;
 
   for (const [dist, registry, origin] of [
     [websiteDist, websitePages, CUSTOM.website],
@@ -327,7 +338,11 @@ test("version claims stay consistent and no placeholder interface ships", async 
     for (const page of registry) {
       // Scan authored page text only: the serialized RSC payload is not prose
       // and can split a sentence across chunks.
-      const html = (await readFile(join(dist, page.file), "utf8")).replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
+      // Tarball filenames embed a version plus an extension, so they are
+      // replaced before the scan rather than read as a version claim.
+      const html = (await readFile(join(dist, page.file), "utf8"))
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "")
+        .replace(/[^\s"'<>]*\.tgz\b/g, "<tarball>");
       assert.ok(!/Interaction sample|interaction-sample/.test(html), `${page.path} still shows the sample`);
 
       for (const version of html.match(versionPattern) ?? []) {
@@ -337,8 +352,16 @@ test("version claims stay consistent and no placeholder interface ships", async 
         );
       }
 
-      for (const match of html.matchAll(new RegExp(escapeRegExp(versions.design), "g"))) {
-        const context = html.slice(Math.max(0, match.index - 80), match.index + 80);
+      // The SDK and CLI candidates share the `0.4.0` prefix with the design
+      // iteration, so strip the full candidate strings before asking whether a
+      // bare design version is explained.
+      const withoutCandidates = html
+        .split(versions.sdk)
+        .join("")
+        .split(versions.cli)
+        .join("");
+      for (const match of withoutCandidates.matchAll(new RegExp(escapeRegExp(versions.design), "g"))) {
+        const context = withoutCandidates.slice(Math.max(0, match.index - 80), match.index + 80);
         assert.match(
           context,
           /design/i,
@@ -346,10 +369,12 @@ test("version claims stay consistent and no placeholder interface ships", async 
         );
       }
 
-      // The package is unpublished, so a page may say there is no install path,
-      // but it must never present one as a command to run.
-      const installPattern = /npm (?:install|i) (?:syndroo|@syndroo)|npx syndroo|pnpm add syndroo/g;
-      for (const match of html.matchAll(installPattern)) {
+      // No candidate is published. A page may show a tarball path and may run
+      // the locally installed binary, but it must never present a registry
+      // package name as something to install.
+      const registryInstallPattern =
+        /npm (?:install|i|add) (?:-g |--global |-D |--save-dev )?(?:syndroo|@syndroo\/)|npx (?:-y |--yes )?@syndroo\/|pnpm (?:add|install) (?:syndroo|@syndroo\/)|yarn add (?:syndroo|@syndroo\/)/g;
+      for (const match of html.matchAll(registryInstallPattern)) {
         const before = html.slice(Math.max(0, match.index - 24), match.index);
         assert.match(
           before,
@@ -365,6 +390,55 @@ test("version claims stay consistent and no placeholder interface ships", async 
   assert.ok(websiteHome.includes(versions.product), "the marketing home should state the product version");
   assert.ok(docsHome.includes(versions.product), "the docs home should state the product version");
   assert.ok(docsHome.includes(versions.design), "the docs home should distinguish the design iteration");
+});
+
+test("the packages page states each public package's job, version and runtime", async () => {
+  const html = await docsPage("packages/index.html");
+  const flat = html.replace(/\s+/g, " ");
+
+  for (const entry of publicPackages) {
+    assert.ok(flat.includes(entry.name), `the packages page should name ${entry.name}`);
+    assert.ok(
+      flat.includes(entry.version),
+      `the packages page should state ${entry.name} at ${entry.version}`,
+    );
+    assert.ok(
+      flat.includes(entry.kind),
+      `the packages page should say ${entry.name} is the ${entry.kind}`,
+    );
+  }
+
+  assert.ok(flat.includes("Node.js 22 or newer"), "the packages page should state the minimum runtime");
+  assert.ok(
+    /not published|has no registry entry|nothing is published/i.test(flat),
+    "the packages page must say the candidates are unpublished",
+  );
+  assert.ok(
+    flat.includes("syndroo-sdk-0.4.0-rc.1.tgz"),
+    "the packages page should show the local tarball to install",
+  );
+});
+
+test("every quickstart ends on the same acceptance statement", async () => {
+  const quickstarts = [
+    "agent-setup/index.html",
+    "quickstart/cli/index.html",
+    "quickstart/sdk/index.html",
+  ];
+
+  for (const file of quickstarts) {
+    const html = await docsPage(file);
+    const flat = html.replace(/\s+/g, " ");
+
+    assert.ok(idsOf(html).has("acceptance"), `${file} should carry the shared #acceptance section`);
+    for (const outcome of ["Accepted", "Delivered", "Failed", "Unknown"]) {
+      assert.ok(flat.includes(outcome), `${file} should name the ${outcome} outcome`);
+    }
+    assert.ok(
+      flat.includes("Node.js 22 or newer"),
+      `${file} should state the minimum runtime it needs`,
+    );
+  }
 });
 
 function escapeRegExp(value: string): string {

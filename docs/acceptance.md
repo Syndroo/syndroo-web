@@ -4,6 +4,86 @@ This file separates what was accepted for the static prototype from what has
 been verified in this repository. The two records are not interchangeable, and
 the newest record comes first.
 
+## v0.4.0 documentation entry paths (2026-09-20)
+
+Scope: the documentation site in this repository, for CR-040-04 section 7.6. The
+docs gained a packages overview and three client quickstarts, the overview now
+separates getting an instance from choosing a client, and the agent page became a
+quickstart. No deployment, no npm publish, no live platform call and no
+credential use formed any part of this work.
+
+Everything documented was read from the candidate packages themselves:
+`packages/cli/README.md`, `packages/cli/skills/syndroo/`, `packages/cli/src/help.ts`,
+`packages/cli/src/exit-codes.ts`, `packages/sdk/README.md` and `packages/sdk/src/`.
+
+What was executed, and what it produced:
+
+- `npm run build`: both apps exported. Website: 53 files / 9 pages; docs: 87
+  files / 20 pages (three new pages: `/packages/`, `/quickstart/cli/`,
+  `/quickstart/sdk/`). `robots.txt` and `sitemap.xml` are still generated per app
+  from its registry and the configured origin.
+- `npm run check`: website 342 local references, 0 issues; docs 1397 local
+  references, 0 issues. Every exported `.js` file parsed with `node --check`.
+- `npm test`: 45 tests passed, 0 failed. That includes four new fixtures: two
+  asserting the packages page states each package's job, version and runtime and
+  that every client quickstart ends on the shared `#acceptance` section, and two
+  reading the documented CLI surface.
+- `node scripts/check-docs-commands.ts`: 18 documented pages checked against the
+  real CLI at `../syndroo/packages/cli/dist/bin.js` (CLI `0.4.0-rc.1`), 0 issues.
+  Every `syndroo` command, every `--flag` and the documented CLI version was
+  compared with the CLI's own `--help` and `version` output. The first run found a
+  real false positive - the prose that says the CLI deliberately has no
+  `--api-key` flag - so the checker now ignores a flag written after a negation.
+  The same fixtures are in `tests/docs-commands.test.ts`, which skips with a
+  printed reason when no product checkout is reachable.
+- Loopback probes of the exported sites (ports 4173 / 4174): all 18 registered
+  docs pages and all 7 registered website pages answered `200`; all 15 docs URLs
+  that existed before this change answered `200`; an unknown path answered `404`
+  on both origins; the docs `sitemap.xml` listed exactly the 18 registered paths;
+  `robots.txt` still pointed at the configured sitemap URL; every registered page
+  carried a `main article` with `h2` anchors, which is what the docs search index
+  reads; and the ten historical quickstart anchors still resolved.
+- The CLI quickstart was executed against a loopback stub, not a real instance:
+  `syndroo version`, `skill path`, `doctor`, `posts validate --file post.json`,
+  `posts create --file post.json --idempotency-key first-post-001 --json --yes`,
+  `posts get post_1 --json`, `posts wait post_1 --timeout 20s`, `posts list
+  --limit 5` and `posts create --dry-run`. Exit codes were `0` for each, and the
+  create reported `"accepted": true` with `"delivered": false`. An unknown
+  subcommand was rejected with a usage message naming the five accepted `posts`
+  commands.
+- The SDK quickstart code was executed verbatim against the same stub:
+  `posts.create` returned `post_1 queued`, `posts.get` printed `published` and the
+  Bluesky publication, `posts.list({ limit: 5 })` resolved to an array of one
+  summary, and `health()` returned `{"status":"ok"}`.
+- Installing the candidates was rehearsed offline. `npm pack --workspace
+  @syndroo/sdk` and `npm pack --workspace @syndroo/cli` produce
+  `syndroo-sdk-0.4.0-rc.1.tgz` and `syndroo-cli-0.4.0-rc.1.tgz`. In a clean
+  directory, `npm install <sdk tarball>` then `npm install <cli tarball>`
+  succeeds in 105 ms and 125 ms with no registry access, and `syndroo version`
+  and `syndroo skill path` answer from the installed files. Installing the CLI
+  tarball alone fails with `ENOTCACHED` / a registry lookup for its pinned
+  `@syndroo/sdk@0.4.0-rc.1` dependency, and passing both tarballs to a single
+  `npm install` did not stay off the registry either: it stalled on that same
+  lookup. The documentation therefore states the SDK-then-CLI order rather than
+  leaving it to be discovered.
+- Real behaviour found while verifying, and now stated in the SDK quickstart:
+  `posts.wait` parks on a timer the runtime may ignore, so a short script whose
+  only remaining work is that wait can exit before the deadline. The sample uses a
+  single `posts.get` instead and explains when `posts.wait` is appropriate.
+
+Limits recorded by this entry:
+
+- Only the loopback stub was exercised. No deployed instance, no real platform
+  account and no npm registry were contacted, and no candidate was published.
+- No agent client was evaluated against the Skill; the agent quickstart records
+  the workflow and the guardrails, not a client-specific acceptance result.
+- The CLI-surface check needs a product checkout. Without one,
+  `tests/docs-commands.test.ts` reports a skip, so a CI run of this repository
+  alone cannot fail on documentation drift.
+- The marketing site still states that no Syndroo skill, plugin or SDK exists, in
+  `apps/website/app/page.tsx`. That page was outside this task's write scope, so
+  the claim was left untouched and is now stale.
+
 ## v0.4.0 framework migration (2026-09-20)
 
 Scope: the website and documentation sources in this repository only, for

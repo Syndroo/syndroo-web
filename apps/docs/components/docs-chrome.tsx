@@ -62,7 +62,7 @@ export function DocsTopbar(): React.JSX.Element {
             </button>
             <span
               className="version-badge"
-              title="Documentation version. There is no historical documentation for this project yet."
+              title={`The HTTP contract version these docs describe. There is no historical documentation for this project yet; the SDK and CLI candidates are ${versions.sdk}.`}
             >
               <span className="version-badge__label">Version</span>
               <strong>{versions.docs}</strong>
@@ -125,8 +125,11 @@ export function DocsFooter(): React.JSX.Element {
           Syndroo {versions.docs} docs ({versions.releaseStage}). Apache-2.0. Copyright 2026 Syndroo.
         </span>
         <nav aria-label="Footer">
+          <a href="/packages/">Packages</a>
+          <a href="/quickstart/cli/">CLI quickstart</a>
+          <a href="/quickstart/sdk/">SDK quickstart</a>
+          <a href="/agent-setup/">Agent and Skill</a>
           <a href="/quickstart/">First Bluesky post</a>
-          <a href="/agent-setup/">Agent setup</a>
           <a href="/api/">API reference</a>
           <a href="/concepts/">Concepts</a>
           <a href={`${ORIGIN_PLACEHOLDERS.website}/`}>Website</a>

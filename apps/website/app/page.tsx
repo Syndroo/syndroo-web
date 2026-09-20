@@ -39,8 +39,8 @@ export default function IndexPage() {
               <span>Text publishing</span>
             </p>
             <p className="hero__boundary">
-              <strong>Where this stands:</strong> agent setup today means wiring your own agent to the documented HTTP API.
-              Syndroo ships no skill, plugin or MCP server yet, and no platform client has passed live-account acceptance.
+              <strong>Where this stands:</strong> the SDK, the CLI and an agent Skill are built and packaged, but they are
+              release candidates that are not published to npm yet, and no platform client has passed live-account acceptance.
             </p>
           </div>
 
@@ -238,21 +238,23 @@ export default function IndexPage() {
               <p className="card__link"><a href="http://localhost:4174/agent-setup/">Read the agent setup guide</a></p>
             </article>
             <article className="card">
-              <span className="status-tag status-tag--experimental">Not built</span>
+              <span className="status-tag status-tag--experimental">Release candidate</span>
               <h3>Skill or plugin</h3>
               <p>
-                No Syndroo-authored skill, plugin or tool package exists for this candidate. There is nothing to install,
-                and no fake install command is published here.
+                The Syndroo Skill ships inside the <code>@syndroo/cli</code> package and walks an agent from a draft to a
+                per-platform result. Both are candidates awaiting publication, so installing means consuming the local
+                tarball, not npm.
               </p>
-              <p className="card__link"><a href="http://localhost:4174/agent-setup/">See what is verified</a></p>
+              <p className="card__link"><a href="http://localhost:4174/agent-setup/">Read the agent quickstart</a></p>
             </article>
             <article className="card">
               <span className="status-tag status-tag--experimental">Out of scope</span>
               <h3>MCP server</h3>
               <p>
-                This version ships no MCP server and no SDK package. The supported interface is the documented HTTP API.
+                This version ships no MCP server. Agents reach Syndroo through the Skill and the CLI, applications through
+                the <code>@syndroo/sdk</code> client library, and everything else through the documented HTTP API.
               </p>
-              <p className="card__link"><a href="http://localhost:4174/api/">Read the API reference</a></p>
+              <p className="card__link"><a href="http://localhost:4174/packages/">See the packages</a></p>
             </article>
           </div>
         </div>
@@ -401,8 +403,9 @@ export default function IndexPage() {
             <details>
               <summary>Is there a Syndroo skill, plugin or MCP server?</summary>
               <p>
-                No. The interface is the documented HTTP API. Agent setup means pointing your own agent or script at your
-                deployment; no installable Syndroo package exists for this candidate.
+                There is a Syndroo Skill, and it ships inside the <code>@syndroo/cli</code> package. There is no MCP server.
+                The Skill, the CLI and the <code>@syndroo/sdk</code> client library are all built and packaged as release
+                candidates, and none of them is published to npm yet, so each one is installed from a local tarball.
               </p>
             </details>
             <details>

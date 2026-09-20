@@ -126,17 +126,19 @@ is generated: change the source and rebuild instead of editing built files.
 
 ## Content status
 
-The product candidate is `0.2.0-rc.1`: prepared, unpublished, untagged and
-undeployed. Threads and Bluesky are exercised against local mock servers with
-live acceptance still pending; X, Tumblr and LinkedIn are experimental. The
-interactive publish demo on the marketing site is simulated in the browser and
-performs no network request. The website's `0.3.0` is a design iteration of this
-repository, not a product version, and no platform has a live-account acceptance
-record. Agent setup means wiring your own client to the documented HTTP API:
-there is no Syndroo skill, plugin, SDK or MCP server. Privacy and Terms are drafts
-pending operational and legal review. See [docs/design.md](docs/design.md) for the
-full contract and [docs/acceptance.md](docs/acceptance.md) for what has actually
-been verified.
+The service candidate is `0.2.0-rc.1`, and the SDK and CLI candidates are
+`0.4.0-rc.1`: all prepared, unpublished, untagged and undeployed. None is on a
+registry, so the documentation installs a tarball built from the product
+repository instead of a package name. Threads and Bluesky are exercised against
+local mock servers with live acceptance still pending; X, Tumblr and LinkedIn are
+experimental. The interactive publish demo on the marketing site is simulated in
+the browser and performs no network request. The website's `0.4.0` is a design
+iteration of this repository, not a product version, and no platform has a
+live-account acceptance record. Agent setup installs the Syndroo Skill together
+with the `syndroo` command it drives, or wires a client to the documented HTTP
+API; no MCP server ships. Privacy and Terms are drafts pending operational and
+legal review. See [docs/design.md](docs/design.md) for the full contract and
+[docs/acceptance.md](docs/acceptance.md) for what has actually been verified.
 
 ## License
 

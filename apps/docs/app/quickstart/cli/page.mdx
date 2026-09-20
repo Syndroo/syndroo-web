@@ -1,0 +1,150 @@
+export const metadata = {
+  title: "CLI quickstart - Syndroo Docs",
+  description: "Publish one post to one platform with the syndroo command: install the candidate tarball, configure, preview, submit once, and read the result back.",
+  alternates: { canonical: "/quickstart/cli/" },
+  openGraph: {
+    type: "website",
+    url: "/quickstart/cli/",
+    title: "CLI quickstart - Syndroo Docs",
+    description: "Publish one post to one platform with the syndroo command: install the candidate tarball, configure, preview, submit once, and read the result back.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <a href="/packages/">Packages</a>
+          <span aria-hidden="true">/</span>
+          <span>CLI quickstart</span>
+        </nav>
+        <h1 id="cli-quickstart">Publish your first post with the CLI</h1>
+        <p className="lede">The <code>{"syndroo"}</code> command talks to one deployed instance. This path installs the candidate tarball, checks the configuration, previews one document, submits it once under a stable key, and reads the per-platform result back. It ends with one published post on one platform.</p>
+
+        <div className="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+          <div>
+            <span className="callout-title">The CLI is a 0.4.0-rc.1 candidate and it is not published.</span>
+            <p>Nothing on this page installs a Syndroo package from a registry, because no candidate for <code>{"@syndroo/cli"}</code> or <code>{"@syndroo/sdk"}</code> exists there yet. You build the tarball in a checkout and install that file. The instance you talk to is a <code>{"@syndroo/cloudflare-worker"}</code> candidate at <code>{"0.2.0-rc.1"}</code>. Once credentials are configured, <code>{"posts create"}</code> publishes for real, so use an account you are happy to post from.</p>
+          </div>
+        </div>
+
+        <h2 id="before-you-start">Before you start</h2>
+        <ul>
+          <li><strong>Node.js 22 or newer.</strong> The CLI and the SDK both declare it. Run <code>{"node --version"}</code> if you are unsure.</li>
+          <li><strong>A running instance.</strong> An instance is the deployed Worker. Deploy one into your own Cloudflare account with <a href="/operations/cloudflare/">Cloudflare deployment</a>, or run one locally with <a href="/operations/local/">Local development</a>. Both end with a URL and an API key.</li>
+          <li><strong>One platform's credentials, configured in the instance.</strong> This page uses Bluesky. The <a href="/platforms/bluesky/">Bluesky guide</a> lists the exact secret names. Credentials belong to the instance, never to the CLI.</li>
+          <li><strong>A checkout of the product repository</strong> so you can build the tarballs, and an empty directory to install them into.</li>
+        </ul>
+
+        <h2 id="install">Install the candidate</h2>
+        <p>Build the tarballs in one checkout. This installs the CLI and the SDK it depends on, and it needs no registry access.</p>
+        <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nmkdir -p /tmp/syndroo-pack\nnpm pack --workspace @syndroo/sdk --pack-destination /tmp/syndroo-pack\nnpm pack --workspace @syndroo/cli --pack-destination /tmp/syndroo-pack"}</code></pre>
+        <p>Now install both files into an empty directory, SDK first, and confirm the command answers:</p>
+        <pre data-label="terminal"><code>{"mkdir syndroo-quickstart\ncd syndroo-quickstart\nnpm init -y\nnpm install /tmp/syndroo-pack/syndroo-sdk-0.4.0-rc.1.tgz\nnpm install /tmp/syndroo-pack/syndroo-cli-0.4.0-rc.1.tgz\n./node_modules/.bin/syndroo version"}</code></pre>
+        <p>Subtracting the version line, the expected output is:</p>
+        <pre data-label="response"><code>{"@syndroo/cli 0.4.0-rc.1 (node <your node version>)"}</code></pre>
+        <p>Every command below is written as <code>{"./node_modules/.bin/syndroo"}</code>, the binary this project just installed. Naming the file is deliberate: a bare package-name invocation can fall back to a registry lookup, and there is nothing on the registry to find.</p>
+        <div className="callout info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5" /><path d="M12 8h.01" /></svg>
+          <div>
+            <span className="callout-title">Install the SDK tarball first.</span>
+            <p>The CLI's only runtime dependency is <code>{"@syndroo/sdk"}</code>, pinned to <code>{"0.4.0-rc.1"}</code>. With that version already installed, the second command reuses it and needs no registry. Installing the CLI on its own, or before the SDK, sends the installer looking for a version that is not on the registry yet, and it fails.</p>
+          </div>
+        </div>
+        <p>The CLI ships the official Syndroo Skill inside its own package. Locate it when a client needs the path:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo skill path"}</code></pre>
+
+        <h2 id="configure">Point it at your instance</h2>
+        <p>The CLI reads exactly two environment variables and its own flags. It never reads <code>{".env"}</code>, <code>{".dev.vars"}</code> or a configuration file, and it never writes a shell profile.</p>
+        <pre data-label="terminal"><code>{"export SYNDROO_BASE_URL=\"https://your-worker.your-subdomain.workers.dev\"\nexport SYNDROO_API_KEY=\"the-same-secret-your-worker-has\""}</code></pre>
+        <p>A local instance uses <code>{"http://localhost:8787"}</code> as the base URL. <code>{"--base-url"}</code> overrides <code>{"SYNDROO_BASE_URL"}</code> for one run; there is deliberately no <code>{"--api-key"}</code> flag, so the key cannot leak into shell history or a process listing.</p>
+        <p>Check the three facts that matter before anything is sent:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo doctor"}</code></pre>
+        <p><code>{"doctor"}</code> only reads, and it checks all three separately: whether an instance address is configured, whether it answers, and whether it accepts the key. It exits <code>{"0"}</code> when all three hold. When one does not, it names which one, and exits <code>{"2"}</code>.</p>
+
+        <h2 id="first-post">Preview, then submit once</h2>
+        <p>Write the document. It is one JSON file, and the CLI reads it once, so the bytes you preview are the bytes it submits.</p>
+        <pre data-label="post.json"><code>{"{\n  \"content\": \"First post through my own Syndroo instance.\",\n  \"platforms\": [\"bluesky\"]\n}"}</code></pre>
+        <p>Validate offline first. This sends nothing and needs no reachable instance:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo posts validate --file post.json"}</code></pre>
+        <p>The preview prints the target platforms, the schedule, the final text for each platform, and the sha256 of the request. When there is no terminal to answer a prompt, the run needs <code>{"--yes"}</code> and a stable <code>{"--idempotency-key"}</code>:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo posts create --file post.json --idempotency-key first-post-001 --json --yes"}</code></pre>
+        <p>In a terminal, drop <code>{"--yes"}</code> and the CLI asks instead. Anything that is not <code>{"y"}</code> or <code>{"yes"}</code> cancels and sends nothing, and exits <code>{"5"}</code>. Add <code>{"--dry-run"}</code> when you want the preview and nothing else.</p>
+        <div className="callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+          <div>
+            <span className="callout-title">Exit 0 means accepted, not published.</span>
+            <p><code>{"posts create"}</code> returns an acceptance receipt. The instance has stored one post and queued one publication per selected platform; nothing has reached a platform yet. Keep the post id it prints.</p>
+          </div>
+        </div>
+        <p>With <code>{"--json"}</code> the created object is the only thing on stdout, so it can be piped straight into a script. Every diagnostic, including the preview, goes to stderr. Abbreviated, that object is:</p>
+        <pre data-label="posts create --json (abbreviated)"><code>{"{\n  \"ok\": true,\n  \"command\": \"posts.create\",\n  \"accepted\": true,\n  \"delivered\": false,\n  \"id\": \"post_...\",\n  \"status\": \"queued\",\n  \"idempotencyKey\": \"first-post-001\",\n  \"requestSha256\": \"21dcef5b...\",\n  \"createRequests\": 1,\n  \"exitCode\": 0\n}"}</code></pre>
+
+        <h2 id="read-the-result">Read the result back</h2>
+        <p>Read one post until it reaches a terminal status, or take a single snapshot:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo posts wait \"$POST_ID\" --timeout 60s\n./node_modules/.bin/syndroo posts get \"$POST_ID\" --json"}</code></pre>
+        <p><code>{"posts wait"}</code> exits <code>{"0"}</code> only when the status is <code>{"published"}</code>. It exits <code>{"3"}</code> when its deadline passes, which says nothing about the server-side post: waiting only reads, so the honest resume is another <code>{"posts wait"}</code> or a <code>{"posts get"}</code>. To find the id again, list the recent posts:</p>
+        <pre data-label="terminal"><code>{"./node_modules/.bin/syndroo posts list --limit 5"}</code></pre>
+        <p>Read <a href="/concepts/">Delivery and guarantees</a> before you build automation on top of any of this.</p>
+
+        <h2 id="exit-codes">JSON output and exit codes</h2>
+        <p>Scripts and agents branch on the exit code rather than on English. The same table is in the CLI's own help text.</p>
+        <div className="table-wrap">
+          <table>
+            <caption>Exit codes reported by the <code>syndroo</code> command.</caption>
+            <thead>
+              <tr><th scope="col">Code</th><th scope="col">Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>{"0"}</code></th><td>The command finished. For <code>{"posts create"}</code> that means accepted, not delivered.</td></tr>
+              <tr><th scope="row"><code>{"1"}</code></th><td>The command failed.</td></tr>
+              <tr><th scope="row"><code>{"2"}</code></th><td>Usage, configuration or document problem. Nothing was sent.</td></tr>
+              <tr><th scope="row"><code>{"3"}</code></th><td><code>{"posts wait"}</code> reached its deadline. The post still exists.</td></tr>
+              <tr><th scope="row"><code>{"4"}</code></th><td>A write may have reached the instance and no result is known.</td></tr>
+              <tr><th scope="row"><code>{"5"}</code></th><td>The preview was declined. Nothing was sent.</td></tr>
+              <tr><th scope="row"><code>{"6"}</code></th><td>The post ended without full delivery: <code>{"failed"}</code> or <code>{"partial"}</code>.</td></tr>
+              <tr><th scope="row"><code>{"130"}</code></th><td>The local process stopped on a signal; server-side work was not cancelled.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>With <code>{"--json"}</code> the object always carries <code>{"exitCode"}</code> and <code>{"createRequests"}</code>, the number of requests that could have created a post. A failure carries <code>{"ok: false"}</code> and an <code>{"error.code"}</code> such as <code>{"INVALID_DOCUMENT"}</code>, <code>{"AUTH_REJECTED"}</code>, <code>{"IDEMPOTENCY_CONFLICT"}</code>, <code>{"AMBIGUOUS_DELIVERY"}</code> or <code>{"WAIT_TIMEOUT"}</code>.</p>
+
+        <h2 id="when-the-result-is-unknown">When the result is unknown</h2>
+        <p>If a create fails after the request may have reached the instance, the CLI reports exit <code>{"4"}</code>, prints the idempotency key it used, and stops. It never retries silently and never mints a new key to paper over a failure. Re-run the same command with the same <code>{"--idempotency-key"}</code> to replay the original result, or read the post once you have its id.</p>
+        <p>A publication whose <code>{"errorAmbiguous"}</code> field is <code>{"true"}</code> may have been accepted by the platform. Check the account by hand before deciding anything. Do not resend that content automatically, and do not reach for the HTTP API as a second attempt through a different door.</p>
+
+        <h2 id="acceptance">What success looks like</h2>
+        <p>One post, one platform, and a result you can state without guessing. This is the same acceptance bar in the agent and SDK paths.</p>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Outcome</th><th scope="col">How you know</th><th scope="col">What it means</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Accepted</th><td><code>{"posts create"}</code> exits <code>{"0"}</code></td><td>The instance stored the post and queued a publication. Nothing has reached a platform.</td></tr>
+              <tr><th scope="row">Delivered</th><td><code>{"posts wait"}</code> exits <code>{"0"}</code>, or a read shows <code>{"published"}</code></td><td>Every selected platform confirmed. With one platform selected, that platform published.</td></tr>
+              <tr><th scope="row">Failed</th><td>Exit <code>{"6"}</code>, or a read shows <code>{"failed"}</code> or <code>{"partial"}</code></td><td>Stopped after a terminal failure or an exhausted retry budget. Read <code>{"errorCode"}</code> and <code>{"attempts"}</code>. Only a publication with <code>{"errorAmbiguous"}</code> set to <code>{"false"}</code> is a clean failure.</td></tr>
+              <tr><th scope="row">Unknown</th><td>Exit <code>{"4"}</code>, or a read shows <code>{"errorAmbiguous"}</code> <code>{"true"}</code></td><td>The write may have landed. Query the post with the original key and check the platform account by hand.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Next: <a href="/agent-setup/">agent and Skill quickstart</a>, the <a href="/quickstart/sdk/">SDK quickstart</a>, the <a href="/api/">HTTP API reference</a>, or <a href="/packages/">the packages overview</a>.</p>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#before-you-start">Before you start</a></li>
+        <li><a href="#install">Install the candidate</a></li>
+        <li><a href="#configure">Point it at your instance</a></li>
+        <li><a href="#first-post">Preview, then submit once</a></li>
+        <li><a href="#read-the-result">Read the result back</a></li>
+        <li><a href="#exit-codes">JSON output and exit codes</a></li>
+        <li><a href="#when-the-result-is-unknown">When the result is unknown</a></li>
+        <li><a href="#acceptance">What success looks like</a></li>
+      </ul>
+    </nav>

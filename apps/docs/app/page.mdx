@@ -29,23 +29,16 @@ export const metadata = {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5" /><path d="M12 8h.01" /></svg>
           <div>
             <span className="callout-title">These docs cover an unpublished release candidate.</span>
-            <p>The product version is <strong>0.2.0-rc.1</strong>: prepared in the repository, not published to npm, not tagged, not deployed, and not accepted as a release. Installation uses the source repository. The marketing site's <strong>0.4.0</strong> is a website design iteration; it is not a product version and changes nothing about what the Worker does.</p>
+            <p>The service candidate is <strong>0.2.0-rc.1</strong>, and the SDK and CLI candidates are <strong>0.4.0-rc.1</strong>: prepared in the repository, not published to npm, not tagged, not deployed, and not accepted as a release. Installation uses a tarball built from the source repository. The marketing site's <strong>0.4.0</strong> is a website design iteration; it is not a product version and changes nothing about what the Worker does.</p>
           </div>
         </div>
 
         <h2 id="choose-a-path">Choose your path</h2>
-        <p>Pick the shortest route to a first published post. Every path ends in the same authenticated HTTP call.</p>
+        <p>Two decisions, in order. First get an instance, because nothing else works without one. Then pick how you want to talk to it. Every path ends the same way: one published post, and a result you can state as accepted, delivered, failed or unknown.</p>
+
+        <h3 id="get-an-instance">1. Get an instance</h3>
+        <p>An instance is the deployed Worker, with your Cloudflare account, your D1 database and your platform credentials. The two routes are separate: deployment does not require the local steps, and local development does not require a Cloudflare account.</p>
         <div className="tile-grid">
-          <a className="tile" href="/quickstart/">
-            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>
-            <span className="tile-title">First post with Bluesky</span>
-            <span className="tile-text">One platform, one credential set, one request, and how to read the result back.</span>
-          </a>
-          <a className="tile" href="/agent-setup/">
-            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M8 10h8M8 14h5" /></svg></span>
-            <span className="tile-title">Agent setup</span>
-            <span className="tile-text">Point an agent or script at your deployment, with the exact HTTP workflow and its guardrails.</span>
-          </a>
           <a className="tile" href="/operations/cloudflare/">
             <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.4A3.5 3.5 0 0 1 17 18Z" /></svg></span>
             <span className="tile-title">Cloudflare deployment</span>
@@ -58,14 +51,40 @@ export const metadata = {
           </a>
         </div>
 
+        <h3 id="pick-a-client">2. Pick how you talk to it</h3>
+        <p>Three client paths, one per audience, plus the raw HTTP reference they are all built on. Each quickstart installs a candidate tarball, publishes one post to one platform, and reads the result back.</p>
+        <div className="tile-grid">
+          <a className="tile" href="/agent-setup/">
+            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M8 10h8M8 14h5" /></svg></span>
+            <span className="tile-title">Agent and Skill</span>
+            <span className="tile-text">Install the official Skill with the CLI, and give an agent the workflow and its guardrails.</span>
+          </a>
+          <a className="tile" href="/quickstart/cli/">
+            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6" /><path d="M12 19h8" /></svg></span>
+            <span className="tile-title">CLI quickstart</span>
+            <span className="tile-text">Publish from a terminal, a script or a CI job, and branch on exit codes instead of English.</span>
+          </a>
+          <a className="tile" href="/quickstart/sdk/">
+            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4m0 6v4a2 2 0 0 0 2 2h4m6 0h4a2 2 0 0 0 2-2v-4m0-6V5a2 2 0 0 0-2-2h-4" /></svg></span>
+            <span className="tile-title">SDK quickstart</span>
+            <span className="tile-text">Call the instance from your own Node.js code with the client library the CLI itself uses.</span>
+          </a>
+          <a className="tile" href="/quickstart/">
+            <span className="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>
+            <span className="tile-title">First post over HTTP</span>
+            <span className="tile-text">One platform, one credential set, one request, and how to read the result back.</span>
+          </a>
+        </div>
+        <p>Not sure which package is which? <a href="/packages/">Packages</a> states which one deploys the service, which one is the client library, which one provides the terminal command, and which versions fit together.</p>
+
         <h2 id="what-is-syndroo">What Syndroo is</h2>
         <p>Syndroo is a small npm-workspaces monorepo with a Worker in front of Cloudflare D1, Queues and a Cron Trigger. It accepts immediate or scheduled posts, keeps one publication row per platform, and reports each platform's own outcome.</p>
         <ul>
           <li><strong>HTTP API service.</strong> There is no dashboard, no account with the project, and no hosted service. You deploy the Worker, then call its URL from <code>{"curl"}</code>, an agent, a script or your own application.</li>
           <li><strong>Self-hosted.</strong> You own the Cloudflare account, D1 database, Queue, Cron Trigger and platform credentials.</li>
           <li><strong>Text only.</strong> Every adapter in this candidate publishes text. Media, per-request authors, OAuth login flows and token refresh are outside this version, so credential renewal is your job.</li>
-          <li><strong>One public package, not published yet.</strong> <code>{"@syndroo/cloudflare-worker"}</code> is the only public package, and this candidate has not been published. The other workspace packages, including <code>{"@syndroo/core"}</code>, are internal implementations rather than public SDKs.</li>
-          <li><strong>No Syndroo skill, plugin or MCP server.</strong> Agent setup means wiring your own client to the documented HTTP API; nothing is installable from the project yet.</li>
+          <li><strong>Three public packages, none published yet.</strong> <code>{"@syndroo/cloudflare-worker"}</code> at <code>{"0.2.0-rc.1"}</code> deploys and runs the service, <code>{"@syndroo/sdk"}</code> at <code>{"0.4.0-rc.1"}</code> is the client library, and <code>{"@syndroo/cli"}</code> at <code>{"0.4.0-rc.1"}</code> provides the <code>{"syndroo"}</code> command and the official Skill. None has a registry entry, so every install consumes a tarball built in a checkout. The remaining workspace packages, including <code>{"@syndroo/core"}</code>, are internal implementations rather than public SDKs. See <a href="/packages/">Packages</a>.</li>
+          <li><strong>A Skill and a CLI exist; an MCP server does not.</strong> Agent setup can install the packaged Skill together with the command it drives, or wire a client to the documented HTTP API instead. No MCP server ships with this candidate.</li>
         </ul>
 
         <h2 id="how-it-runs">How it runs</h2>
@@ -146,7 +165,7 @@ export const metadata = {
           <li><a href="/recipes/blog-distribution/">Publish a blog summary</a> - your own client writes the summary; Syndroo publishes it.</li>
           <li><a href="/recipes/api-automation/">Call Syndroo from CI or a script</a> - stable idempotency keys and polling until a terminal state.</li>
         </ul>
-        <p>These recipes are written for the 0.2.0-rc.1 HTTP contract. They do not assume a dashboard, an SDK or an agent skill.</p>
+        <p>These recipes are written for the 0.2.0-rc.1 HTTP contract, so they work with any client, including the SDK and the CLI. They do not assume a dashboard.</p>
 
         <h2 id="getting-help">Getting help</h2>
         <p>Source, issues and the license live in the public repository. The marketing site links to the project overview and changelog.</p>
