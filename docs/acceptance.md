@@ -40,13 +40,30 @@ What was executed, and what it produced:
 - `docs/design.md` and `README.md` were updated to describe the new shell rules,
   mascot sizes, shared theme implementation and Next.js build.
 
+Browser acceptance of the exported sites (2026-09-20, headless Chromium):
+
+- The exports were served on loopback and driven through a real rendering
+  engine. Measured results: the website shell follows the viewport at
+  360/390/768/1280/1440/1920/2560 CSS px with no horizontal overflow; the hero
+  mascot renders at 320px desktop and 220px mobile with `border-radius: 0`, an
+  absolutely positioned glow layer behind it and zero clipping ancestors; the
+  docs header, main and footer edges agree within 0.00px at both 390px and
+  1440px across the home, quickstart, API and Bluesky pages; the theme menu is
+  reachable by Tab with a visible 2px focus outline, switching to Dark repaints
+  the page (`rgb(251,251,254)` to `rgb(14,17,32)`) at 15.91:1 body contrast and
+  writes the preference; the reduced-motion context produced no page errors;
+  and with JavaScript disabled the home page still renders 5,552 characters of
+  text. No off-origin request was observed from either site.
+- This host has no Google Chrome, so the recorder used the installed
+  Chromium-based Brave in headless mode. The WEB-01..11 checklist is therefore
+  only partially satisfied: a `channel: "chrome"` run, Safari, 200% zoom,
+  System-theme following and first-paint-flash capture are still outstanding.
+
 Limits recorded by this entry:
 
-- Browser acceptance was not run. The viewport measurements, dark-mode
-  contrast, first-paint flash behaviour, keyboard order, reduced motion, 200%
-  zoom, System-theme following, Safari smoke test and the WEB-01..11 checklist
-  remain unexecuted; the shell, mascot and theme claims above are verified
-  against the exported CSS and markup, not in a rendering engine.
+- The above is one engine, one pass, and a local static server. First-paint
+  flash behaviour, 200% zoom, System-theme following and the Safari smoke test
+  are still unexecuted.
 - The origin check above is a local build-time check. Nothing was deployed and
   no Cloudflare Pages build was triggered.
 - Live platform publishing was not exercised at any point.
