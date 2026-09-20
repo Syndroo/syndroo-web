@@ -6,7 +6,7 @@
  * same-directory doc.js; this file intentionally avoids TypeScript-only runtime
  * syntax (enums, namespaces, parameter properties) so stripping is exact.
  */
-import { docsPages } from "./site-data.js";
+import { docsPages } from "@syndroo/content/site-data";
 
 type PageDef = {
   fetchPath: string;
@@ -537,12 +537,17 @@ function wireSearch(): void {
 /* ------------------------------------------------------------------ */
 
 function wireSidebar(): void {
-  const toggle = byId<HTMLButtonElement>("menu-toggle");
-  const sidebar = byId<HTMLElement>("docs-sidebar");
-  const scrim = byId<HTMLDivElement>("sidebar-scrim");
-  if (!toggle || !sidebar || !scrim) {
+  const toggleElement = byId<HTMLButtonElement>("menu-toggle");
+  const sidebarElement = byId<HTMLElement>("docs-sidebar");
+  const scrimElement = byId<HTMLDivElement>("sidebar-scrim");
+  if (!toggleElement || !sidebarElement || !scrimElement) {
     return;
   }
+  // Non-null aliases so the nested handlers below stay type-safe under
+  // `strictNullChecks`; the guard above is the only place that checks them.
+  const toggle: HTMLButtonElement = toggleElement;
+  const sidebar: HTMLElement = sidebarElement;
+  const scrim: HTMLDivElement = scrimElement;
 
   const mobile = window.matchMedia("(max-width: 900px)");
 
@@ -812,10 +817,11 @@ function wireCopyButtons(): void {
  * resize; nothing scrolls or jumps on its own.
  */
 function wireTopbarOffset(): void {
-  const topbar = document.querySelector<HTMLElement>(".topbar");
-  if (!topbar) {
+  const topbarElement = document.querySelector<HTMLElement>(".topbar");
+  if (!topbarElement) {
     return;
   }
+  const topbar: HTMLElement = topbarElement;
 
   const root = document.documentElement;
   let frame = 0;
@@ -847,7 +853,11 @@ function wireTopbarOffset(): void {
   window.addEventListener("orientationchange", schedule);
 }
 
-function boot(): void {
+export function bootDocs(): void {
+  if (booted) {
+    return;
+  }
+  booted = true;
   wireTopbarOffset();
   wireSearch();
   wireSidebar();
@@ -860,14 +870,10 @@ function boot(): void {
       buildIndex();
     });
   } else {
-    window.setTimeout(function later(): void {
+    setTimeout(function later(): void {
       buildIndex();
     }, 400);
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
-} else {
-  boot();
-}
+let booted = false;

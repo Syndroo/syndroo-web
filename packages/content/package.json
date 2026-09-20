@@ -1,0 +1,12 @@
+{
+  "name": "@syndroo/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Single maintained content source for the Syndroo website and documentation site.",
+  "license": "Apache-2.0",
+  "exports": {
+    "./site-data": "./site-data.ts",
+    "./demo-data": "./demo-data.ts"
+  }
+}

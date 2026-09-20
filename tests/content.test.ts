@@ -8,16 +8,17 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { after, before } from "node:test";
 import { promisify } from "node:util";
 
-import { docsBuild } from "../apps/docs/app.config.ts";
-import { websiteBuild } from "../apps/website/app.config.ts";
-import { buildApp } from "../scripts/lib/build-app.ts";
+import { SITE_TARGETS } from "../scripts/lib/app-targets.ts";
+import { listFiles } from "../scripts/lib/files.ts";
+import { rewriteOriginsInDirectory } from "../scripts/lib/origin-rewrite.ts";
 import type { Origins } from "../scripts/lib/origins.ts";
+import { repoRoot } from "../scripts/lib/paths.ts";
 import { demoScenarios } from "../packages/content/demo-data.ts";
 import {
   ORIGIN_PLACEHOLDERS,
@@ -54,12 +55,23 @@ let docsDist = "";
 
 before(async () => {
   scratch = await mkdtemp(join(tmpdir(), "syndroo-content-"));
-  const website = websiteBuild(CUSTOM, join(scratch, "website"));
-  const docs = docsBuild(CUSTOM, join(scratch, "docs"));
-  await buildApp(website);
-  await buildApp(docs);
-  websiteDist = website.distRoot;
-  docsDist = docs.distRoot;
+
+  // The exported output is produced by `npm run build`. Copying it into a
+  // scratch tree and running the same origin rewrite keeps these fixtures on
+  // real exported bytes without depending on a per-test Next.js build.
+  for (const site of SITE_TARGETS) {
+    if ((await listFiles(site.outRoot)).length === 0) {
+      throw new Error(`${site.name} has no export at ${site.outRoot}; run \`npm run build\` before \`npm test\``);
+    }
+    const target = join(scratch, site.name.replace("@syndroo/", ""));
+    await cp(site.outRoot, target, { recursive: true });
+    await rewriteOriginsInDirectory(target, CUSTOM);
+    if (site.name === "@syndroo/website") {
+      websiteDist = target;
+    } else {
+      docsDist = target;
+    }
+  }
 });
 
 after(async () => {
@@ -151,7 +163,8 @@ test("the shared page registry matches the built output", async () => {
   ] as const) {
     for (const page of registry) {
       const html = await readFile(join(dist, page.file), "utf8");
-      assert.ok(html.startsWith("<!doctype html>"), `${label} ${page.file} should be a page`);
+      // Next.js emits the doctype in upper case.
+      assert.match(html, /^<!doctype html>/i, `${label} ${page.file} should be a page`);
       assert.equal(countOccurrences(html, '<link rel="canonical"'), 1, `${label} ${page.file} canonical`);
     }
   }
@@ -285,7 +298,11 @@ test("robots.txt and sitemap.xml come from the registry and the configured origi
     [docsDist, docsPages, CUSTOM.docs],
   ] as const) {
     const robots = await readFile(join(dist, "robots.txt"), "utf8");
-    assert.equal(robots, `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`);
+    // Next.js writes this file from app/robots.ts, so the contract is the rules
+    // and the configured sitemap URL, not the exact casing or spacing.
+    assert.match(robots, /^User-[Aa]gent: \*\nAllow: \/\n/m);
+    assert.ok(robots.includes(`Sitemap: ${origin}/sitemap.xml`), `${dist} robots sitemap URL`);
+    assert.ok(!robots.includes("localhost:417"), `${dist} robots must not leak a loopback origin`);
 
     const sitemap = await readFile(join(dist, "sitemap.xml"), "utf8");
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -308,7 +325,9 @@ test("version claims stay consistent and no placeholder interface ships", async 
     [docsDist, docsPages, CUSTOM.docs],
   ] as const) {
     for (const page of registry) {
-      const html = await readFile(join(dist, page.file), "utf8");
+      // Scan authored page text only: the serialized RSC payload is not prose
+      // and can split a sentence across chunks.
+      const html = (await readFile(join(dist, page.file), "utf8")).replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
       assert.ok(!/Interaction sample|interaction-sample/.test(html), `${page.path} still shows the sample`);
 
       for (const version of html.match(versionPattern) ?? []) {
@@ -454,11 +473,34 @@ test("the demo fixtures keep the documented contract", () => {
 });
 
 test("the marketing demo cannot send anything", async () => {
-  const script = await readFile(join(websiteDist, "js", "site.js"), "utf8");
-  assert.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(script), "the demo must not perform network calls");
-  assert.ok(script.includes("prefers-reduced-motion"), "the demo should honour reduced motion");
-  assert.ok(script.includes("aria-disabled"), "controls should stay focusable while inactive");
-  assert.ok(script.includes("is-inactive"), "inactive controls need a visible state");
+  // The authored module is the authoritative check: it is the code path that
+  // renders every demo state, and it must not reach the network.
+  const source = await readFile(join(repoRoot, "apps/website/src/js/site.ts"), "utf8");
+  assert.ok(
+    !/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(source),
+    "the demo source must not perform network calls",
+  );
+  assert.ok(source.includes("prefers-reduced-motion"), "the demo should honour reduced motion");
+
+  // The exported bundle that carries the demo must be equally clean. Framework
+  // chunks are excluded: Next.js itself uses `fetch` internally.
+  const chunkRoot = join(websiteDist, "_next", "static", "chunks");
+  const chunks = (await listFiles(chunkRoot)).filter((file) => file.endsWith(".js"));
+  const demoChunks: string[] = [];
+  for (const chunk of chunks) {
+    const script = await readFile(chunk, "utf8");
+    if (script.includes("prefers-reduced-motion") && script.includes("Simulated")) {
+      demoChunks.push(chunk);
+      assert.ok(
+        !/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(script),
+        `${chunk} carries the demo and must not perform network calls`,
+      );
+    }
+  }
+  assert.ok(demoChunks.length > 0, "the exported demo chunk should be found");
+  const demoScript = await readFile(demoChunks[0], "utf8");
+  assert.ok(demoScript.includes("aria-disabled"), "controls should stay focusable while inactive");
+  assert.ok(demoScript.includes("is-inactive"), "inactive controls need a visible state");
 
   const home = await websitePage("index.html");
   assert.ok(home.includes("Simulated - no posts are sent"), "the demo should always say it is simulated");

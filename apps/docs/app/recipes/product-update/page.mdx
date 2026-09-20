@@ -1,0 +1,115 @@
+export const metadata = {
+  title: "Recipe: publish a product update - Syndroo Docs",
+  description: "Publish one release note to two platforms with per-platform wording, using the Syndroo 0.2.0-rc.1 HTTP API, including what to do when one platform fails.",
+  alternates: { canonical: "/recipes/product-update/" },
+  openGraph: {
+    type: "website",
+    url: "/recipes/product-update/",
+    title: "Recipe: publish a product update - Syndroo Docs",
+    description: "Publish one release note to two platforms with per-platform wording, using the Syndroo 0.2.0-rc.1 HTTP API, including what to do when one platform fails.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Recipes</span>
+          <span aria-hidden="true">/</span>
+          <span>Product update</span>
+        </nav>
+        <h1 id="product-update">Recipe: publish a product update</h1>
+        <p className="lede">One release note, two destinations, and wording that fits each platform. This is the smallest realistic cross-posting job: a shared body, one override, one idempotency key, and a result you read back instead of assuming.</p>
+
+        <h2 id="inputs">Inputs</h2>
+        <ul>
+          <li><strong>A release identifier</strong> you can reproduce, such as a tag or a version string. It becomes the idempotency key.</li>
+          <li><strong>Shared text</strong> for every platform, and optionally shorter text for one of them.</li>
+          <li><strong>A Worker URL and key</strong> in the environment: <code>{"SYNDROO_URL"}</code> and <code>{"SYNDROO_API_KEY"}</code>.</li>
+          <li><strong>Configured platforms.</strong> This recipe uses <code>{"bluesky"}</code> and <code>{"threads"}</code>; both need their credentials before the request is accepted (<a href="/platforms/bluesky/">Bluesky</a>, <a href="/platforms/threads/">Threads</a>).</li>
+        </ul>
+
+        <h2 id="steps">Steps</h2>
+        <ol className="steps">
+          <li>
+            <h3 id="write-the-text">Write both versions inside their limits</h3>
+            <p>The candidate enforces 300 Unicode code points and 3,000 UTF-8 bytes for Bluesky, and 500 characters for Threads. The API caps the shared body at 10,000 code points, and a per-platform limit that is exceeded later fails that publication with <code>{"INVALID_CONTENT"}</code> instead of being truncated.</p>
+          </li>
+          <li>
+            <h3 id="send">Send the request</h3>
+            <p>The key is derived from the release identifier, so repeating this exact request after a network failure returns the original post instead of publishing twice.</p>
+            <div data-code-scope="publish">
+              <pre data-label="POST /v1/posts"><code>{"curl -X POST \"$SYNDROO_URL/v1/posts\" \\\n  -H \"Authorization: Bearer $SYNDROO_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Idempotency-Key: release-0.2.0-rc.1\" \\\n  --data '{\n    \"content\": \"Syndroo 0.2.0-rc.1 candidate: one HTTP call accepts a post and queues one publication per platform.\",\n    \"platforms\": [\"threads\", \"bluesky\"],\n    \"overrides\": {\n      \"bluesky\": { \"content\": \"0.2.0-rc.1 candidate: Mock SNS gate green for Bluesky and Threads. Live accounts still pending.\" }\n    }\n  }'"}</code></pre>
+            </div>
+          </li>
+          <li>
+            <h3 id="expected-acceptance">Expected acceptance</h3>
+            <pre data-label="202 Accepted"><code>{"{\n  \"id\": \"post_...\",\n  \"status\": \"queued\"\n}"}</code></pre>
+            <p>Keep the <code>{"id"}</code>. HTTP <code>{"202"}</code> does not confirm platform success, and it may already be out of date when it reaches you: the Queue consumer can have published before you read the response. Poll the post for the real outcome.</p>
+          </li>
+          <li>
+            <h3 id="read-back">Read the per-platform result</h3>
+            <p>Query the post with the id from the receipt:</p>
+            <pre data-label="terminal"><code>{"curl \\\n  -H \"Authorization: Bearer $SYNDROO_API_KEY\" \\\n  \"$SYNDROO_URL/v1/posts/post_...\""}</code></pre>
+            <p>The response carries one publication entry per platform:</p>
+            <pre data-label="GET /v1/posts/{id}"><code>{"{\n  \"id\": \"post_...\",\n  \"status\": \"published\",\n  \"publications\": [\n    { \"platform\": \"threads\", \"status\": \"published\", \"attempts\": 1, \"externalId\": \"1789...\" },\n    { \"platform\": \"bluesky\", \"status\": \"published\", \"attempts\": 1, \"externalId\": \"at://...\", \"externalUrl\": \"https://bsky.app/...\" }\n  ]\n}"}</code></pre>
+            <p>Show the platform's own link when it returned one. A platform that returned only an identifier gets only that identifier shown; do not construct a URL from it.</p>
+          </li>
+        </ol>
+
+        <h2 id="failure-handling">Failure handling</h2>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">What you see</th><th scope="col">What happened</th><th scope="col">What to do</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Post status <code>{"partial"}</code></th>
+                <td>One platform published and the other did not.</td>
+                <td>Report per platform. There is no retry endpoint: first confirm <code>{"errorAmbiguous"}</code> is <code>{"false"}</code> on the failing entry, fix the cause, and then decide whether to send a new request with a new key that lists only the platforms you confirmed failed. Never include the platforms that already published.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>{"errorCode: \"RATE_LIMIT\""}</code>, <code>{"attempts: 3"}</code></th>
+                <td>Retries were attempted and the retry budget is exhausted.</td>
+                <td>Wait for the platform's window to pass, then publish a new request. Do not resend the whole original request against every platform.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>{"errorCode: \"INVALID_CONTENT\""}</code></th>
+                <td>The text exceeded the platform's own limit after the API accepted it.</td>
+                <td>Shorten that platform's override and send a new request with a new key.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>{"errorAmbiguous: true"}</code></th>
+                <td>The platform may have accepted the post.</td>
+                <td>Check the account by hand before doing anything else. Syndroo never resends an ambiguous publication.</td>
+              </tr>
+              <tr>
+                <th scope="row">HTTP <code>{"409"}</code> <code>{"IDEMPOTENCY_CONFLICT"}</code></th>
+                <td>The release key was already used with different text.</td>
+                <td>Decide whether this is the same post or a new one. Same post: resend the original body. New post: use a new key.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="applies-to">Applies to</h2>
+        <p>Syndroo 0.2.0-rc.1 (unpublished candidate). Statuses, fields and limits are those documented in the <a href="/api/">HTTP API reference</a>; per-platform wording needs the platform's own guide.</p>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#inputs">Inputs</a></li>
+        <li><a href="#steps">Steps</a></li>
+        <li><a className="is-sub" href="#write-the-text">Write the text</a></li>
+        <li><a className="is-sub" href="#send">Send the request</a></li>
+        <li><a className="is-sub" href="#expected-acceptance">Expected acceptance</a></li>
+        <li><a className="is-sub" href="#read-back">Read the result</a></li>
+        <li><a href="#failure-handling">Failure handling</a></li>
+        <li><a href="#applies-to">Applies to</a></li>
+      </ul>
+    </nav>

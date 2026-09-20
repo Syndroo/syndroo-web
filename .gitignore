@@ -3,6 +3,11 @@ node_modules/
 
 # Build output: regenerate with `npm run build`
 apps/*/dist/
+apps/*/out/
+apps/*/.next/
+
+# Static assets are copied from packages/brand/assets by `npm run assets`
+apps/*/public/assets/
 
 # Editor and OS noise
 .DS_Store
@@ -15,3 +20,6 @@ apps/*/dist/
 !.env.example
 .dev.vars
 .dev.vars.*
+
+# Next.js TypeScript incremental build info
+*.tsbuildinfo

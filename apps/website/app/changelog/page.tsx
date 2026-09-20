@@ -1,0 +1,181 @@
+// Migrated verbatim from the former authored HTML page body by
+// `scripts/migrate-pages.ts`. Header, main and footer come from app/layout.tsx.
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Changelog - Syndroo",
+  description: "Prepared changes in the Syndroo 0.2.0-rc.1 release candidate, kept separate from anything published.",
+  alternates: { canonical: "/changelog/" },
+  openGraph: {
+    type: "website",
+    url: "/changelog/",
+    title: "Changelog - Syndroo",
+    description: "Prepared changes in the Syndroo 0.2.0-rc.1 release candidate, kept separate from anything published.",
+  },
+  twitter: { card: "summary" },
+};
+
+export default function ChangelogPage() {
+  return (
+    <>
+<div className="page-head">
+        <div className="wrap">
+          <span className="eyebrow">Changelog</span>
+          <h1>What is prepared, and what is published</h1>
+          <p>
+            This page mirrors the repository changelog. It records prepared work and its status separately, because a
+            version that exists in the source tree is not the same thing as a release that someone can install.
+          </p>
+        </div>
+      </div>
+
+      <section className="section">
+        <div className="wrap prose">
+          <div className="draft-banner">
+            <strong>No published release yet</strong>
+            <p>
+              The repository has no version tags, and the current candidate has not been published to npm, deployed or
+              accepted as a release. Everything below describes prepared work only.
+            </p>
+          </div>
+
+          <div className="release">
+            <div className="release__head">
+              <h2>0.2.0-rc.1</h2>
+              <span className="release__status">{"Release candidate · not published"}</span>
+            </div>
+            <p className="muted" style={{ margin: "0" }}>
+              The version lives in <code>{"packages/cloudflare-worker/package.json"}</code>. Publication is a separate
+              maintainer decision, so nothing in this section is tagged, deployed, or available as a published npm release.
+            </p>
+
+            <h3>Changed</h3>
+            <ul>
+              <li>
+                Bluesky publishing now uses the official <code>{"@atproto/api"}</code> SDK, keeping link facets, publication
+                identifiers, bounded responses and application-owned retries.
+              </li>
+              <li>
+                Bluesky requests are sent with <code>{"redirect: \"manual\""}</code>. <code>{"workerd"}</code> rejects
+                <code>{"redirect: \"error\""}</code> before dispatch, and <code>{"manual"}</code> keeps the same guarantee: the
+                response is inspected and a 3xx counts as a failure rather than a followed redirect.
+              </li>
+              <li>
+                Platforms are enabled independently from their credentials, unconfigured platforms are rejected before
+                persistence or enqueueing, and the Bluesky host defaults to <code>{"bsky.social"}</code>.
+              </li>
+              <li>
+                Production setup requires only <code>{"SYNDROO_API_KEY"}</code>; platform secrets are added after deployment.
+                Local development uses the <code>{"local"}</code> Wrangler environment to load optional platform credentials.
+              </li>
+              <li>
+                Publication state transitions commit together with their Post aggregate update in one D1 transaction,
+                including the claim read. A statement failure rolls the claim back, and an unknown commit outcome stays on
+                the conservative path instead of resetting a publication to <code>{"pending"}</code>.
+              </li>
+              <li>
+                The Worker bundle is rebuilt from source into a clean output directory before packaging, and
+                <code>{"npm run verify:package"}</code> checks the packed artifact against the built bundle.
+              </li>
+              <li>
+                The toolchain floor rises to <code>{"wrangler@^4.132.0"}</code>, <code>{"@cloudflare/workers-types"}</code>
+                <code>{"^5.20260915.1"}</code> and <code>{"@cloudflare/vitest-plugin"}</code> <code>{"^1.1.10"}</code>.
+              </li>
+            </ul>
+
+            <h3>Added</h3>
+            <ul>
+              <li>
+                Optional maintenance admission control: the non-secret variable <code>{"SYNDROO_MAINTENANCE"}</code> with the
+                exact value <code>{"true"}</code> rejects authenticated <code>{"POST /v1/posts"}</code> with HTTP <code>{"503"}</code>
+                before the request body, the <code>{"Idempotency-Key"}</code> or D1 is read. Health checks and authenticated
+                queries keep working, and the switch does not pause Queue consumers or the Cron Trigger.
+              </li>
+              <li>
+                Strict retry deadlines through migration <code>{"0003_retry_timing.sql"}</code>, which adds the nullable
+                <code>{"publications.retry_at"}</code> column. Claim and Cron selection both require the deadline, so a
+                duplicate Queue message cannot start the next attempt early. Minimum waits are 60 seconds after the first
+                failure and 120 seconds after the second, the attempt limit stays at three, and ambiguous outcomes are
+                never retried automatically.
+              </li>
+              <li>
+                A local Mock SNS end-to-end gate (<code>{"npm run test:e2e"}</code>, <code>{"npm run check:e2e"}</code>) that
+                drives the bundled Worker, D1, Queue, Cron handler and real adapters against loopback mock servers with
+                fake credentials.
+              </li>
+              <li>
+                Package verification covering the packed artifact, plus generated third-party license text for the bundled
+                Worker.
+              </li>
+              <li>
+                Native LinkedIn public text publishing with an explicit author and API version, little-text escaping,
+                header-based confirmation and ambiguous-write protection.
+              </li>
+              <li>
+                Native Tumblr NPF text publishing with OAuth 1.0a, optional blog credentials, preflight text validation,
+                bounded responses and ambiguous-write protection.
+              </li>
+              <li>
+                X text publishing through the official <code>{"@xdevplatform/xdk"}</code> SDK, optional OAuth 1.0a
+                credentials, official weighted text validation and bounded requests without SDK retries.
+              </li>
+              <li>
+                A thin deployment architecture around the public <code>{"@syndroo/cloudflare-worker"}</code> package, plus the
+                Apache License 2.0, NOTICE, DCO contribution policy, CI and an npm release workflow.
+              </li>
+            </ul>
+
+            <h3>Migration and rollback</h3>
+            <ul>
+              <li>
+                Apply migration <code>{"0003_retry_timing.sql"}</code> before deploying this Worker version;
+                <code>{"npm run deploy"}</code> applies pending migrations before the code deploy. The migration is compatible
+                with the previously deployed Worker: rows written by older code keep <code>{"retry_at"}</code> as
+                <code>{"NULL"}</code> and stay immediately eligible.
+              </li>
+              <li>
+                Rolling back to older Worker code keeps publishing against the migrated database but cannot enforce the
+                stored retry deadline, so a duplicate Queue message or Cron scan can start the next attempt before the
+                earliest stored retry time. Do not reverse the migration and do not reset publication statuses by hand.
+              </li>
+            </ul>
+
+            <h3>Licensing note</h3>
+            <ul>
+              <li>
+                <code>{"@xdevplatform/xdk@0.6.6"}</code> declares an MIT license and an author in its
+                <code>{"package.json"}</code>, but the published tarball for that exact version contains only
+                <code>{"dist/"}</code>, <code>{"package.json"}</code> and <code>{"README.md"}</code>, and the upstream repository has
+                no license file. The distribution therefore adds the canonical SPDX MIT text with the copyright
+                placeholder unmodified, and records the source URL and SHA-256 beside it. This is not the upstream
+                project's license file and asserts no copyright holder.
+              </li>
+            </ul>
+
+            <h3>Verification status</h3>
+            <ul>
+              <li>Local unit and script suites pass. Gate totals are recorded by the release maintainer after the final run.</li>
+              <li>
+                Bluesky and Threads are exercised locally through the Mock SNS gate only; live-account acceptance has not
+                been performed. X, Tumblr and LinkedIn are experimental and have not been validated live.
+              </li>
+            </ul>
+          </div>
+
+          <h2 id="how-to-read">How to read this page</h2>
+          <p>
+            Prepared work can still change before a release. The candidate carries a migration and a toolchain upgrade, so
+            "not published" is load-bearing information rather than a formality. When a release is actually tagged, this
+            page will gain a new section that says so, with the tag and the published package version.
+          </p>
+
+          <div className="in-page-nav">
+            <a href="http://localhost:4174/">Documentation</a>
+            <a href="/blog/">Blog</a>
+            <a href="https://github.com/Syndroo/syndroo/blob/main/CHANGELOG.md" rel="noreferrer">Changelog in the repository</a>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

@@ -1,7 +1,7 @@
 # Design contract
 
 Current contract for the two sites in this repository, at design iteration
-`0.3.0`. Evidence for what has actually been run lives in
+`0.4.0`. Evidence for what has actually been run lives in
 [acceptance.md](acceptance.md).
 
 ## Version vocabulary
@@ -11,12 +11,12 @@ Four facts stay separate, and the tests fail if a page mixes them up:
 | Fact | Value |
 | --- | --- |
 | Product version | `0.2.0-rc.1`, an unpublished release candidate |
-| Website design iteration | `0.3.0` |
+| Website design iteration | `0.4.0` |
 | Documentation version | `0.2.0-rc.1` |
 | Platform status | `mock-tested` for Bluesky and Threads, `experimental` for X, Tumblr and LinkedIn |
 
 The design iteration is a change to this repository's website, never a product
-release, and no page may present `0.3.0` as the product version. A platform's
+release, and no page may present `0.4.0` as the product version. A platform's
 status changes only with a real acceptance record; a configured instance is a
 separate fact.
 
@@ -38,6 +38,16 @@ URLs resolved from the build-time `WEBSITE_ORIGIN` and `DOCS_ORIGIN` values. Eac
 build also generates `robots.txt` and `sitemap.xml` from that app's page registry
 and the configured origin.
 
+Both sites are Next.js App Router applications with TypeScript and Tailwind CSS,
+using shadcn/ui components for the controls that need one, and each one is
+statically exported with `output: "export"` into its own `out/`. The docs app
+renders MDX pages. There are no Server Actions, no request-time auth and no
+dynamic server route, and images do not depend on the default server-side
+optimizer, so either export can be served as plain files. The build accepts no
+credentials: it refuses to run while a `.env*` or `.dev.vars*` file is present.
+The build applies one single-pass origin rewrite to the exported text, so a
+custom-origin build never ships loopback links inside its own files.
+
 ## Content source
 
 `packages/content/` is the single maintained source for the facts both sites and
@@ -54,13 +64,13 @@ pages, so a custom-origin build never ships loopback links inside its own bundle
 The modules have no imports and no runtime syntax that type stripping cannot
 erase.
 
-Authored navigation stays in the HTML. The marketing navigation and footer are
-written into each page and a fixture test compares every page against the
-registry, so drift fails the build. Documentation pages instead declare
-`<!-- docs:head -->` and `<!-- docs:foot -->`; the build replaces those two
-markers with the shared topbar, sidebar, footer and search dialog, and a page
-that loses a marker fails the build. There is no general template engine: pages
-remain authored HTML between the markers.
+Navigation is rendered from the registry by each app's layout: the marketing
+header and footer, and the documentation topbar, sidebar, on-page TOC, footer and
+search dialog. A fixture test compares every export against the registry, so
+drift fails the check. The documentation sidebar marks the current page from the
+registry path, and the search index is still built from the same registry at
+runtime, so a new page is reachable, marked and searchable without touching the
+chrome.
 
 ## Visual direction
 
@@ -68,19 +78,36 @@ A welcoming engineering tool, not a dashboard: spacious off-white canvas with
 ink, muted and thin-border neutrals, violet `#6446ed` and blue `#267cf8` accents
 and a pale lavender support tone. The existing branching logo mark and the three
 mascot artworks are used unmodified. Type is the system stack (Avenir Next,
-Inter, system UI, sans-serif) with a monospace stack for code. Content is
-constrained to a 1160px column with 40px desktop and 22px mobile gutters.
-Buttons are at least 44px tall, panels keep their existing radii, shadows stay
-restrained, and the skip link and `:focus-visible` outline stay in place.
+Inter, system UI, sans-serif) with a monospace stack for code. Buttons are at
+least 44px tall, panels keep their existing radii, shadows stay restrained, and
+the skip link and `:focus-visible` outline stay in place.
 
-Mascot sizes are per role rather than one shared value: about 160px as an accent
-in the hero demo (120px on narrow screens) and about 96px in the closing call to
-action (80px on narrow screens). The demo section no longer repeats a large
-mascot. Headings run 58px desktop, 36px at 720px and 32px at 420px; body text is
-17px desktop and 16.5px mobile; code is 13.5px in prose and 13px inside the demo
-consoles. Layout uses `min-width: 0` and grid collapse instead of hiding overflow
-on `body`, so the only horizontal scrolling is inside a code block or a wide
-table.
+The marketing shell has no fixed maximum width: `.wrap` spans the viewport with
+`padding-inline: clamp(20px, 3vw, 64px)`, so the header, sections and footer grow
+with the window while prose keeps its own `ch`-based measure. The documentation
+site uses one shell token for its topbar, layout grid and footer, so all three
+share the same left and right boundary at every viewport, and the article column
+stays at `78ch`. Code blocks and wide tables scroll inside their own container.
+
+Mascot sizes are per role and set from the change request: 320px in the hero
+visual area (220px below 720px) and 200px in the closing call to action (160px
+below 720px). The artwork is not cropped: the image itself carries no
+`border-radius`, no ancestor hides overflow, and the glow is a separate layer
+behind the image. Headings run 58px desktop, 36px at 720px and 32px at 420px;
+body text is 17px desktop and 16.5px mobile; code is 13.5px in prose and 13px
+inside the demo consoles. Layout uses `min-width: 0` and grid collapse instead of
+hiding overflow on `body`, so the only horizontal scrolling is inside a code
+block or a wide table.
+
+Theme is a shared semantic-token layer, not a per-page restyle. Both headers
+carry the same Light/Dark/System control from `packages/theme/`, `System` is the
+default, and the choice moves surfaces, borders, text, status chips, code
+consoles, focus rings and the menu together. The pre-paint script reads a
+`syndroo-theme` cookie before next-themes runs, so the production pair
+(`syndroo.com` and its subdomains) shares one preference across origins without
+a first-paint flash; the cookie is written only on those hosts, is scoped with
+`Domain=syndroo.com`, and a browser that refuses storage still renders a themed
+page. Local and preview origins keep the choice per site.
 
 ## Marketing composition
 

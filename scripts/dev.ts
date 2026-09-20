@@ -1,49 +1,44 @@
-// Build both sites once, then serve both built outputs on loopback.
-//
-// There is no file watcher: edit a source, run the build again, then reload.
-import { runAppBuild } from "./lib/build-app.ts";
+// Development servers for both sites. Never used by the build.
+import { spawn } from "node:child_process";
+import { join } from "node:path";
+import { SITE_TARGETS } from "./lib/app-targets.ts";
 import { runCli } from "./lib/cli.ts";
-import {
-  DEFAULT_DOCS_PORT,
-  DEFAULT_HOST,
-  DEFAULT_WEBSITE_PORT,
-  resolveOrigins,
-} from "./lib/origins.ts";
-import { closeOnShutdown, startStaticServers } from "./lib/static-server.ts";
-import { docsBuild } from "../apps/docs/app.config.ts";
-import { websiteBuild } from "../apps/website/app.config.ts";
+import { repoRoot } from "./lib/paths.ts";
+import { prepareAssets } from "./prepare-assets.ts";
+
+const nextBin = join(repoRoot, "node_modules/next/dist/bin/next");
+const DEV_PORTS = [3000, 3001];
 
 await runCli("dev", async () => {
-  const origins = resolveOrigins(process.env);
-  const website = websiteBuild(origins);
-  const docs = docsBuild(origins);
+  await prepareAssets();
 
-  await runAppBuild(website);
-  await runAppBuild(docs);
+  const children = SITE_TARGETS.map((site, index) =>
+    spawn(process.execPath, [nextBin, "dev", "-p", String(DEV_PORTS[index] ?? 3000 + index)], {
+      cwd: site.appRoot,
+      env: process.env,
+      stdio: ["ignore", "inherit", "inherit"],
+    }),
+  );
 
-  // Started as one unit: a port already in use must not leave the other
-  // listener running behind a failed command.
-  const servers = await startStaticServers([
-    {
-      label: "Marketing site",
-      root: website.distRoot,
-      host: DEFAULT_HOST,
-      port: DEFAULT_WEBSITE_PORT,
-    },
-    {
-      label: "Documentation site",
-      root: docs.distRoot,
-      host: DEFAULT_HOST,
-      port: DEFAULT_DOCS_PORT,
-    },
-  ]);
+  const stop = (): void => {
+    for (const child of children) {
+      child.kill("SIGTERM");
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
 
-  for (const server of servers) {
-    console.log(`${server.label}: ${server.url} (serving ${server.root})`);
-  }
-  console.log(`Cross-site links: marketing -> ${origins.website}, docs -> ${origins.docs}`);
-  console.log("No file watcher: re-run `npm run build` after editing a source file, then reload.");
-
-  closeOnShutdown(servers);
-  await new Promise(() => {});
+  await Promise.all(
+    children.map(
+      (child) =>
+        new Promise<void>((done, fail) => {
+          child.once("error", fail);
+          child.once("exit", () => {
+            stop();
+            done();
+          });
+        }),
+    ),
+  );
 });

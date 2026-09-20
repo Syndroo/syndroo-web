@@ -1,0 +1,248 @@
+/* Syndroo marketing stylesheet entry (Next.js App Router, static export).
+ *
+ * Two layers:
+ *   1. Tailwind CSS v4 supplies the utility layer the shadcn/ui components use.
+ *      Preflight is deliberately not imported: the authored stylesheet below
+ *      already owns its resets, and preflight would change the accepted design.
+ *   2. The authored marketing stylesheet stays the single source for layout,
+ *      typography and the palette. It is imported unchanged, so this migration
+ *      does not restyle anything by accident.
+ *
+ * Everything appended after the import is the v0.4.0 design iteration
+ * (CR-040-04..07): semantic theme tokens, the full-width shell, the mascot
+ * sizing, and the shared theme control.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "../src/static/css/site.css";
+
+/* =====================================================================
+   v0.4.0 design iteration (CR-040-04..07)
+   ===================================================================== */
+
+:root {
+  color-scheme: light;
+}
+
+/* --- CR-040-05 / WEB-03: the main layout follows the viewport.
+ * The former `max-width: 1160px` is removed rather than replaced: the shell
+ * keeps only a clamp-style inline gutter, so header, sections and footer grow
+ * with the viewport. Prose keeps its own measure through the existing
+ * `ch`-based rules, and the demo panel keeps its own grid. */
+.wrap {
+  max-width: none;
+  padding-inline: clamp(20px, 3vw, 64px);
+}
+
+/* --- CR-040-06 / WEB-04: mascot sizing and cropping.
+ * Per-role sizes from the change request. The mascot artwork is used
+ * unmodified; the glow is a separate layer behind the image instead of a
+ * circular mask painted on the image itself. No ancestor sets
+ * `overflow: hidden`, so ears, tail and paws cannot be clipped. */
+:root {
+  --mascot-hero: 320px;
+  --mascot-cta: 200px;
+}
+
+.hero__visual {
+  display: grid;
+  gap: 22px;
+  justify-items: center;
+}
+
+.hero__mascot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  padding-block: 6px;
+}
+
+.hero__mascot-glow {
+  position: absolute;
+  inset: -6% -8%;
+  z-index: 0;
+  border-radius: 999px;
+  background: radial-gradient(
+    closest-side,
+    rgba(100, 70, 237, 0.16),
+    rgba(38, 124, 248, 0.08) 62%,
+    rgba(251, 251, 254, 0) 80%
+  );
+  pointer-events: none;
+}
+
+.demo__mascot {
+  position: relative;
+  z-index: 1;
+  width: var(--mascot-hero);
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 0;
+  background: none;
+}
+
+.cta__mascot img {
+  width: var(--mascot-cta);
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --mascot-hero: 220px;
+    --mascot-cta: 160px;
+  }
+}
+
+/* --- CR-040-07 / WEB-05, WEB-08, WEB-09: shared theme.
+ * The control writes `data-theme` on <html>. Dark is a full palette swap, not
+ * a background change: surfaces, borders, text, status chips, the code
+ * consoles, focus rings and the menu all move together. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas: #0e1120;
+  --surface: #161b2e;
+  --ink: #e9ecf8;
+  --muted: #a6aec6;
+  --border: #272e46;
+  --border-strong: #38405c;
+  --violet: #9b8bff;
+  --violet-dark: #b3a7ff;
+  --blue: #6ba6ff;
+  --lavender: #221f3d;
+  --lavender-deep: #2e2952;
+  --console: #0b0e1a;
+  --console-line: #232a44;
+  --console-text: #dfe3f5;
+  --console-muted: #9aa3c2;
+  --ok: #4cc38a;
+  --warn: #e0ac53;
+  --danger: #f08a8a;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.4), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Literal colours that were not tokens yet. Each one is listed here rather
+   than rewritten inside the accepted stylesheet. */
+[data-theme="dark"] .site-header {
+  background: rgba(14, 17, 32, 0.92);
+}
+
+[data-theme="dark"] .skip-link,
+[data-theme="dark"] .skip-link:focus {
+  color: #0e1120;
+}
+
+[data-theme="dark"] .status-tag--tested {
+  border-color: #2f6e4f;
+  background: #12291f;
+}
+
+[data-theme="dark"] .status-tag--experimental,
+[data-theme="dark"] .release__status,
+[data-theme="dark"] .draft-banner {
+  border-color: #5c4a22;
+  background: #2a2214;
+}
+
+[data-theme="dark"] .release li {
+  color: #d6dcf0;
+}
+
+[data-theme="dark"] .draft-banner p {
+  color: #e3c98a;
+}
+
+[data-theme="dark"] .accent {
+  background: linear-gradient(96deg, #9b8bff 0%, #6ba6ff 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="dark"] .hero__mascot-glow {
+  background: radial-gradient(
+    closest-side,
+    rgba(155, 139, 255, 0.24),
+    rgba(107, 166, 255, 0.14) 62%,
+    rgba(14, 17, 32, 0) 80%
+  );
+}
+
+/* --- Theme control (shadcn/ui dropdown menu) ---------------------------- */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--lavender);
+  color: var(--violet-dark);
+}
+
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.ui-menu {
+  min-width: 190px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: var(--shadow-card);
+}
+
+.ui-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.ui-menu__item[data-highlighted] {
+  background: var(--lavender);
+  color: var(--violet-dark);
+}
+
+.ui-menu__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+}
+
+.ui-menu__item svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* The mobile header keeps the theme control visible next to the menu button. */
+@media (max-width: 900px) {
+  .site-header__inner {
+    gap: 12px;
+  }
+}

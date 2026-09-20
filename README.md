@@ -39,11 +39,11 @@ Run everything from the repository root.
 
 ```bash
 npm ci           # install workspace dependencies
-npm run build    # build both sites into their own dist/
+npm run build    # Next.js static export of both sites into their own out/
 npm run check    # verify built artifacts and internal links
 npm test         # run the Node test fixtures
-npm run dev      # build once, then serve both sites on loopback
-npm run preview  # serve the already-built output
+npm run dev      # run both Next.js development servers
+npm run preview  # serve the exported output on loopback
 ```
 
 Focused builds and single-app previews:
@@ -51,13 +51,11 @@ Focused builds and single-app previews:
 ```bash
 npm run build:website
 npm run build:docs
-npm run preview --workspace apps/website
-npm run preview --workspace apps/docs
 ```
 
-`npm run dev` builds and then serves. It does not watch the filesystem, so
-re-run `npm run build` after editing a source file, or use `npm run
-build:website` / `npm run build:docs` for the app you changed.
+`npm run dev` runs the Next.js development servers for both apps. `npm run
+build` writes each app's static export to `apps/*/out`, and `npm run preview`
+serves those exported files on loopback without watching or rebuilding them.
 
 ## Local origins
 
@@ -87,20 +85,25 @@ build fails with a clear error when a value does not qualify.
 ## Repository layout
 
 ```text
-apps/website/     marketing site: pages in src/pages/, CSS in src/static/css/,
-                  browser TypeScript in src/js/, plus its own build output
-apps/docs/        documentation site: pages in src/pages/, styles.css in
-                  src/static/, browser TypeScript in src/js/, plus its own
-                  build output; src/chrome.ts owns the navigation, footer and
-                  search dialog that the build injects into every page
+apps/website/     marketing site: Next.js App Router routes in app/, shared
+                  header/footer components in components/, authored browser
+                  TypeScript in src/js/, its own static export in out/
+apps/docs/        documentation site: Next.js App Router with MDX pages in
+                  app/ (*.mdx), the topbar/sidebar/footer/search chrome in
+                  components/, authored browser TypeScript in src/js/, its own
+                  static export in out/
 packages/content/ the maintained content source: versions, platform
                   capability facts, agent access methods, navigation, the page
                   registries and the simulated demo fixtures. Both builds
                   compile these modules into their own output, so the two sites
                   and the tests cannot disagree about them
+packages/theme/   the shared theme implementation: the next-themes provider, the
+                  pre-paint cookie script and the Light/Dark/System control used
+                  by both headers
 packages/brand/assets/  the only home of the shared marks: logo, favicon, the
                   three mascot artworks and the five platform SVGs, documented
-                  in packages/brand/PROVENANCE.md
+                  in packages/brand/PROVENANCE.md; copied into each app's
+                  public/assets by `npm run assets`
 scripts/          build, dev, check and preview entry points
 tests/            Node fixtures for artifacts, links and server behaviour
 .github/          CI that builds, checks and tests (no deployment)
@@ -110,17 +113,16 @@ Each app builds a self-contained output directory holding its own HTML, CSS,
 generated browser JavaScript and copies of the shared brand assets it uses, so
 either site can be served from its own output without the other. The brand
 assets package remains the single source for every shared mark, and both builds
-copy those files unchanged. Each build also generates `robots.txt` and
-`sitemap.xml` from the page registry and the configured origins.
+copy those files unchanged. `app/robots.ts` and `app/sitemap.ts` generate
+`robots.txt` and `sitemap.xml` from the page registry and the configured
+origins, and the export contains no server runtime: every page is prerendered
+HTML, so a page can be opened and refreshed directly.
 
-Page sources are authored HTML and CSS, with TypeScript for browser behaviour.
-Built output is generated: change the source and rebuild instead of editing
-built files.
-
-Documentation pages declare two markers, `<!-- docs:head -->` and
-`<!-- docs:foot -->`, which the build replaces with the shared topbar, sidebar,
-footer and search dialog. A page that loses a marker fails the build rather than
-shipping without navigation, and each page stays authored HTML between them.
+Marketing pages are App Router routes (`app/**/page.tsx`) in the same shape as
+the pages they replaced, and documentation pages are MDX (`app/**/page.mdx`).
+The topbar, sidebar, footer, search dialog and theme control are rendered once
+by each app's layout, so a new page cannot drift out of the chrome. Built output
+is generated: change the source and rebuild instead of editing built files.
 
 ## Content status
 

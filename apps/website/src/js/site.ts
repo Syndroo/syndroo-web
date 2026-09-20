@@ -7,9 +7,9 @@
 //
 // Authored in TypeScript and compiled by the shared Node 24 build with type
 // stripping, so it avoids TypeScript-only runtime syntax.
-import { platforms } from "./site-data.js";
-import { demoScenarios } from "./demo-data.js";
-import type { DemoResponse, DemoScenario, DemoStep, PublicationEntry } from "./demo-data.js";
+import { platforms } from "@syndroo/content/site-data";
+import { demoScenarios } from "@syndroo/content/demo-data";
+import type { DemoResponse, DemoScenario, DemoStep, PublicationEntry } from "@syndroo/content/demo-data";
 
 type PlatformInfo = {
   name: string;
@@ -670,5 +670,20 @@ function initDemo(): void {
   statusLine.textContent = READY_STATUS;
 }
 
-initNavigation();
-initDemo();
+let booted = false;
+
+/**
+ * Wire the header menu and the hero demo.
+ *
+ * Called once by components/site-behaviors.tsx after hydration. The guard keeps
+ * a second call (React's development double-effect) from binding listeners
+ * twice, and the page is otherwise unchanged from the authored script.
+ */
+export function bootWebsite(): void {
+  if (booted) {
+    return;
+  }
+  booted = true;
+  initNavigation();
+  initDemo();
+}

@@ -61,7 +61,7 @@ export type Versions = {
 export const versions: Versions = {
   product: "0.2.0-rc.1",
   releaseStage: "unpublished release candidate",
-  design: "0.3.0",
+  design: "0.4.0",
   docs: "0.2.0-rc.1",
 };
 

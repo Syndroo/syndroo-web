@@ -2,15 +2,30 @@
   "name": "@syndroo/docs",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "description": "Syndroo documentation site: authored HTML, CSS and TypeScript with its own static build.",
+  "description": "Syndroo documentation site: Next.js App Router with MDX and its own static export.",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "node build.ts",
-    "dev": "node dev.ts",
-    "preview": "node preview.ts"
+    "build": "node ../../scripts/prepare-assets.ts && next build",
+    "dev": "next dev -p 3001"
   },
   "engines": {
     "node": ">=24"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "3.1.1",
+    "@mdx-js/react": "3.1.1",
+    "@next/mdx": "15.5.25",
+    "@radix-ui/react-dropdown-menu": "2.1.24",
+    "@syndroo/content": "*",
+    "@syndroo/theme": "*",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.47.0",
+    "next": "15.5.25",
+    "next-themes": "0.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remark-gfm": "4.0.1",
+    "tailwind-merge": "3.7.0"
   }
 }

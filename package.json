@@ -6,9 +6,11 @@
   "description": "Sources and build tooling for the Syndroo website and documentation site.",
   "license": "Apache-2.0",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
+    "assets": "node scripts/prepare-assets.ts",
     "build": "node scripts/build.ts",
     "build:website": "npm run build --workspace apps/website",
     "build:docs": "npm run build --workspace apps/docs",
@@ -19,5 +21,29 @@
   },
   "engines": {
     "node": ">=24"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "3.1.1",
+    "@mdx-js/react": "3.1.1",
+    "@next/mdx": "15.5.25",
+    "@radix-ui/react-dropdown-menu": "2.1.24",
+    "@tailwindcss/postcss": "4.3.3",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.47.0",
+    "next": "15.5.25",
+    "next-themes": "0.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remark-gfm": "4.0.1",
+    "tailwind-merge": "3.7.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@types/mdx": "2.0.14",
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3"
   }
 }

@@ -4,6 +4,53 @@ This file separates what was accepted for the static prototype from what has
 been verified in this repository. The two records are not interchangeable, and
 the newest record comes first.
 
+## v0.4.0 framework migration (2026-09-20)
+
+Scope: the website and documentation sources in this repository only, for
+CR-040-04..07. Both sites moved to Next.js App Router with a static export; the
+brand, content facts, page set and four simulated demo scenarios were carried
+over unchanged. No deployment, no publish, no live platform call and no
+credential use formed any part of this work.
+
+What was executed, and what it produced:
+
+- `npm ci`, then `npm run build`: both apps exported to their own `out/`.
+  Website: 53 files / 9 pages; docs: 78 files / 17 pages. Both exports contain
+  no server runtime, and `robots.txt` and `sitemap.xml` are generated per app
+  from its registry and the configured origin.
+- `npm run check` after that build: website 342 local references, 0 issues;
+  docs 1057 local references, 0 issues. Every exported HTML file also passed the
+  no-server-dependency markers, and every exported `.js` file parsed with
+  `node --check`.
+- `npm test`: 41 tests passed, 0 failed (`tests/content.test.ts`,
+  `tests/export.test.ts`, `tests/server.test.ts`).
+- `WEBSITE_ORIGIN=https://www.syndroo.com DOCS_ORIGIN=https://docs.syndroo.com
+  node scripts/build.ts`: completed, and the exported canonical URL, Open Graph
+  URL, `robots.txt` sitemap line and `sitemap.xml` all carried the configured
+  origins. A scan of both exports found no remaining `localhost:4173` or
+  `localhost:4174` reference. The default build was restored afterwards.
+- `node scripts/preview.ts` on loopback, then HTTP probes of every registered
+  page on both sites: 200 for each page, `404` for an unknown path on both
+  origins, and a repeated request for the same page still answered 200.
+- Static checks of the exported output: no `src` or `link rel="preconnect"`
+  pointing off-origin; only Next.js' shared polyfill chunk matches
+  `XMLHttpRequest`, and no app chunk does; the docs search still fetches only
+  its own local pages; the marketing demo source and the chunk that carries it
+  contain no `fetch`, `XMLHttpRequest`, `sendBeacon` or `WebSocket`.
+- `docs/design.md` and `README.md` were updated to describe the new shell rules,
+  mascot sizes, shared theme implementation and Next.js build.
+
+Limits recorded by this entry:
+
+- Browser acceptance was not run. The viewport measurements, dark-mode
+  contrast, first-paint flash behaviour, keyboard order, reduced motion, 200%
+  zoom, System-theme following, Safari smoke test and the WEB-01..11 checklist
+  remain unexecuted; the shell, mascot and theme claims above are verified
+  against the exported CSS and markup, not in a rendering engine.
+- The origin check above is a local build-time check. Nothing was deployed and
+  no Cloudflare Pages build was triggered.
+- Live platform publishing was not exercised at any point.
+
 ## Website design iteration 0.3.0 (2026-09-18)
 
 Scope: the website and documentation sources in this repository, at design

@@ -1,0 +1,10 @@
+{
+  "name": "@syndroo/theme",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared theme provider and Light/Dark/System control for both Syndroo sites.",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.tsx"
+  }
+}
