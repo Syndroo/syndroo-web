@@ -117,7 +117,7 @@ export const metadata = {
         <h2 id="credentials">Credential and secret handling</h2>
         <ul>
           <li><strong><code>{"SYNDROO_API_KEY"}</code> is a publishing credential.</strong> It is not a read-only key. Treat anyone who has it as able to publish through your instance.</li>
-          <li><strong>Platform credentials stay in the instance.</strong> Bluesky, Threads, X, Tumblr and LinkedIn secrets are configured on the deployment; clients never hold them.</li>
+          <li><strong>Platform credentials stay in the instance.</strong> Bluesky, Threads, X, Tumblr and LinkedIn credentials can be configured as deployment secrets or connected at runtime through <code>{"/v1/auth"}</code>; clients never need to hold platform tokens permanently.</li>
           <li><strong>The client holds one secret.</strong> The agent process needs the Syndroo URL and the API key, and nothing else. The CLI reads no configuration file and writes no shell profile, and there is no API-key flag, so the key cannot land in shell history or a process listing.</li>
           <li><strong>A confirmation is not a permission.</strong> Both the Skill's own confirmation step and <code>{"--yes"}</code> are workflow conventions that record what the operator approved. They grant no server-side permission; they can only submit what the configured key may already do.</li>
           <li><strong>Rotation is replacing a secret.</strong> Change the value on the instance, then update the environment your client reads. There is no token-issuing flow in this candidate.</li>

@@ -46,6 +46,26 @@ export const metadata = {
           </div>
         </div>
 
+        <h2 id="platform-auth-api">Platform authentication API</h2>
+        <p>Besides post creation, Syndroo exposes a credential-management surface under <code>{"/v1/auth"}</code> so an agent can connect platforms at runtime without editing deployment files or redeploying.</p>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>{"GET"}</code></th><td><code>{"/v1/auth"}</code></td><td>List status for each installed platform, including source (<code>{"env"}</code>, <code>{"credential"}</code>, or <code>{"mixed"}</code>).</td></tr>
+              <tr><th scope="row"><code>{"GET"}</code></th><td><code>{"/v1/auth/:platform"}</code></td><td>Read status for one platform.</td></tr>
+              <tr><th scope="row"><code>{"POST"}</code></th><td><code>{"/v1/auth/:platform"}</code></td><td>Store direct credentials (for example access tokens) in D1.</td></tr>
+              <tr><th scope="row"><code>{"DELETE"}</code></th><td><code>{"/v1/auth/:platform"}</code></td><td>Delete stored credentials for one platform.</td></tr>
+              <tr><th scope="row"><code>{"GET"}</code></th><td><code>{"/v1/auth/:platform/connect"}</code></td><td>Start OAuth browser flow and return the provider authorization URL.</td></tr>
+              <tr><th scope="row"><code>{"GET"}</code></th><td><code>{"/v1/auth/:platform/callback"}</code></td><td>OAuth callback endpoint (public redirect target).</td></tr>
+              <tr><th scope="row"><code>{"POST"}</code></th><td><code>{"/v1/auth/:platform/refresh"}</code></td><td>Refresh OAuth 2.0 access token where refresh tokens are available.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>At publish time, D1-stored credentials are preferred over environment variables. This lets operators rotate or reconnect credentials at runtime while keeping app-level OAuth keys in deployment secrets.</p>
+
         <h2 id="create-a-post">Create a post</h2>
         <pre data-label="POST /v1/posts"><code>{"POST /v1/posts\nAuthorization: Bearer $SYNDROO_API_KEY\nContent-Type: application/json\nIdempotency-Key: example-post-001"}</code></pre>
         <p>A new post returns HTTP <code>{"202"}</code> with <code>{"status"}</code> set to <code>{"queued"}</code> or <code>{"scheduled"}</code>. The reply is an acceptance receipt: it does not confirm platform success, and <code>{"queued"}</code> means the stored post still has publications waiting. Read <code>{"publications"}</code> to see which platforms are already done.</p>
@@ -253,6 +273,7 @@ export const metadata = {
       <ul>
         <li><a href="#base-url">Base URL and headers</a></li>
         <li><a href="#authentication">Authentication</a></li>
+        <li><a href="#platform-auth-api">Platform authentication API</a></li>
         <li><a href="#create-a-post">Create a post</a></li>
         <li><a className="is-sub" href="#request-fields">Request fields</a></li>
         <li><a className="is-sub" href="#create-example">Example request</a></li>

@@ -35,7 +35,7 @@ export const metadata = {
         <ul>
           <li><strong>An X account you can post from</strong>, on the same account as the developer app you will create.</li>
           <li><strong>Access to the X developer portal</strong> and an app with permission to publish for that account. The recorded requirement for this candidate is an app with Read and Write permissions; access levels and their names are X's to change, so confirm the current requirement in the portal and the official documentation.</li>
-          <li><strong>Four OAuth 1.0a values</strong> for that app: the consumer key and secret, plus the user access token and its secret.</li>
+          <li><strong>Four OAuth 1.0a values</strong> for that app: the consumer key and secret, plus the user access token and its secret. You can keep all four in deployment secrets, or keep app keys in env and connect the user token pair at runtime via <code>{"/v1/auth/x"}</code>.</li>
           <li><strong>A running Worker and its API key.</strong> Either <a href="/operations/cloudflare/">a deployment in your own Cloudflare account</a> or <a href="/operations/local/">a local instance</a>. The Worker holds the platform credentials; clients hold only <code>{"SYNDROO_API_KEY"}</code>. If you have not set one up yet, the <a href="/quickstart/">first-post walkthrough</a> covers the whole path with Bluesky.</li>
         </ul>
         <p>The adapter reads all four Worker secrets:</p>
@@ -116,7 +116,7 @@ export const metadata = {
             <tbody>
               <tr><th scope="row">Text limit</th><td>280 weighted characters, validated with <code>{"twitter-text"}</code> before the network call. Longer formats such as premium long posts are outside this version.</td></tr>
               <tr><th scope="row">Content type</th><td>Text only, with SDK retries disabled so Syndroo's own retry policy is the only one.</td></tr>
-              <tr><th scope="row">Credential maintenance</th><td>Yours. X documents OAuth 1.0a user tokens as not expiring on their own but remaining revocable, so a revoked token keeps failing as <code>{"AUTH"}</code> until you regenerate the user credentials and replace the Worker secrets. Syndroo has no OAuth flow and does not renew credentials.</td></tr>
+              <tr><th scope="row">Credential maintenance</th><td>Yours. X documents OAuth 1.0a user tokens as not expiring on their own but remaining revocable, so a revoked token keeps failing as <code>{"AUTH"}</code> until you regenerate user credentials. Update either the deployment secrets or the runtime credential via <code>{"/v1/auth/x"}</code> / <code>{"/v1/auth/x/connect"}</code>; Syndroo does not auto-renew OAuth 1.0a credentials.</td></tr>
               <tr><th scope="row">External dependency</th><td>X's access levels, request limits and posting rules apply. Syndroo includes no pricing of its own and promises nothing about which access level you have or need; check X's current plans and documentation.</td></tr>
             </tbody>
           </table>

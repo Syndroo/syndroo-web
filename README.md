@@ -136,7 +136,10 @@ the browser and performs no network request. The website's `0.4.0` is a design
 iteration of this repository, not a product version, and no platform has a
 live-account acceptance record. Agent setup installs the Syndroo Skill together
 with the `syndroo` command it drives, or wires a client to the documented HTTP
-API; no MCP server ships. Privacy and Terms are drafts pending operational and
+API. The API now includes `/v1/auth` endpoints for runtime platform credential
+management (direct token submission and OAuth browser connect/callback for
+supported platforms), plus OAuth 2.0 token refresh where a refresh token is
+available; no MCP server ships. Privacy and Terms are drafts pending operational and
 legal review. See [docs/design.md](docs/design.md) for the full contract and
 [docs/acceptance.md](docs/acceptance.md) for what has actually been verified.
 
