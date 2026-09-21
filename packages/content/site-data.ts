@@ -216,7 +216,8 @@ export const platforms: Platform[] = [
     status: "experimental",
     statusLabel: "Experimental",
     limit: "280 weighted characters",
-    credentials: "X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET",
+    credentials:
+      "App credentials from env: X_API_KEY, X_API_SECRET; user access token pair from env or /v1/auth/x",
     guide: "/platforms/x/",
     source: "https://github.com/Syndroo/syndroo/tree/main/packages/x",
     references: [
@@ -238,7 +239,7 @@ export const platforms: Platform[] = [
     statusLabel: "Experimental",
     limit: "4,096 Unicode code points",
     credentials:
-      "TUMBLR_CONSUMER_KEY, TUMBLR_CONSUMER_SECRET, TUMBLR_TOKEN, TUMBLR_TOKEN_SECRET, TUMBLR_BLOG",
+      "App credentials from env: TUMBLR_CONSUMER_KEY, TUMBLR_CONSUMER_SECRET; user token from env or /v1/auth/tumblr; blog from env or credential payload",
     guide: "/platforms/tumblr/",
     source: "https://github.com/Syndroo/syndroo/tree/main/packages/tumblr",
     references: [
@@ -258,7 +259,8 @@ export const platforms: Platform[] = [
     status: "experimental",
     statusLabel: "Experimental",
     limit: "3,000 UTF-16 units after escaping",
-    credentials: "LINKEDIN_ACCESS_TOKEN, LINKEDIN_AUTHOR, LINKEDIN_API_VERSION",
+    credentials:
+      "Publish identity from env or /v1/auth/linkedin (access_token, optional author/api_version); OAuth app credentials for connect/refresh: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET",
     guide: "/platforms/linkedin/",
     source: "https://github.com/Syndroo/syndroo/tree/main/packages/linkedin",
     references: [
@@ -301,6 +303,15 @@ export const agentClients: AgentClient[] = [
     statusLabel: "Shipped in the CLI package, not verified in any specific client",
     note:
       "The Skill is part of the `@syndroo/cli` tarball and is installed with it. The workflow, guardrails and exit codes are written out in the Agent and Skill quickstart, but no agent client has been evaluated against them in this repository.",
+  },
+  {
+    id: "oauth-connect",
+    name: "Agent-guided OAuth connect",
+    method: "Agent -> /v1/auth/:platform/connect -> browser -> /v1/auth/:platform/callback",
+    status: "documented",
+    statusLabel: "Implemented in the service; no client-specific evaluation recorded",
+    note:
+      "The agent starts an OAuth flow through the service and opens the returned URL in a browser. On callback success, the platform credential is stored in D1 and used for later publishing without redeploying the Worker.",
   },
   {
     id: "http-workflow",

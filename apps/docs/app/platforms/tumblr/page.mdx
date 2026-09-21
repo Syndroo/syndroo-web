@@ -35,7 +35,7 @@ export const metadata = {
         <ul>
           <li><strong>A Tumblr account</strong> you can post from, and the blog you intend to publish to.</li>
           <li><strong>A registered Tumblr OAuth application</strong> that gives you a consumer key and secret.</li>
-          <li><strong>The completed OAuth 1.0a authorization</strong> for that account, which yields the user token and token secret. Syndroo does not run this flow; you finish it once, outside the Worker.</li>
+          <li><strong>The completed OAuth 1.0a authorization</strong> for that account, which yields the user token and token secret. You can complete this yourself and submit the pair to <code>{"/v1/auth/tumblr"}</code>, or let Syndroo start the browser flow with <code>{"/v1/auth/tumblr/connect"}</code>.</li>
           <li><strong>A running Worker and its API key.</strong> Either <a href="/operations/cloudflare/">a deployment in your own Cloudflare account</a> or <a href="/operations/local/">a local instance</a>. The Worker holds the platform credentials; clients hold only <code>{"SYNDROO_API_KEY"}</code>. If you have not set one up yet, the <a href="/quickstart/">first-post walkthrough</a> covers the whole path with Bluesky.</li>
         </ul>
         <p>The adapter reads five Worker secrets:</p>
@@ -112,7 +112,7 @@ export const metadata = {
             <tbody>
               <tr><th scope="row">Text limit</th><td>4,096 Unicode code points in a single NPF text block, validated before the network call.</td></tr>
               <tr><th scope="row">Content type</th><td>Text only. HTML and Markdown are sent as plain text rather than interpreted, and media, tags, drafts and reblogs are outside this version.</td></tr>
-              <tr><th scope="row">Credential maintenance</th><td>Yours. Re-run the authorization or register a new application if Tumblr revokes access, then replace the Worker secrets. Syndroo has no OAuth flow and does not renew tokens.</td></tr>
+              <tr><th scope="row">Credential maintenance</th><td>Yours. Re-run the authorization or register a new application if Tumblr revokes access, then update deployment secrets or the runtime credential via <code>{"/v1/auth/tumblr"}</code>. Syndroo does not auto-renew OAuth 1.0a tokens.</td></tr>
               <tr><th scope="row">External dependency</th><td>Tumblr's own terms and rate limits apply, including the documented per-user daily posting limit that answers with <code>{"429"}</code> when it is exceeded. Syndroo controls none of them, includes no pricing of its own, and makes no promise about a provider's current plan, quota or API behaviour.</td></tr>
             </tbody>
           </table>
