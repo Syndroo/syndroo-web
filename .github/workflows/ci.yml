@@ -10,6 +10,19 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The default pair is the loopback default; the production pair is the
+        # published pair. Both runs configure build, check and test identically,
+        # so an export built for one pair cannot pass by being rebased on test.
+        include:
+          - name: default origins
+            website_origin: ""
+            docs_origin: ""
+          - name: production origins
+            website_origin: https://syndroo.com
+            docs_origin: https://docs.syndroo.com
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -46,13 +59,21 @@ jobs:
 
       - name: Build both sites
         run: npm run build
+        env:
+          WEBSITE_ORIGIN: ${{ matrix.website_origin }}
+          DOCS_ORIGIN: ${{ matrix.docs_origin }}
 
       - name: Check the built output
         run: npm run check
+        env:
+          WEBSITE_ORIGIN: ${{ matrix.website_origin }}
+          DOCS_ORIGIN: ${{ matrix.docs_origin }}
 
       - name: Run the test fixtures
         run: npm test
         env:
+          WEBSITE_ORIGIN: ${{ matrix.website_origin }}
+          DOCS_ORIGIN: ${{ matrix.docs_origin }}
           # The docs fixtures read this checkout; without it they would skip.
           SYNDROO_CORE_REPO: ${{ github.workspace }}/syndroo
 

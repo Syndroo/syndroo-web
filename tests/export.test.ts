@@ -6,7 +6,7 @@
 // pages, the configured origins, no server-only Next.js dependency, and the
 // shell/mascot/theme invariants that can be checked statically.
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import test from "node:test";
@@ -24,10 +24,13 @@ import {
   resolveOrigins,
   type Origins,
 } from "../scripts/lib/origins.ts";
-import { docsPages, websitePages } from "../packages/content/site-data.ts";
+import { ORIGIN_PLACEHOLDERS, docsPages, websitePages } from "../packages/content/site-data.ts";
 
 const CUSTOM: Origins = { website: "https://www.example.com", docs: "https://docs.example.com" };
 const DEFAULTS: Origins = { website: DEFAULT_WEBSITE_ORIGIN, docs: DEFAULT_DOCS_ORIGIN };
+
+/** The pair the export under test was built with, taken from the environment. */
+const BUILT: Origins = resolveOrigins(process.env);
 
 const WEBSITE = SITE_TARGETS[0];
 const DOCS = SITE_TARGETS[1];
@@ -124,7 +127,7 @@ test("both exports are internally consistent and carry no server dependency", as
   for (const site of SITE_TARGETS) {
     const summary = await auditDist({
       distRoot: site.outRoot,
-      origins: DEFAULTS,
+      origins: BUILT,
       expectedPages: [...site.expectedPages],
     });
     assert.deepEqual(summary.issues, [], `${site.name} should have no export issues`);
@@ -146,42 +149,43 @@ test("both exports are internally consistent and carry no server dependency", as
   }
 });
 
-test("a custom origin pair rewrites the export without touching product sample URLs", async (t) => {
-  await requireExport();
+test("the origin rewrite repoints authored placeholders and leaves product sample URLs alone", async (t) => {
+  // A synthetic authored fixture, so the rewrite is covered on its own terms and
+  // not through a build that already rewrote the export.
   const root = await mkdtemp(join(tmpdir(), "syndroo-origins-"));
   t.after(() => rm(root, { recursive: true, force: true }));
+  const PRODUCT_SAMPLE = "git clone https://github.com/Syndroo/syndroo";
 
-  for (const site of SITE_TARGETS) {
-    const target = join(root, site.name.replace("@syndroo/", ""));
-    await cp(site.outRoot, target, { recursive: true });
-    await rewriteOriginsInDirectory(target, CUSTOM);
-
-    const summary = await auditDist({
-      distRoot: target,
-      origins: CUSTOM,
-      expectedPages: [...site.expectedPages],
-    });
-    assert.deepEqual(summary.issues, [], `${site.name} should be clean for ${CUSTOM.website}`);
-
-    const home = await readFile(join(target, "index.html"), "utf8");
-    assert.ok(
-      home.includes(`href="${CUSTOM.docs}/"`) || home.includes(`href="${CUSTOM.website}/"`),
-      `${site.name} should link to the configured origins`,
-    );
-    assert.ok(
-      !home.includes(DEFAULT_WEBSITE_ORIGIN) && !home.includes(DEFAULT_DOCS_ORIGIN),
-      `${site.name} must not leak a loopback origin once a custom pair is configured`,
-    );
-  }
-
-  // The product sample in the docs root is content, not a cross-site link: the
-  // install block clones the product repository, and the rewrite must leave it
-  // exactly as authored.
-  const docsRoot = await readFile(join(root, "docs", "index.html"), "utf8");
-  assert.ok(
-    docsRoot.includes("git clone https://github.com/Syndroo/syndroo"),
-    "the product repository URL must not be rewritten",
+  await mkdir(join(root, "_next", "static", "chunks"), { recursive: true });
+  await writeFile(
+    join(root, "index.html"),
+    [
+      "<!doctype html>",
+      '<link rel="canonical" href="http://localhost:4173/"/>',
+      `<a href="${ORIGIN_PLACEHOLDERS.docs}/commands/">Commands</a>`,
+      `<a href="${ORIGIN_PLACEHOLDERS.docs}/">Docs</a>`,
+      `<code>${PRODUCT_SAMPLE}</code>`,
+      "",
+    ].join("\n"),
   );
+  await writeFile(
+    join(root, "_next", "static", "chunks", "app.js"),
+    `const docs="${ORIGIN_PLACEHOLDERS.docs}/accounts/";const home="${ORIGIN_PLACEHOLDERS.website}/";\n`,
+  );
+
+  const changed = await rewriteOriginsInDirectory(root, CUSTOM);
+  assert.equal(changed, 2, "the rewrite should report both text files it changed");
+
+  const html = await readFile(join(root, "index.html"), "utf8");
+  assert.ok(html.includes(`<a href="${CUSTOM.docs}/commands/">`), "authored docs links should use the custom docs origin");
+  assert.ok(html.includes(`<link rel="canonical" href="${CUSTOM.website}/"/>`), "the authored canonical should use the custom website origin");
+  assert.ok(html.includes(PRODUCT_SAMPLE), "the product repository URL must not be rewritten");
+  assert.ok(!html.includes(ORIGIN_PLACEHOLDERS.docs), "the authored docs placeholder must not survive");
+  assert.ok(!html.includes(ORIGIN_PLACEHOLDERS.website), "the authored website placeholder must not survive");
+
+  const script = await readFile(join(root, "_next", "static", "chunks", "app.js"), "utf8");
+  assert.ok(script.includes(`"${CUSTOM.docs}/accounts/"`), "a generated chunk should use the custom docs origin");
+  assert.ok(script.includes(`"${CUSTOM.website}/"`), "a generated chunk should use the custom website origin");
 });
 
 test("swapping the two origins cannot cascade through the rewrite", () => {

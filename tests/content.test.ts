@@ -5,20 +5,24 @@
 // 404 documents Next.js generates), the shared navigation, the metadata, the
 // generated files, the theme control and the way cross-site links resolve.
 //
-// The built output is copied into a scratch tree and the origin rewrite is run
-// again over it, so the fixtures cover the configured origin pair as well as
-// the content. Nothing here contacts a platform, a registry or any network
-// service.
+// These fixtures read the built output as it was produced, so they cover the
+// configured origin pair as well as the content: the pair is resolved from the
+// environment the build ran with, and a build configured for another pair is
+// checked against that pair instead of being rebased inside the fixture.
+// Nothing here contacts a platform, a registry or any network service.
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import test, { after, before } from "node:test";
+import test, { before } from "node:test";
 
 import { SITE_TARGETS } from "../scripts/lib/app-targets.ts";
 import { listFiles } from "../scripts/lib/files.ts";
-import { rewriteOriginsInDirectory } from "../scripts/lib/origin-rewrite.ts";
-import { DEFAULT_DOCS_ORIGIN, DEFAULT_WEBSITE_ORIGIN, type Origins } from "../scripts/lib/origins.ts";
+import {
+  DEFAULT_DOCS_ORIGIN,
+  DEFAULT_WEBSITE_ORIGIN,
+  resolveOrigins,
+  type Origins,
+} from "../scripts/lib/origins.ts";
 import { repoRoot } from "../scripts/lib/paths.ts";
 import {
   ORIGIN_PLACEHOLDERS,
@@ -32,7 +36,17 @@ import {
   websitePages,
 } from "../packages/content/site-data.ts";
 
-const CUSTOM: Origins = { website: "https://www.example.com", docs: "https://docs.example.com" };
+/**
+ * The origin pair the built output was produced with. The fixtures read the
+ * export a build already rewrote, so they follow the environment the build ran
+ * with instead of rewriting the artifacts they are verifying.
+ */
+const BUILT: Origins = resolveOrigins(process.env);
+
+/** The loopback defaults output built for another pair must not leak. */
+const LOOPBACK_DEFAULTS = [DEFAULT_WEBSITE_ORIGIN, DEFAULT_DOCS_ORIGIN].filter(
+  (origin) => origin !== BUILT.website && origin !== BUILT.docs,
+);
 
 /**
  * The seven public pages, in the order the sites publish them. A page that is
@@ -47,36 +61,30 @@ const PUBLIC_PAGES = [
 /** Pages Next.js generates for a static export; they carry no marketing copy. */
 const TECHNICAL_FILES = ["404.html", "404/index.html"];
 
-let scratch = "";
 let websiteDist = "";
 let docsDist = "";
 
 before(async () => {
-  scratch = await mkdtemp(join(tmpdir(), "syndroo-content-"));
-
   for (const site of SITE_TARGETS) {
     if ((await listFiles(site.outRoot)).length === 0) {
       throw new Error(`${site.name} has no export at ${site.outRoot}; run \`npm run build\` before \`npm test\``);
     }
-    const target = join(scratch, site.name.replace("@syndroo/", ""));
-    await cp(site.outRoot, target, { recursive: true });
-    await rewriteOriginsInDirectory(target, CUSTOM);
-    if (site.name === "@syndroo/website") {
-      websiteDist = target;
-    } else {
-      docsDist = target;
-    }
   }
-});
-
-after(async () => {
-  if (scratch !== "") {
-    await rm(scratch, { recursive: true, force: true });
-  }
+  [websiteDist, docsDist] = SITE_TARGETS.map((site) => site.outRoot);
 });
 
 function countOccurrences(text: string, needle: string): number {
   return text.split(needle).length - 1;
+}
+
+/**
+ * A built file may keep a loopback default only when that origin is one of the
+ * origins it was built for; otherwise it is a leak from the authored sources.
+ */
+function assertNoLoopback(text: string, label: string): void {
+  for (const origin of LOOPBACK_DEFAULTS) {
+    assert.ok(!text.includes(origin), `${label} must not leak the loopback origin ${origin}`);
+  }
 }
 
 function decodeEntities(value: string): string {
@@ -143,10 +151,17 @@ function resolveBuiltTarget(
   return { file: entry.file, fragment };
 }
 
+/** Map an authored placeholder link onto the origin pair the build used. */
 function expectedWithOrigins(href: string): string {
-  return href.startsWith(ORIGIN_PLACEHOLDERS.docs)
-    ? CUSTOM.docs + href.slice(ORIGIN_PLACEHOLDERS.docs.length)
-    : href;
+  for (const [placeholder, origin] of [
+    [ORIGIN_PLACEHOLDERS.docs, BUILT.docs],
+    [ORIGIN_PLACEHOLDERS.website, BUILT.website],
+  ] as const) {
+    if (href === placeholder || href.startsWith(`${placeholder}/`)) {
+      return origin + href.slice(placeholder.length);
+    }
+  }
+  return href;
 }
 
 async function docsPage(file: string): Promise<string> {
@@ -260,8 +275,8 @@ test("the website navigation and footer match the shared registry", async () => 
 
 test("canonical URLs use each page's own configured origin", async () => {
   for (const [dist, registry, origin, read] of [
-    [websiteDist, websitePages, CUSTOM.website, websitePage],
-    [docsDist, docsPages, CUSTOM.docs, docsPage],
+    [websiteDist, websitePages, BUILT.website, websitePage],
+    [docsDist, docsPages, BUILT.docs, docsPage],
   ] as const) {
     for (const page of registry) {
       const html = await read(page.file);
@@ -282,7 +297,7 @@ test("cross-site links resolve inside the other built site", async () => {
 
   for (const page of websitePages) {
     const html = await websitePage(page.file);
-    for (const href of crossSiteHrefs(html, CUSTOM.docs)) {
+    for (const href of crossSiteHrefs(html, BUILT.docs)) {
       const target = resolveBuiltTarget(href, docsPages);
       const targetHtml = await docsPage(target.file);
       if (target.fragment !== "") {
@@ -294,7 +309,7 @@ test("cross-site links resolve inside the other built site", async () => {
 
   for (const page of docsPages) {
     const html = await docsPage(page.file);
-    for (const href of crossSiteHrefs(html, CUSTOM.website)) {
+    for (const href of crossSiteHrefs(html, BUILT.website)) {
       const target = resolveBuiltTarget(href, websitePages);
       const targetHtml = await websitePage(target.file);
       if (target.fragment !== "") {
@@ -309,11 +324,11 @@ test("cross-site links resolve inside the other built site", async () => {
   // The hero actions are the primary funnel into the docs site, and the
   // platform strip links every platform to its own guide.
   const home = await websitePage("index.html");
-  assert.ok(home.includes(`href="${CUSTOM.docs}/"`), "the hero should link to the docs home");
-  assert.ok(home.includes(`href="${CUSTOM.docs}/commands/"`), "the hero should offer the command reference");
+  assert.ok(home.includes(`href="${BUILT.docs}/"`), "the hero should link to the docs home");
+  assert.ok(home.includes(`href="${BUILT.docs}/commands/"`), "the hero should offer the command reference");
   for (const platform of platforms) {
     assert.ok(
-      home.includes(`href="${CUSTOM.docs}/accounts/"`),
+      home.includes(`href="${BUILT.docs}/accounts/"`),
       `${platform.name} should be reachable from the platform strip`,
     );
   }
@@ -342,15 +357,15 @@ test("the docs lookup pages name the local path and no retired surface", async (
 
 test("robots.txt and sitemap.xml come from the registry and the configured origins", async () => {
   for (const [dist, registry, origin] of [
-    [websiteDist, websitePages, CUSTOM.website],
-    [docsDist, docsPages, CUSTOM.docs],
+    [websiteDist, websitePages, BUILT.website],
+    [docsDist, docsPages, BUILT.docs],
   ] as const) {
     const robots = await readFile(join(dist, "robots.txt"), "utf8");
     // Next.js writes this file from app/robots.ts, so the contract is the rules
     // and the configured sitemap URL, not the exact casing or spacing.
     assert.match(robots, /^User-[Aa]gent: \*\nAllow: \/\n/m);
     assert.ok(robots.includes(`Sitemap: ${origin}/sitemap.xml`), `${dist} robots sitemap URL`);
-    assert.ok(!robots.includes("localhost:417"), `${dist} robots must not leak a loopback origin`);
+    assertNoLoopback(robots, `${dist} robots`);
 
     const sitemap = await readFile(join(dist, "sitemap.xml"), "utf8");
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -359,7 +374,7 @@ test("robots.txt and sitemap.xml come from the registry and the configured origi
       registry.map((page) => `${origin}${page.path}`),
       `${dist} sitemap entries`,
     );
-    assert.ok(!sitemap.includes("localhost:417"), `${dist} sitemap must not leak a loopback origin`);
+    assertNoLoopback(sitemap, `${dist} sitemap`);
   }
 });
 
@@ -447,10 +462,10 @@ test("version claims stay consistent and no unpublished surface is offered", asy
   }
 });
 
-test("a rewritten export keeps no loopback origin and the sources keep the defaults", async () => {
+test("the built export carries the configured pair and the sources keep the defaults", async () => {
   // The authored sources keep the historical loopback defaults and every build
-  // rewrites the configured pair. These fixtures run that rewrite over the
-  // export, so a leaked loopback origin here is a real one.
+  // rewrites the configured pair. These fixtures read that built output, so a
+  // loopback origin the build was not configured for is a real leak.
   for (const source of ["packages/content/site-data.ts", "scripts/lib/origins.ts", "apps/docs/lib/origins.ts"]) {
     const text = await readFile(join(repoRoot, source), "utf8");
     assert.ok(
@@ -464,12 +479,9 @@ test("a rewritten export keeps no loopback origin and the sources keep the defau
     [docsDist, "@syndroo/docs"],
   ] as const) {
     const html = await readFile(join(dist, "index.html"), "utf8");
+    assertNoLoopback(html, site);
     assert.ok(
-      !html.includes(DEFAULT_WEBSITE_ORIGIN) && !html.includes(DEFAULT_DOCS_ORIGIN),
-      `${site} must not leak a loopback origin once a custom pair is configured`,
-    );
-    assert.ok(
-      html.includes(CUSTOM.docs) || html.includes(CUSTOM.website),
+      html.includes(BUILT.website) || html.includes(BUILT.docs),
       `${site} should use the configured origin pair`,
     );
   }
