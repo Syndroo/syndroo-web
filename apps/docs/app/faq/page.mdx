@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "FAQ - Syndroo docs",
+  description: "Configuration failures, expired plans, unknown results and local state recovery for the syndroo CLI.",
+  alternates: { canonical: "/faq/" },
+  openGraph: {
+    type: "website",
+    url: "/faq/",
+    title: "FAQ - Syndroo docs",
+    description: "Configuration failures, expired plans, unknown results and local state recovery for the syndroo CLI.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>FAQ</span>
+        </nav>
+        <h1 id="faq">FAQ</h1>
+        <p className="lede">Four failures worth knowing before you publish.</p>
+
+        <h2 id="configuration">Configuration still fails</h2>
+        <p>Run <code>{"syndroo doctor --local"}</code>: it names the failing check and sends nothing. When the failing check is a credential, confirm the exported group is present in this shell and re-register the account as described in <a href="/accounts/">Account configuration</a>.</p>
+
+        <h2 id="expired-plan">The plan expired</h2>
+        <p>An unexecuted plan expires 24 hours after the preview. Preview again from the same <code>{"post.json"}</code> with the same <code>{"key"}</code>, then review the new plan before executing it.</p>
+
+        <h2 id="unknown-result">The result is unknown</h2>
+        <p>An <code>{"unknown"}</code> target may have reached the platform. Read the receipt, inspect the platform account by hand, and do not resend that content.</p>
+
+        <h2 id="state-recovery">Recover the local state</h2>
+        <p>Stop every other Syndroo process first, then inspect and recover:</p>
+        <pre data-label="terminal"><code>{"syndroo state inspect\nsyndroo state recover --confirm-no-writers --yes"}</code></pre>
+        <p>If the state holds a lock with no readable owner, stop and diagnose it by hand instead of deleting the state directory.</p>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#configuration">Configuration still fails</a></li>
+        <li><a href="#expired-plan">The plan expired</a></li>
+        <li><a href="#unknown-result">The result is unknown</a></li>
+        <li><a href="#state-recovery">Recover the local state</a></li>
+      </ul>
+    </nav>

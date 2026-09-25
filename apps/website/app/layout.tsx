@@ -11,7 +11,7 @@ import { websiteOrigin } from "../lib/origins";
 export const metadata: Metadata = {
   metadataBase: new URL(websiteOrigin()),
   title: "Syndroo",
-  description: "Self-hosted publishing for AI agents and scripts.",
+  description: "Publish text to Bluesky and Threads from your own machine.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): React.JSX.Element {

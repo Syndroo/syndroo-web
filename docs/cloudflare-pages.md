@@ -27,21 +27,21 @@ root build command from the repository root. Shared build entry points live in
 `scripts/` and brand assets in `packages/brand/assets/`.
 
 The build command builds both sites even though each project publishes one of
-them. `npm run check` audits `apps/website/dist` and `apps/docs/dist` together
-(`scripts/check.ts`), so the focused `npm run build:website` and
-`npm run build:docs` scripts leave the other app without output and make the
-check fail with `no build output found`. `npm test` then runs the 44 fixtures:
-build and origin handling, the shared content and navigation contract for both
-sites, and the static-server behaviour. Building both in one run is cheap for two
-small static sites and keeps the published output gated by the same check and
-test run.
+them. `npm run check` audits `apps/website/out` and `apps/docs/out` together
+(`scripts/check.ts`), so building only one app leaves the other without output
+and makes the check fail with `no build output found`. `npm test` then runs the
+fixtures: build and origin handling, the shared content and navigation contract
+for both sites, the CLI contract, and the static-server behaviour. Building both
+in one run is cheap for two small static sites and keeps the published output
+gated by the same check and test run.
 
 Each build writes one self-contained output directory. Besides the pages, CSS,
 assets and generated browser JavaScript, every build now emits
 `robots.txt` and `sitemap.xml` from the page registry and the configured origin,
 and every page carries a canonical URL plus Open Graph title, description and
-URL for its own origin. The current output is 23 files across 7 marketing pages
-and 30 files across 15 documentation pages.
+URL for its own origin. The current output is the marketing homepage plus the two
+technical 404 documents, and the six documentation pages plus their two 404
+documents.
 
 ## Environment variables
 
@@ -66,14 +66,14 @@ build fails with a clear error otherwise (`scripts/lib/origins.ts`).
 Each site now uses both origins, and the check enforces both sides:
 
 - its own origin appears in the HTML metadata: one canonical URL and one Open
-  Graph URL per page, so 14 references across the 7 marketing pages and 30 across
-  the 15 documentation pages. Those two counts cover HTML only; the generated
-  files are counted separately, with the origin in every `sitemap.xml` entry (7
-  and 15 URLs) and once in each `robots.txt`;
-- the other site's origin appears in real cross-site links - 64 links from the
-  marketing pages to `https://docs.syndroo.com` and 31 links from the
-  documentation pages back to `https://syndroo.com`, covering the shared
-  navigation, the footer, the hero calls to action and the platform guides.
+  Graph URL per registered page. Those references cover HTML only; the generated
+  files are counted separately, with the origin in every `sitemap.xml` entry -
+  one for the marketing homepage and six for the documentation - and once in each
+  `robots.txt`;
+- the other site's origin appears in real cross-site links: the marketing
+  navigation and footer point at the documentation origin, and the documentation
+  topbar and footer point back at the marketing origin, so the two sites resolve
+  each other in the configured pair.
 
 `DOCS_ORIGIN` therefore shapes the website's cross-site links, and
 `WEBSITE_ORIGIN` shapes the documentation's, while each site's own origin shapes
@@ -135,7 +135,7 @@ whatever pair the environment provides.
 - `.github/workflows/ci.yml` needs no change and no new secret: it stays a
   read-only verifier (`permissions: contents: read`) running `npm ci`,
   `npm run build`, `npm run check` and `npm test`.
-- Keep `node_modules/`, `apps/*/dist/` and any `.env`/`.dev.vars` file out of
+- Keep `node_modules/`, `apps/*/out/` and any `.env`/`.dev.vars` file out of
   git, as `.gitignore` already does.
 
 ## Preview links and serving behaviour
@@ -160,69 +160,15 @@ publishable-type rule.
 
 ## Verified
 
-### Current verification, design iteration 0.3.0 (2026-09-18, local only)
+CI runs `npm ci`, `npm run build`, `npm run check` and `npm test` on every push
+with both origins configured, so the deployment gate is the same run a reviewer
+can reproduce locally. The documentation fixtures check the real CLI from a
+pinned product checkout, so a documented command, flag or candidate version that
+the CLI no longer has fails the build instead of reaching a reader.
 
-Run in this repository against the sources described above; nothing was deployed
-and no dashboard setting was changed.
-
-- `npm run build` and `npm run check` with the production origin pair
-  (`WEBSITE_ORIGIN=https://syndroo.com`, `DOCS_ORIGIN=https://docs.syndroo.com`)
-  exited 0: website 23 files / 7 pages with 228 local references, documentation
-  30 files / 15 pages with 858 local references, and 0 issues for either site.
-  All five generated browser scripts parsed.
-- `npm test` reported 44 passing tests: 12 build fixtures, 20 content fixtures
-  for the shared registry, navigation, chrome, metadata, generated files and the
-  CI recipe script, and 12 static-server fixtures.
-- The production-origin output contains no `localhost:417` reference and no
-  `*.pages.dev` reference. Each page's canonical and Open Graph URLs, both
-  `sitemap.xml` files (7 and 15 URLs) and both `robots.txt` files carry the
-  configured custom-domain origins. The only remaining `http://` strings in the
-  HTML output are the product's own `http://localhost:8787` Worker sample on the
-  quickstart, API and local-development pages, which is content rather than a
-  cross-site link.
-- A per-file verification record of that production-origin build is kept with the
-  review evidence: all 23 website and 30 documentation output paths with their
-  SHA256 digests and byte sizes, plus the origins and per-site counts used here.
-
-This section records pre-deployment checks only, and it stays accurate as each
-push is deployed: after a deployment, re-fetch both custom domains and compare
-the served bytes against the per-file record above. A successful `npm run build`
-is a statement about the build, not about what a host is serving.
-
-### Earlier deployment and verification records (before design iteration 0.3.0)
-
-The documentation project's Cloud build log ran on Node 24.13.1 with a clean
-install, built both sites, reported 0 audit issues across 350 local references
-and 24 passing tests, uploaded 16 files and finished with a successful
-deployment.
-
-The same command chain was run on 2026-09-17 in an isolated copy of `main` at
-`90fd6d6` with the then-configured `*.pages.dev` origins: install, build, check
-and tests all exited 0, the built HTML contained no loopback link, and two
-consecutive builds produced identical output.
-
-The website rebuild also completed successfully using the then-configured
-`*.pages.dev` origins. Public verification covered all 35 output files across
-both sites: every request returned HTTP 200, every response matched the reviewed
-build byte for byte, and no page contained a loopback cross-site link. The live
-demo reached `published`, documentation search opened the matching API section,
-and the website-to-documentation navigation worked.
-
-Unknown paths returned the home document with HTTP 200, confirming the Pages
-fallback described above. Requests for `package.json` and `.env` also returned
-that same home document; they did not expose those files.
-
-The custom-origin build was prepared on 2026-09-17 in a fresh isolated copy of
-`main` at `1ccf054` with `WEBSITE_ORIGIN=https://syndroo.com` and
-`DOCS_ORIGIN=https://docs.syndroo.com` under Node 24.15.0: `npm ci`,
-`npm run build`, `npm run check` and `npm test` all exited 0, the audit reported
-0 issues across 350 local references in 35 output files, all 24 fixtures passed,
-and two consecutive builds produced identical hashes for all 35 files. The built
-HTML carried exactly 35 links to `https://docs.syndroo.com` and 9 links to
-`https://syndroo.com`, with no `localhost:417` reference and no `*.pages.dev`
-reference. That leaves the SVG namespace and the product's own
-`http://localhost:8787` Worker sample on the quickstart page as the only
-remaining `http://` strings in the text output.
+A successful `npm run build` is a statement about the build, not about what a
+host is serving. After a deployment, fetch both custom domains and confirm the
+served HTML carries the custom-domain pair with no `localhost:417` reference.
 
 ## References
 

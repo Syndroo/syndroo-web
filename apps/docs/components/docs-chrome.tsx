@@ -62,7 +62,7 @@ export function DocsTopbar(): React.JSX.Element {
             </button>
             <span
               className="version-badge"
-              title={`The HTTP contract version these docs describe. There is no historical documentation for this project yet; the SDK and CLI candidates are ${versions.sdk}.`}
+              title={`The Syndroo CLI candidate these docs describe: ${versions.cli}.`}
             >
               <span className="version-badge__label">Version</span>
               <strong>{versions.docs}</strong>
@@ -125,16 +125,14 @@ export function DocsFooter(): React.JSX.Element {
           Syndroo {versions.docs} docs ({versions.releaseStage}). Apache-2.0. Copyright 2026 Syndroo.
         </span>
         <nav aria-label="Footer">
-          <a href="/packages/">Packages</a>
-          <a href="/quickstart/cli/">CLI quickstart</a>
-          <a href="/quickstart/sdk/">SDK quickstart</a>
-          <a href="/agent-setup/">Agent and Skill</a>
-          <a href="/quickstart/">First Bluesky post</a>
-          <a href="/api/">API reference</a>
-          <a href="/concepts/">Concepts</a>
+          <a href="/">Quick start</a>
+          <a href="/accounts/">Accounts</a>
+          <a href="/publishing/">Publishing and retry</a>
+          <a href="/agent-setup/">Agent usage</a>
+          <a href="/commands/">Commands</a>
+          <a href="/faq/">FAQ</a>
           <a href={`${ORIGIN_PLACEHOLDERS.website}/`}>Website</a>
           <a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE">License</a>
-          <a href="https://github.com/Syndroo/syndroo/issues">Contact</a>
         </nav>
       </div>
     </footer>
@@ -165,12 +163,12 @@ export function DocsSearchDialog(): React.JSX.Element {
           </button>
         </div>
         <p className="search-meta" id="search-meta">
-          Search every page of the local docs. Try &quot;idempotency&quot;, &quot;scheduledAt&quot; or &quot;64 KiB&quot;.
+          Search every page of the local docs. Try &quot;planId&quot;, &quot;retry&quot; or &quot;Bluesky&quot;.
         </p>
         <div className="search-empty" id="search-empty" hidden>
           <strong>No results</strong>
           <span>
-            Try a shorter term, or search for an API field such as <code>overrides</code>.
+            Try a shorter term, or search for a command such as <code>receipts</code>.
           </span>
         </div>
         <ul className="search-results" id="search-results"></ul>

@@ -5,28 +5,9 @@
 // imports and of TypeScript-only runtime syntax: Node's type stripping rewrites
 // it verbatim into generated browser JavaScript.
 //
-// What lives here: the product and design versions, the capability record for
-// each platform, the agent access methods, the shared navigation, and the page
-// registries used for sitemaps, expected build output and the docs search index.
-// What does not live here: anything that would turn mock-tested adapters into
-// validated ones. A status changes only with real acceptance evidence.
-
-/**
- * Where the capability record was read from, so a reviewer can check it.
- * `coreCommit` is the product-repository revision the facts were taken from.
- */
-export type FactsSource = {
-  coreRepository: string;
-  coreCommit: string;
-  /** Date the platform and client facts were last reviewed against that revision. */
-  reviewed: string;
-};
-
-export const factsSource: FactsSource = {
-  coreRepository: "https://github.com/Syndroo/syndroo",
-  coreCommit: "87ba42b",
-  reviewed: "2026-09-18",
-};
+// What lives here: the candidate versions, the two supported platforms, the
+// shared navigation and the page registries used for sitemaps, expected build
+// output and the docs search index.
 
 /**
  * Origins written into authored sources. Both builds rewrite these to the
@@ -43,293 +24,47 @@ export const ORIGIN_PLACEHOLDERS: OriginPlaceholders = {
   docs: "http://localhost:4174",
 };
 
+export const PRODUCT_REPOSITORY = "https://github.com/Syndroo/syndroo";
+export const PRODUCT_LICENSE_URL = `${PRODUCT_REPOSITORY}/blob/main/LICENSE`;
+
 /**
- * The version facts stay separate. The design iteration version is not a
- * product version, and the Worker candidate is not the SDK or CLI candidate.
+ * Version facts. The CLI is the documented product surface, and the docs site
+ * describes the same candidate. No candidate is published to a registry.
  */
 export type Versions = {
-  /** Candidate version of `@syndroo/cloudflare-worker`, which runs the service. */
-  product: string;
-  /** Publication state shared by every product candidate; none is published. */
-  releaseStage: string;
-  /** Candidate version of `@syndroo/sdk`. */
-  sdk: string;
-  /** Candidate version of `@syndroo/cli`, whose only dependency is the SDK above. */
+  /** Candidate version of `@syndroo/cli`, whose local path needs no server. */
   cli: string;
-  /** Website design iteration described by this repository. */
-  design: string;
-  /** Version the HTTP documentation describes; the Worker candidate. */
+  /** Version the documentation describes; the same CLI candidate. */
   docs: string;
+  /** Publication state shared by the candidate. */
+  releaseStage: string;
 };
 
 export const versions: Versions = {
-  product: "0.2.0-rc.1",
+  cli: "0.6.0-rc.1",
+  docs: "0.6.0-rc.1",
   releaseStage: "unpublished release candidate",
-  sdk: "0.4.0-rc.1",
-  cli: "0.4.0-rc.1",
-  design: "0.4.0",
-  docs: "0.2.0-rc.1",
 };
 
-/** Minimum runtime every public package declares in its `engines` field. */
+/** Minimum runtime the packaged CLI declares in its `engines` field. */
 export const PUBLIC_NODE_RUNTIME = "Node.js 22 or newer";
 
 /**
- * The three public packages in the product repository, and which job each one
- * does for a reader. None of them is published to npm for these candidates, so
- * every install instruction has to consume a local artifact.
+ * The two platforms the local CLI publishes to, and their CSS marks. The
+ * homepage names them and nothing more: limits and credential groups belong to
+ * the platform's own documentation, not to a marketing one-liner.
  */
-export type PublicPackage = {
-  /** Package name as it appears in `package.json`. */
-  name: string;
-  /** Candidate version in the product repository. */
-  version: string;
-  /** The job this package does, in the words the documentation uses. */
-  kind: "service" | "client library" | "terminal command";
-  /** One sentence on what it is for. */
-  role: string;
-  /** Minimum Node.js runtime declared by the package. */
-  nodeRuntime: string;
-  /** Runtime dependencies as declared, stated plainly. */
-  runtimeDependencies: string;
-  /** Product repository path. */
-  sourcePath: string;
-  /** The installable contents of the published tarball. */
-  ships: string;
-};
-
-export const publicPackages: PublicPackage[] = [
-  {
-    name: "@syndroo/cloudflare-worker",
-    version: versions.product,
-    kind: "service",
-    role: "Deploys and runs the service: the Bearer-authenticated HTTP API, the D1 schema, the Queue consumer and the Cron Trigger.",
-    nodeRuntime: PUBLIC_NODE_RUNTIME,
-    runtimeDependencies: "one runtime dependency, `jsonc-parser`",
-    sourcePath: "packages/cloudflare-worker",
-    ships: "the bundled Worker entry point, the D1 migrations, the generated third-party licence file, and the `syndroo-deploy` command",
-  },
-  {
-    name: "@syndroo/sdk",
-    version: versions.sdk,
-    kind: "client library",
-    role: "Calls one deployed instance from your own application: health, create, read, list, and a bounded poll for a terminal status.",
-    nodeRuntime: PUBLIC_NODE_RUNTIME,
-    runtimeDependencies: "no runtime dependencies; it uses the runtime's global `fetch`, `AbortSignal` and Web Streams",
-    sourcePath: "packages/sdk",
-    ships: "the compiled client and its type declarations",
-  },
-  {
-    name: "@syndroo/cli",
-    version: versions.cli,
-    kind: "terminal command",
-    role: "Puts the same operations in a terminal, a script or a CI job, and ships the official Syndroo Skill alongside them.",
-    nodeRuntime: PUBLIC_NODE_RUNTIME,
-    runtimeDependencies: "one runtime dependency, `@syndroo/sdk` pinned to " + versions.sdk,
-    sourcePath: "packages/cli",
-    ships: "the `syndroo` command and the bundled `skills/syndroo` Skill directory",
-  },
-];
-
-/**
- * Public capability status. No live-account acceptance record exists for this
- * candidate, so no platform is described as validated.
- */
-export type PlatformStatus = "mock-tested" | "experimental";
-
 export type Platform = {
-  /** Platform key used by the publishing API. */
+  /** Platform key used by a local publish document and by the CSS modifier. */
   id: string;
   name: string;
   /** CSS modifier for the local platform mark, `platform-icon--<icon>`. */
   icon: string;
-  /** Provider identifier returned in a publication entry. */
-  provider: string;
-  status: PlatformStatus;
-  statusLabel: string;
-  /** Text limits enforced by the adapter before network access. */
-  limit: string;
-  /** Worker secret names this platform needs. */
-  credentials: string;
-  /** Documentation guide path on the docs origin. */
-  guide: string;
-  /** Source package in the product repository. */
-  source: string;
-  /** Official provider documentation, as recorded for this candidate. */
-  references: { label: string; href: string }[];
-  /** One-sentence honest summary of what is and is not verified. */
-  summary: string;
-  /** The evidence behind `status`, stated without claiming more than that. */
-  evidence: string;
 };
 
 export const platforms: Platform[] = [
-  {
-    id: "bluesky",
-    name: "Bluesky",
-    icon: "bluesky",
-    provider: "bluesky-native",
-    status: "mock-tested",
-    statusLabel: "Mock-tested",
-    limit: "300 Unicode code points and 3,000 UTF-8 bytes (enforced by the candidate)",
-    credentials: "BLUESKY_IDENTIFIER, BLUESKY_PASSWORD (app password), optional BLUESKY_HOST",
-    guide: "/platforms/bluesky/",
-    source: "https://github.com/Syndroo/syndroo/tree/main/packages/bluesky",
-    references: [
-      { label: "Bluesky API documentation", href: "https://docs.bsky.app/" },
-      {
-        label: "Official @atproto/api SDK",
-        href: "https://github.com/bluesky-social/atproto/tree/main/packages/api",
-      },
-    ],
-    summary:
-      "Uses the official @atproto/api SDK. Exercised locally by the Mock SNS end-to-end gate; no live-account acceptance record exists yet.",
-    evidence:
-      "Unit tests plus the local Mock SNS end-to-end gate in the core repository. Recorded as mock-tested in the 0.2.0-rc.1 README; live-account acceptance is an open release gate.",
-  },
-  {
-    id: "threads",
-    name: "Threads",
-    icon: "threads",
-    provider: "threads-native",
-    status: "mock-tested",
-    statusLabel: "Mock-tested",
-    limit: "500 characters",
-    credentials:
-      "THREADS_ACCESS_TOKEN (long-lived user token with threads_basic and threads_content_publish)",
-    guide: "/platforms/threads/",
-    source: "https://github.com/Syndroo/syndroo/tree/main/packages/threads",
-    references: [
-      { label: "Threads API documentation", href: "https://developers.facebook.com/docs/threads" },
-      { label: "Meta Threads API collection", href: "https://www.postman.com/meta/threads/overview" },
-    ],
-    summary:
-      "Native HTTP adapter. Exercised locally by the Mock SNS end-to-end gate; no live-account acceptance record exists yet, and long-lived tokens are refreshed by you, not by Syndroo.",
-    evidence:
-      "Unit tests plus the local Mock SNS end-to-end gate in the core repository. Recorded as mock-tested in the 0.2.0-rc.1 README; live-account acceptance is an open release gate.",
-  },
-  {
-    id: "x",
-    name: "X",
-    icon: "x",
-    provider: "x-sdk",
-    status: "experimental",
-    statusLabel: "Experimental",
-    limit: "280 weighted characters",
-    credentials:
-      "App credentials from env: X_API_KEY, X_API_SECRET; user access token pair from env or /v1/auth/x",
-    guide: "/platforms/x/",
-    source: "https://github.com/Syndroo/syndroo/tree/main/packages/x",
-    references: [
-      { label: "TypeScript XDK", href: "https://docs.x.com/tools/typescript-xdk" },
-      { label: "Counting characters", href: "https://docs.x.com/fundamentals/counting-characters" },
-      { label: "Create a post", href: "https://docs.x.com/x-api/posts/create-post" },
-    ],
-    summary:
-      "Uses the official @xdevplatform/xdk SDK with OAuth 1.0a user authentication. Implemented and unit-tested; no live-account acceptance record exists.",
-    evidence:
-      "Unit tests in the core repository, including workerd coverage. Recorded as experimental in the 0.2.0-rc.1 README.",
-  },
-  {
-    id: "tumblr",
-    name: "Tumblr",
-    icon: "tumblr",
-    provider: "tumblr-native",
-    status: "experimental",
-    statusLabel: "Experimental",
-    limit: "4,096 Unicode code points",
-    credentials:
-      "App credentials from env: TUMBLR_CONSUMER_KEY, TUMBLR_CONSUMER_SECRET; user token from env or /v1/auth/tumblr; blog from env or credential payload",
-    guide: "/platforms/tumblr/",
-    source: "https://github.com/Syndroo/syndroo/tree/main/packages/tumblr",
-    references: [
-      { label: "Tumblr OAuth applications", href: "https://www.tumblr.com/oauth/apps" },
-      { label: "NPF publishing API", href: "https://github.com/tumblr/docs/blob/master/api.md" },
-    ],
-    summary:
-      "Native HTTP adapter with OAuth 1.0a signing. Implemented and unit-tested; no live-account acceptance record exists, and it publishes one NPF text block only.",
-    evidence:
-      "Unit tests and the approved native-HTTP spike recorded in the core repository. Recorded as experimental in the 0.2.0-rc.1 README.",
-  },
-  {
-    id: "linkedin",
-    name: "LinkedIn",
-    icon: "linkedin",
-    provider: "linkedin-native",
-    status: "experimental",
-    statusLabel: "Experimental",
-    limit: "3,000 UTF-16 units after escaping",
-    credentials:
-      "Publish identity from env or /v1/auth/linkedin (access_token, optional author/api_version); OAuth app credentials for connect/refresh: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET",
-    guide: "/platforms/linkedin/",
-    source: "https://github.com/Syndroo/syndroo/tree/main/packages/linkedin",
-    references: [
-      {
-        label: "Posts API and permissions",
-        href: "https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api",
-      },
-      {
-        label: "API versioning",
-        href: "https://learn.microsoft.com/en-us/linkedin/marketing/versioning",
-      },
-    ],
-    summary:
-      "Independently written native HTTP adapter for POST /rest/posts. Implemented and unit-tested; no live-account acceptance record exists.",
-    evidence:
-      "Unit tests in the core repository, including workerd coverage. Recorded as experimental in the 0.2.0-rc.1 README.",
-  },
-];
-
-/**
- * Agent access methods. The Skill and the CLI it ships with exist as candidate
- * artifacts, but no client-specific installation or behaviour evaluation has
- * been recorded, so nothing here is described as verified.
- */
-export type AgentClient = {
-  id: string;
-  name: string;
-  method: string;
-  status: "documented" | "not-verified";
-  statusLabel: string;
-  note: string;
-};
-
-export const agentClients: AgentClient[] = [
-  {
-    id: "syndroo-skill",
-    name: "Syndroo Skill with the Syndroo CLI",
-    method: "Skill -> CLI -> SDK -> HTTP API",
-    status: "documented",
-    statusLabel: "Shipped in the CLI package, not verified in any specific client",
-    note:
-      "The Skill is part of the `@syndroo/cli` tarball and is installed with it. The workflow, guardrails and exit codes are written out in the Agent and Skill quickstart, but no agent client has been evaluated against them in this repository.",
-  },
-  {
-    id: "oauth-connect",
-    name: "Agent-guided OAuth connect",
-    method: "Agent -> /v1/auth/:platform/connect -> browser -> /v1/auth/:platform/callback",
-    status: "documented",
-    statusLabel: "Implemented in the service; no client-specific evaluation recorded",
-    note:
-      "The agent starts an OAuth flow through the service and opens the returned URL in a browser. On callback success, the platform credential is stored in D1 and used for later publishing without redeploying the Worker.",
-  },
-  {
-    id: "http-workflow",
-    name: "Client-managed HTTP workflow",
-    method: "Manual HTTP workflow",
-    status: "documented",
-    statusLabel: "Documented, not verified end to end",
-    note:
-      "The agent sends the same authenticated request shown in the API reference, and a person confirms the text before it goes out. Direct HTTP is the fallback when the CLI cannot run, not a second attempt after a CLI failure.",
-  },
-  {
-    id: "mcp-server",
-    name: "MCP server",
-    method: "Model Context Protocol",
-    status: "not-verified",
-    statusLabel: "Out of scope",
-    note: "No MCP server ships with this candidate, and building one is outside the current roadmap.",
-  },
+  { id: "bluesky", name: "Bluesky", icon: "bluesky" },
+  { id: "threads", name: "Threads", icon: "threads" },
 ];
 
 export type NavItem = {
@@ -337,48 +72,16 @@ export type NavItem = {
   href: string;
 };
 
-/** Marketing navigation. Cross-site links carry the docs placeholder origin. */
+/** Site navigation. Cross-site links carry the docs placeholder origin. */
 export const primaryNav: NavItem[] = [
-  { label: "How it works", href: "/#how-it-works" },
-  { label: "Agent setup", href: `${ORIGIN_PLACEHOLDERS.docs}/agent-setup/` },
-  { label: "Platforms", href: "/#platforms" },
   { label: "Docs", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
-  { label: "GitHub", href: "https://github.com/Syndroo/syndroo" },
+  { label: "GitHub", href: PRODUCT_REPOSITORY },
 ];
 
-export type FooterColumn = {
-  title: string;
-  items: NavItem[];
-};
-
-export const footerNav: FooterColumn[] = [
-  {
-    title: "Product",
-    items: [
-      { label: "Documentation", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
-      { label: "Agent setup", href: `${ORIGIN_PLACEHOLDERS.docs}/agent-setup/` },
-      { label: "Quickstart", href: `${ORIGIN_PLACEHOLDERS.docs}/quickstart/` },
-      { label: "API reference", href: `${ORIGIN_PLACEHOLDERS.docs}/api/` },
-      { label: "Changelog", href: "/changelog/" },
-    ],
-  },
-  {
-    title: "Project",
-    items: [
-      { label: "About", href: "/about/" },
-      { label: "Blog", href: "/blog/" },
-      { label: "Contact: GitHub Issues", href: "https://github.com/Syndroo/syndroo/issues" },
-      { label: "GitHub", href: "https://github.com/Syndroo/syndroo" },
-    ],
-  },
-  {
-    title: "Legal",
-    items: [
-      { label: "Privacy", href: "/privacy/" },
-      { label: "Terms", href: "/terms/" },
-      { label: "License (Apache-2.0)", href: "https://github.com/Syndroo/syndroo/blob/main/LICENSE" },
-    ],
-  },
+export const footerNav: NavItem[] = [
+  { label: "Documentation", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
+  { label: "GitHub", href: PRODUCT_REPOSITORY },
+  { label: "License", href: PRODUCT_LICENSE_URL },
 ];
 
 export type DocsNavItem = {
@@ -399,64 +102,22 @@ export type DocsNavGroup = {
  */
 export const docsNav: DocsNavGroup[] = [
   {
-    title: "Start here",
+    title: "Start",
+    items: [{ label: "Quickstart", href: "/" }],
+  },
+  {
+    title: "Guides",
     items: [
-      { label: "Overview", href: "/" },
-      { label: "Choose your path", href: "/#choose-a-path" },
-      { label: "Packages overview", href: "/packages/" },
-      { label: "Getting an instance", href: "/#get-an-instance" },
+      { label: "Accounts", href: "/accounts/" },
+      { label: "Publishing and retries", href: "/publishing/" },
+      { label: "Agent usage", href: "/agent-setup/" },
     ],
   },
   {
-    title: "Quickstarts",
+    title: "Reference",
     items: [
-      { label: "Agent and Skill", href: "/agent-setup/" },
-      { label: "CLI", href: "/quickstart/cli/" },
-      { label: "SDK", href: "/quickstart/sdk/" },
-      { label: "First post over HTTP", href: "/quickstart/" },
-    ],
-  },
-  {
-    title: "Platform setup",
-    items: [
-      { label: "Bluesky", href: "/platforms/bluesky/" },
-      { label: "Threads", href: "/platforms/threads/" },
-      { label: "X", href: "/platforms/x/" },
-      { label: "Tumblr", href: "/platforms/tumblr/" },
-      { label: "LinkedIn", href: "/platforms/linkedin/" },
-    ],
-  },
-  {
-    title: "Get an instance",
-    items: [
-      { label: "Cloudflare deployment", href: "/operations/cloudflare/" },
-      { label: "Local development", href: "/operations/local/" },
-    ],
-  },
-  {
-    title: "Recipes",
-    items: [
-      { label: "Product update", href: "/recipes/product-update/" },
-      { label: "Blog summary", href: "/recipes/blog-distribution/" },
-      { label: "CI and script calls", href: "/recipes/api-automation/" },
-    ],
-  },
-  {
-    title: "API reference",
-    items: [
-      { label: "HTTP API", href: "/api/" },
-      { label: "Create a post", href: "/api/#create-a-post", sub: true },
-      { label: "Check a post", href: "/api/#get-a-post", sub: true },
-      { label: "Errors", href: "/api/#errors", sub: true },
-      { label: "Limits", href: "/api/#limits", sub: true },
-    ],
-  },
-  {
-    title: "Concepts",
-    items: [
-      { label: "Delivery and guarantees", href: "/concepts/" },
-      { label: "Idempotency", href: "/concepts/#idempotency", sub: true },
-      { label: "Ambiguous outcomes", href: "/concepts/#ambiguous-outcomes", sub: true },
+      { label: "Commands", href: "/commands/" },
+      { label: "FAQ", href: "/faq/" },
     ],
   },
 ];
@@ -471,81 +132,13 @@ export type PageEntry = {
   label: string;
 };
 
-export const websitePages: PageEntry[] = [
-  { file: "index.html", path: "/", label: "Home" },
-  { file: "about/index.html", path: "/about/", label: "About" },
-  { file: "blog/index.html", path: "/blog/", label: "Blog" },
-  {
-    file: "blog/safe-cross-posting-with-idempotency/index.html",
-    path: "/blog/safe-cross-posting-with-idempotency/",
-    label: "Tutorial: safe text cross-posting",
-  },
-  { file: "changelog/index.html", path: "/changelog/", label: "Changelog" },
-  { file: "privacy/index.html", path: "/privacy/", label: "Privacy" },
-  { file: "terms/index.html", path: "/terms/", label: "Terms" },
-];
+export const websitePages: PageEntry[] = [{ file: "index.html", path: "/", label: "Home" }];
 
 export const docsPages: PageEntry[] = [
-  { file: "index.html", path: "/", label: "Overview" },
-  { file: "packages/index.html", path: "/packages/", label: "Packages overview" },
-  {
-    file: "quickstart/index.html",
-    path: "/quickstart/",
-    label: "Quickstart: first post over HTTP",
-  },
-  {
-    file: "quickstart/cli/index.html",
-    path: "/quickstart/cli/",
-    label: "Quickstart: CLI",
-  },
-  {
-    file: "quickstart/sdk/index.html",
-    path: "/quickstart/sdk/",
-    label: "Quickstart: SDK",
-  },
-  {
-    file: "agent-setup/index.html",
-    path: "/agent-setup/",
-    label: "Quickstart: agent and Skill",
-  },
-  {
-    file: "platforms/bluesky/index.html",
-    path: "/platforms/bluesky/",
-    label: "Platform setup: Bluesky",
-  },
-  {
-    file: "platforms/threads/index.html",
-    path: "/platforms/threads/",
-    label: "Platform setup: Threads",
-  },
-  { file: "platforms/x/index.html", path: "/platforms/x/", label: "Platform setup: X" },
-  { file: "platforms/tumblr/index.html", path: "/platforms/tumblr/", label: "Platform setup: Tumblr" },
-  {
-    file: "platforms/linkedin/index.html",
-    path: "/platforms/linkedin/",
-    label: "Platform setup: LinkedIn",
-  },
-  {
-    file: "recipes/product-update/index.html",
-    path: "/recipes/product-update/",
-    label: "Recipe: product update",
-  },
-  {
-    file: "recipes/blog-distribution/index.html",
-    path: "/recipes/blog-distribution/",
-    label: "Recipe: blog summary",
-  },
-  {
-    file: "recipes/api-automation/index.html",
-    path: "/recipes/api-automation/",
-    label: "Recipe: CI and script calls",
-  },
-  { file: "api/index.html", path: "/api/", label: "HTTP API" },
-  { file: "concepts/index.html", path: "/concepts/", label: "Delivery and guarantees" },
-  {
-    file: "operations/cloudflare/index.html",
-    path: "/operations/cloudflare/",
-    label: "Cloudflare deployment",
-  },
-  { file: "operations/local/index.html", path: "/operations/local/", label: "Local development" },
+  { file: "index.html", path: "/", label: "Quickstart" },
+  { file: "accounts/index.html", path: "/accounts/", label: "Accounts" },
+  { file: "publishing/index.html", path: "/publishing/", label: "Publishing and retries" },
+  { file: "agent-setup/index.html", path: "/agent-setup/", label: "Agent usage" },
+  { file: "commands/index.html", path: "/commands/", label: "Commands" },
+  { file: "faq/index.html", path: "/faq/", label: "FAQ" },
 ];

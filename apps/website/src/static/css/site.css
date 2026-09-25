@@ -1274,7 +1274,7 @@ main {
 
 .site-footer__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 32px;
 }
 

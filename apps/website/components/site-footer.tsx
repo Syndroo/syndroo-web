@@ -1,6 +1,6 @@
-// The shared marketing footer: same columns, wording and links as the authored
-// pages, with the navigation taken from the shared content registry.
-import { footerNav, versions } from "@syndroo/content/site-data";
+// The shared marketing footer: a one-line description and the three links the
+// site keeps (documentation, source, licence), taken from the shared registry.
+import { footerNav } from "@syndroo/content/site-data";
 
 export function SiteFooter(): React.JSX.Element {
   return (
@@ -12,25 +12,21 @@ export function SiteFooter(): React.JSX.Element {
               <img src="/assets/logo.svg" alt="" width="26" height="26" />
               Syndroo
             </a>
-            <p>Open-source publishing infrastructure for the social web, under the Apache License 2.0.</p>
+            <p>Publish text to Bluesky and Threads from your own machine.</p>
           </div>
-          {footerNav.map((column) => (
-            <div key={column.title}>
-              <h2>{column.title}</h2>
-              <ul>
-                {column.items.map((item) => (
-                  <li key={item.label}>
-                    <a href={item.href} rel={item.href.startsWith("http") ? "noreferrer" : undefined}>
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <nav className="site-footer__links" aria-label="Footer">
+            <ul>
+              {footerNav.map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} rel={item.href.startsWith("http") ? "noreferrer" : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
         <div className="site-footer__bottom">
-          <span>Prototype content for review. Release candidate {versions.product} is unpublished.</span>
           <span>&copy; 2026 Syndroo</span>
         </div>
       </div>

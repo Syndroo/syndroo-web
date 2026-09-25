@@ -16,6 +16,17 @@ jobs:
         with:
           persist-credentials: false
 
+      # The documentation fixtures compare every documented command and flag
+      # with the real CLI, so CI builds the product checkout they read instead
+      # of letting that fixture skip.
+      - name: Check out the product repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: Syndroo/syndroo
+          ref: 03dbace4f3549253e62419482d930d0fca729d01
+          path: syndroo
+          persist-credentials: false
+
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -25,6 +36,14 @@ jobs:
       - name: Install the workspace layout
         run: npm ci
 
+      - name: Install the product workspace
+        run: npm ci
+        working-directory: syndroo
+
+      - name: Build the product CLI
+        run: npm run build
+        working-directory: syndroo
+
       - name: Build both sites
         run: npm run build
 
@@ -33,3 +52,14 @@ jobs:
 
       - name: Run the test fixtures
         run: npm test
+        env:
+          # The docs fixtures read this checkout; without it they would skip.
+          SYNDROO_CORE_REPO: ${{ github.workspace }}/syndroo
+
+      # The fixture above may skip when no CLI is reachable, which is the right
+      # local behaviour. CI has a checkout and a build, so it runs the contract
+      # check directly: a missing CLI is a hard failure here, not a skip.
+      - name: Check the documented CLI contract
+        run: node scripts/check-docs-commands.ts
+        env:
+          SYNDROO_CORE_REPO: ${{ github.workspace }}/syndroo

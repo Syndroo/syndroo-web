@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Account configuration - Syndroo docs",
+  description: "Bind a Bluesky app password or a Threads access token to the syndroo CLI, verify it, and remove it.",
+  alternates: { canonical: "/accounts/" },
+  openGraph: {
+    type: "website",
+    url: "/accounts/",
+    title: "Account configuration - Syndroo docs",
+    description: "Bind a Bluesky app password or a Threads access token to the syndroo CLI, verify it, and remove it.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Accounts</span>
+        </nav>
+        <h1 id="accounts">Bind a Bluesky or Threads account</h1>
+        <p className="lede">Each provider reads exactly one credential source, and the CLI reads it again on every execution.</p>
+
+        <h2 id="bluesky">Bluesky</h2>
+        <p>Create an app password in your Bluesky account settings, then export it in place of these placeholders. <code>{"BLUESKY_HOST"}</code> is optional and must be <code>{"bsky.social"}</code>.</p>
+        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"app-password\"\nsyndroo auth set bluesky --local --from-env"}</code></pre>
+
+        <h2 id="threads">Threads</h2>
+        <p>Threads reads one access token from your own app authorization. The CLI has no OAuth flow, so it never requests, refreshes or renews it.</p>
+        <pre data-label="terminal"><code>{"export THREADS_ACCESS_TOKEN=\"user-supplied-token\"\nsyndroo auth set threads --local --from-env"}</code></pre>
+        <p>Registration verifies the account with the provider before registering it.</p>
+
+        <h2 id="credential-file">Credential file</h2>
+        <p>One provider can read one strict JSON file instead of the environment:</p>
+        <pre data-label="bluesky-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"bluesky\",\n  \"credentials\": {\n    \"identifier\": \"your-handle.bsky.social\",\n    \"password\": \"APP_PASSWORD_PLACEHOLDER\",\n    \"host\": \"bsky.social\"\n  }\n}"}</code></pre>
+        <pre data-label="threads-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"threads\",\n  \"credentials\": { \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\" }\n}"}</code></pre>
+        <p>The file must be a plain file you own that nobody else can read, so tighten it first:</p>
+        <pre data-label="terminal"><code>{"chmod 600 ./threads-credentials.json\nsyndroo auth set threads --local --credential-file ./threads-credentials.json"}</code></pre>
+
+        <h2 id="verify">Verify and remove</h2>
+        <pre data-label="terminal"><code>{"syndroo auth status --local\nsyndroo auth status bluesky --local --verify\nsyndroo auth remove bluesky --local"}</code></pre>
+        <p><code>{"auth status"}</code> is offline, and <code>{"--verify"}</code> re-checks one identity over the network without changing the binding. A non-interactive registration pins the account you already checked:</p>
+        <pre data-label="terminal"><code>{"syndroo auth set bluesky --local --from-env --expect-account <stable-id> --yes --no-input"}</code></pre>
+        <p>Registration and verification failures are listed in the <a href="/faq/#configuration">FAQ</a>.</p>
+
+        <h2 id="next-steps">Next steps</h2>
+        <ul>
+          <li><a href="/publishing/">Publishing and retry</a></li>
+          <li><a href="/commands/">Command reference</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#bluesky">Bluesky</a></li>
+        <li><a href="#threads">Threads</a></li>
+        <li><a href="#credential-file">Credential file</a></li>
+        <li><a href="#verify">Verify and remove</a></li>
+        <li><a href="#next-steps">Next steps</a></li>
+      </ul>
+    </nav>

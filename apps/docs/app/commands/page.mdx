@@ -1,0 +1,103 @@
+export const metadata = {
+  title: "Command reference - Syndroo docs",
+  description: "Every local syndroo command, its flags, its exit codes, and short examples.",
+  alternates: { canonical: "/commands/" },
+  openGraph: {
+    type: "website",
+    url: "/commands/",
+    title: "Command reference - Syndroo docs",
+    description: "Every local syndroo command, its flags, its exit codes, and short examples.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Commands</span>
+        </nav>
+        <h1 id="commands">Local command reference</h1>
+        <p className="lede">Every command below belongs to the local path and needs no server. <code>{"syndroo help"}</code> prints usage, and <code>{"syndroo <command> --help"}</code> prints the flags for one command.</p>
+
+        <h2 id="commands-list">Commands</h2>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Command</th><th scope="col">What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>{"syndroo init [--namespace <name>]"}</code></th><td>Create the local config and state. Repeats safely with the same namespace.</td></tr>
+              <tr><th scope="row"><code>{"syndroo doctor --local"}</code></th><td>Check config, state and bindings. Read-only, no network.</td></tr>
+              <tr><th scope="row"><code>{"syndroo providers list"}</code></th><td>List the local providers with maturity and availability.</td></tr>
+              <tr><th scope="row"><code>{"syndroo auth set <provider> --local"}</code></th><td>Verify one account and register a credential reference.</td></tr>
+              <tr><th scope="row"><code>{"syndroo auth status [<provider>] --local"}</code></th><td>Show the bindings. Offline unless <code>{"--verify"}</code> is added.</td></tr>
+              <tr><th scope="row"><code>{"syndroo auth remove <provider> --local"}</code></th><td>Remove one binding and keep a tombstone.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish --input <path|-> --dry-run"}</code></th><td>Freeze a plan and print it. The only way to start a local publish.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish --plan <plan-id>"}</code></th><td>Execute one frozen plan.</td></tr>
+              <tr><th scope="row"><code>{"syndroo receipts list"}</code></th><td>List recent local operations, newest first; default 20.</td></tr>
+              <tr><th scope="row"><code>{"syndroo receipts show <operation-id>"}</code></th><td>Show one operation with its per-target records.</td></tr>
+              <tr><th scope="row"><code>{"syndroo retry <operation-id> --to <csv> --dry-run"}</code></th><td>Freeze a retry plan for explicitly selected safe targets.</td></tr>
+              <tr><th scope="row"><code>{"syndroo retry --plan <plan-id>"}</code></th><td>Execute one frozen retry plan.</td></tr>
+              <tr><th scope="row"><code>{"syndroo state inspect"}</code></th><td>Show lock, versions and defects. Never repairs.</td></tr>
+              <tr><th scope="row"><code>{"syndroo state recover --confirm-no-writers --yes"}</code></th><td>Recover after every other writer has stopped.</td></tr>
+              <tr><th scope="row"><code>{"syndroo skill path"}</code></th><td>Print the absolute path of the bundled Skill directory.</td></tr>
+              <tr><th scope="row"><code>{"syndroo help"}</code>, <code>{"syndroo version"}</code></th><td>Print usage or the CLI version. Neither touches the network.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="flags">Flags</h2>
+        <ul>
+          <li><code>{"--json"}</code> writes exactly one object to stdout and sends every diagnostic, including the preview, to stderr.</li>
+          <li><code>{"--local"}</code> selects the local path for <code>{"doctor"}</code> and the auth commands.</li>
+          <li><code>{"--state-home <path>"}</code> and <code>{"--namespace <name>"}</code> override the state location and deduplication domain for one run.</li>
+          <li><code>{"--yes"}</code> confirms without a prompt and <code>{"--no-input"}</code> never prompts; a non-interactive run needs both.</li>
+          <li><code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> chooses the credential source, and <code>{"--expect-account <id>"}</code> pins the account a non-interactive run verified.</li>
+          <li><code>{"--verify"}</code> re-checks an identity over the network without changing the binding.</li>
+          <li><code>{"--input <path|->"}</code>, <code>{"--plan <plan-id>"}</code> and <code>{"--to <csv>"}</code> name the document, a frozen plan, and retry targets.</li>
+          <li><code>{"--confirm-no-writers"}</code> is the recovery confirmation, <code>{"--limit <n>"}</code> bounds a listing, and <code>{"--timeout <duration>"}</code> bounds an execution or an explicit verification.</li>
+        </ul>
+
+        <h2 id="exit-codes">Exit codes</h2>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Code</th><th scope="col">Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>{"0"}</code></th><td>The command finished: a plan was written, a read succeeded, or a run fully succeeded.</td></tr>
+              <tr><th scope="row"><code>{"1"}</code></th><td>Local I/O or runtime failure, or a trusted success that could not be persisted.</td></tr>
+              <tr><th scope="row"><code>{"2"}</code></th><td>Admission failure: usage, config, document, confirmation or binding. No content request.</td></tr>
+              <tr><th scope="row"><code>{"4"}</code></th><td>An unknown write result. Read the receipt before doing anything else.</td></tr>
+              <tr><th scope="row"><code>{"5"}</code></th><td>The operator declined before any content request.</td></tr>
+              <tr><th scope="row"><code>{"6"}</code></th><td>The run ended without full delivery.</td></tr>
+              <tr><th scope="row"><code>{"130"}</code></th><td>The process stopped on a signal. An in-flight write is not cancelled.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The local surface does not return exit <code>{"3"}</code>.</p>
+
+        <h2 id="examples">Short examples</h2>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json\nsyndroo publish --plan <result.planId> --yes --no-input --json\nsyndroo receipts show <result.operationId> --json\nsyndroo retry <result.operationId> --to threads --dry-run --json"}</code></pre>
+        <p>With <code>{"--json"}</code>, stdout carries one envelope: <code>{"{schemaVersion, command, mode, ok, result, error}"}</code>. Read <code>{"result.status"}</code> as well as the exit code, because a preview can be <code>{"ok"}</code> while nothing was published.</p>
+
+        <h2 id="next-steps">Next steps</h2>
+        <ul>
+          <li><a href="/publishing/">Publishing and retry</a></li>
+          <li><a href="/faq/">FAQ</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#commands-list">Commands</a></li>
+        <li><a href="#flags">Flags</a></li>
+        <li><a href="#exit-codes">Exit codes</a></li>
+        <li><a href="#examples">Short examples</a></li>
+        <li><a href="#next-steps">Next steps</a></li>
+      </ul>
+    </nav>

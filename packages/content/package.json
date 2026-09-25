@@ -6,7 +6,6 @@
   "description": "Single maintained content source for the Syndroo website and documentation site.",
   "license": "Apache-2.0",
   "exports": {
-    "./site-data": "./site-data.ts",
-    "./demo-data": "./demo-data.ts"
+    "./site-data": "./site-data.ts"
   }
 }

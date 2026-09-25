@@ -1,147 +1,69 @@
 # Syndroo website and documentation
 
-Website and documentation source: two independently built static sites plus the
-shared brand assets in `packages/brand/assets/`. Everything runs locally, and
-this repository carries no deployment pipeline of its own: Cloudflare Pages
-builds and publishes the sites from the dashboard configuration recorded in the
-deployment guide below. The pages call no third-party asset or analytics API at
-runtime; the docs search fetches its own local pages.
+Sources for the two public sites: the marketing homepage in `apps/website/` and
+the documentation in `apps/docs/`. Both are Next.js App Router sites with a
+static export, built from the shared metadata in `packages/content/` and the
+marks in `packages/brand/assets/`. The product - the `syndroo` CLI, its Worker
+and the platform adapters - lives in <https://github.com/Syndroo/syndroo>.
 
-- Design contract: [docs/design.md](docs/design.md)
-- Acceptance record: [docs/acceptance.md](docs/acceptance.md)
-- Deployment guide: [docs/cloudflare-pages.md](docs/cloudflare-pages.md)
-- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Product repository: <https://github.com/Syndroo/syndroo>
+## Pages
 
-## Hosting
+Seven public pages, plus the two technical 404 documents Next.js generates:
 
-Cloudflare Pages hosts the two sites. Each project keeps its own `*.pages.dev`
-project domain, and the custom domains are the primary hostnames:
+| Site | Paths |
+| --- | --- |
+| Website | `/` |
+| Docs | `/`, `/accounts/`, `/publishing/`, `/agent-setup/`, `/commands/`, `/faq/` |
 
-| Site | Primary hostname | Project domain |
-| --- | --- | --- |
-| Website | <https://syndroo.com> | <https://syndroo-web.pages.dev> |
-| Documentation | <https://docs.syndroo.com> | <https://syndroo-docs.pages.dev> |
+The page registries in `packages/content/site-data.ts` are the single source for
+the sitemaps, the docs search and the expected build output, and the fixtures
+reject an exported page that is not registered, so a retired route cannot
+survive a rebuild.
 
-The custom domains are attached in the Pages dashboard. Build commands, output
-directories, environment variables and the custom-domain mapping are recorded in
-[docs/cloudflare-pages.md](docs/cloudflare-pages.md).
+## Setup
 
-## Requirements
-
-Node.js 24 or newer and npm. The build uses Node's built-in TypeScript type
-stripping, so no compiler or framework package is required. `npm ci` installs
-the workspace layout from `package-lock.json`.
-
-## Commands
-
-Run everything from the repository root.
+Node.js 24 or newer and npm. Run everything from the repository root:
 
 ```bash
 npm ci           # install workspace dependencies
-npm run build    # Next.js static export of both sites into their own out/
-npm run check    # verify built artifacts and internal links
-npm test         # run the Node test fixtures
-npm run dev      # run both Next.js development servers
-npm run preview  # serve the exported output on loopback
+npm run build    # static export of both sites into apps/*/out
+npm run check    # verify built artifacts, links and configured origins
+npm test         # run the Node fixtures (after a build)
+npm run dev      # both Next.js development servers
+npm run preview  # serve the existing export on loopback
 ```
 
-Focused builds and single-app previews:
-
-```bash
-npm run build:website
-npm run build:docs
-```
-
-`npm run dev` runs the Next.js development servers for both apps. `npm run
-build` writes each app's static export to `apps/*/out`, and `npm run preview`
-serves those exported files on loopback without watching or rebuilding them.
-
-## Local origins
-
-Both preview servers bind `127.0.0.1` only and print the URLs they serve.
-
-| App | Default origin |
-| --- | --- |
-| `apps/website` | `http://localhost:4173/` |
-| `apps/docs` | `http://localhost:4174/` |
+`tests/docs-commands.test.ts` compares every documented command and flag with
+the real CLI, so it needs a built product checkout. It resolves the default
+sibling `../syndroo` or `SYNDROO_CORE_REPO`; build that repository first
+(`npm ci && npm run build`). With no built checkout at either path it reports a
+skip and the rest of the suite still runs. CI builds one and then runs
+`node scripts/check-docs-commands.ts`, where a missing CLI is a hard failure.
 
 ## Build-time origins
 
-The two sites link to each other by absolute URL, so the build needs to know
-both origins. The local defaults are the loopback pair above. Point them at the
-hosts you serve from:
+The sites link to each other by absolute URL, so every build needs both origins.
+The authored sources keep `http://localhost:4173` and `http://localhost:4174`;
+the build rewrites them to whatever pair the environment provides.
 
 ```bash
-WEBSITE_ORIGIN=https://syndroo.com \
-DOCS_ORIGIN=https://docs.syndroo.com \
-npm run build
+WEBSITE_ORIGIN=https://syndroo.com DOCS_ORIGIN=https://docs.syndroo.com npm run build
 ```
 
-Each value must be a plain HTTP(S) origin: scheme and host, optional port, with
-no path, query, fragment or credentials, and the two values must differ. The
-build fails with a clear error when a value does not qualify.
+Each value must be a plain HTTP(S) origin - scheme, host, optional port - with no
+path, query, fragment or credentials, and the two must differ.
 
-## Repository layout
-
-```text
-apps/website/     marketing site: Next.js App Router routes in app/, shared
-                  header/footer components in components/, authored browser
-                  TypeScript in src/js/, its own static export in out/
-apps/docs/        documentation site: Next.js App Router with MDX pages in
-                  app/ (*.mdx), the topbar/sidebar/footer/search chrome in
-                  components/, authored browser TypeScript in src/js/, its own
-                  static export in out/
-packages/content/ the maintained content source: versions, platform
-                  capability facts, agent access methods, navigation, the page
-                  registries and the simulated demo fixtures. Both builds
-                  compile these modules into their own output, so the two sites
-                  and the tests cannot disagree about them
-packages/theme/   the shared theme implementation: the next-themes provider, the
-                  pre-paint cookie script and the Light/Dark/System control used
-                  by both headers
-packages/brand/assets/  the only home of the shared marks: logo, favicon, the
-                  three mascot artworks and the five platform SVGs, documented
-                  in packages/brand/PROVENANCE.md; copied into each app's
-                  public/assets by `npm run assets`
-scripts/          build, dev, check and preview entry points
-tests/            Node fixtures for artifacts, links and server behaviour
-.github/          CI that builds, checks and tests (no deployment)
-```
-
-Each app builds a self-contained output directory holding its own HTML, CSS,
-generated browser JavaScript and copies of the shared brand assets it uses, so
-either site can be served from its own output without the other. The brand
-assets package remains the single source for every shared mark, and both builds
-copy those files unchanged. `app/robots.ts` and `app/sitemap.ts` generate
-`robots.txt` and `sitemap.xml` from the page registry and the configured
-origins, and the export contains no server runtime: every page is prerendered
-HTML, so a page can be opened and refreshed directly.
-
-Marketing pages are App Router routes (`app/**/page.tsx`) in the same shape as
-the pages they replaced, and documentation pages are MDX (`app/**/page.mdx`).
-The topbar, sidebar, footer, search dialog and theme control are rendered once
-by each app's layout, so a new page cannot drift out of the chrome. Built output
-is generated: change the source and rebuild instead of editing built files.
+Hosting configuration is recorded in
+[docs/cloudflare-pages.md](docs/cloudflare-pages.md). Built output is generated:
+change the source and rebuild instead of editing `apps/*/out`.
 
 ## Content status
 
-The service candidate is `0.2.0-rc.1`, and the SDK and CLI candidates are
-`0.4.0-rc.1`: all prepared, unpublished, untagged and undeployed. None is on a
-registry, so the documentation installs a tarball built from the product
-repository instead of a package name. Threads and Bluesky are exercised against
-local mock servers with live acceptance still pending; X, Tumblr and LinkedIn are
-experimental. The interactive publish demo on the marketing site is simulated in
-the browser and performs no network request. The website's `0.4.0` is a design
-iteration of this repository, not a product version, and no platform has a
-live-account acceptance record. Agent setup installs the Syndroo Skill together
-with the `syndroo` command it drives, or wires a client to the documented HTTP
-API. The API now includes `/v1/auth` endpoints for runtime platform credential
-management (direct token submission and OAuth browser connect/callback for
-supported platforms), plus OAuth 2.0 token refresh where a refresh token is
-available; no MCP server ships. Privacy and Terms are drafts pending operational and
-legal review. See [docs/design.md](docs/design.md) for the full contract and
-[docs/acceptance.md](docs/acceptance.md) for what has actually been verified.
+`0.6.0-rc.1` is the CLI candidate these docs describe: unpublished, untagged and
+undeployed, so the documentation installs a tarball built from the product
+repository rather than a package name. Bluesky and Threads are the two supported
+platforms and both still need live-account acceptance, so no page claims a
+verified publish.
 
 ## License
 

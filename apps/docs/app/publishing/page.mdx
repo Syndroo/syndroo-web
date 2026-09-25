@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Publishing and retry - Syndroo docs",
+  description: "Preview a frozen plan, execute it, read the receipt, and retry only targets that are provably safe.",
+  alternates: { canonical: "/publishing/" },
+  openGraph: {
+    type: "website",
+    url: "/publishing/",
+    title: "Publishing and retry - Syndroo docs",
+    description: "Preview a frozen plan, execute it, read the receipt, and retry only targets that are provably safe.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+      <article>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Docs</a>
+          <span aria-hidden="true">/</span>
+          <span>Publishing</span>
+        </nav>
+        <h1 id="publishing">Publish and retry</h1>
+        <p className="lede">One logical post moves through two commands: a preview freezes the text, the target account and the payload into a plan, and an execution runs that same plan.</p>
+
+        <h2 id="document">The document</h2>
+        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"release-announcement-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\", \"threads\"],\n  \"overrides\": { \"bluesky\": { \"content\": \"Shorter version for Bluesky.\" } }\n}"}</code></pre>
+        <p><code>{"key"}</code> is the stable identity of this post for its whole life (1-128 characters from <code>{"A-Z a-z 0-9 . _ : -"}</code>). <code>{"content"}</code> is non-blank text of at most 10000 Unicode code points, <code>{"platforms"}</code> is a non-empty list naming only <code>{"bluesky"}</code> or <code>{"threads"}</code>, and <code>{"overrides"}</code> may only name a selected platform. The file is strict JSON, limited to 64 KiB before decoding, and <code>{"--input -"}</code> reads stdin.</p>
+
+        <h2 id="preview">Preview</h2>
+        <p>The preview writes the plan and makes no platform request. Read the frozen text and the target account before continuing; the plan lives 24 hours from creation.</p>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json"}</code></pre>
+
+        <h2 id="execute">Execute</h2>
+        <p>Execution sends at most one content request per target. When nobody can answer a prompt, the run needs both <code>{"--yes"}</code> and <code>{"--no-input"}</code>; a missing confirmation exits <code>{"2"}</code> and sends nothing.</p>
+        <pre data-label="terminal"><code>{"syndroo publish --plan <result.planId> --yes --no-input --json"}</code></pre>
+
+        <h2 id="receipts">Receipts</h2>
+        <pre data-label="terminal"><code>{"syndroo receipts list --limit 20\nsyndroo receipts show <result.operationId> --json"}</code></pre>
+        <p>Each target reports <code>{"status"}</code>, <code>{"reused"}</code>, <code>{"attempts"}</code>, <code>{"remoteId"}</code>, <code>{"url"}</code>, <code>{"writeDisposition"}</code> and a <code>{"retry"}</code> verdict; the aggregate is <code>{"succeeded"}</code>, <code>{"partial"}</code>, <code>{"failed"}</code>, <code>{"unknown"}</code> or <code>{"blocked"}</code>. A <code>{"null"}</code> url means no verified link is known, so do not build one.</p>
+
+        <h2 id="unknown-and-retry">Retry</h2>
+        <p>Retry is explicit and two-phase, exactly like publish. Only targets whose failure is provably <code>{"not_applied"}</code> are eligible, and only within three content attempts per logical delivery; a selection that includes an <code>{"unknown"}</code> target blocks the whole retry, so narrow it to other safe targets instead. A succeeded target is never republished.</p>
+        <pre data-label="terminal"><code>{"syndroo retry <result.operationId> --to threads --dry-run --json\nsyndroo retry --plan <result.planId> --yes --no-input --json"}</code></pre>
+        <p><code>{"unknown"}</code> means the write may have reached the platform. Report it as unknown and stop; do not resend that content blindly.</p>
+
+        <h2 id="next-steps">Next steps</h2>
+        <ul>
+          <li><a href="/commands/">Command reference</a> - flags, exit codes and JSON fields.</li>
+          <li><a href="/faq/">FAQ</a> - expired plans and unknown results.</li>
+        </ul>
+      </article>
+    </main>
+
+    <nav className="toc" id="page-toc" aria-label="On this page">
+      <p className="toc-title">On this page</p>
+      <ul>
+        <li><a href="#document">The document</a></li>
+        <li><a href="#preview">Preview</a></li>
+        <li><a href="#execute">Execute</a></li>
+        <li><a href="#receipts">Receipts</a></li>
+        <li><a href="#unknown-and-retry">Retry</a></li>
+        <li><a href="#next-steps">Next steps</a></li>
+      </ul>
+    </nav>

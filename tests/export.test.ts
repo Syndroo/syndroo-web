@@ -4,7 +4,7 @@
 // `npm run build` (CI runs build, then check, then test). They cover what the
 // static export has to guarantee: independent per-app output, the registered
 // pages, the configured origins, no server-only Next.js dependency, and the
-// v0.4.0 shell/mascot/theme invariants that can be checked statically.
+// shell/mascot/theme invariants that can be checked statically.
 import assert from "node:assert/strict";
 import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -174,9 +174,14 @@ test("a custom origin pair rewrites the export without touching product sample U
     );
   }
 
-  // The Worker sample URL in the docs is content, not a cross-site link.
-  const quickstart = await readFile(join(root, "docs", "quickstart", "index.html"), "utf8");
-  assert.ok(quickstart.includes("http://localhost:8787"), "Worker sample URLs must not be rewritten");
+  // The product sample in the docs root is content, not a cross-site link: the
+  // install block clones the product repository, and the rewrite must leave it
+  // exactly as authored.
+  const docsRoot = await readFile(join(root, "docs", "index.html"), "utf8");
+  assert.ok(
+    docsRoot.includes("git clone https://github.com/Syndroo/syndroo"),
+    "the product repository URL must not be rewritten",
+  );
 });
 
 test("swapping the two origins cannot cascade through the rewrite", () => {
@@ -187,7 +192,7 @@ test("swapping the two origins cannot cascade through the rewrite", () => {
   assert.equal(applyOrigins(source, swapped), `a ${DEFAULT_DOCS_ORIGIN} b https://docs.example.com c`);
 });
 
-test("the exported stylesheets carry the v0.4.0 shell, mascot and theme rules", async () => {
+test("the exported stylesheets carry the full-width shell, mascot and theme rules", async () => {
   await requireExport();
 
   const websiteCssFiles = (await listFiles(WEBSITE.outRoot)).filter((file) => file.endsWith(".css"));
@@ -198,8 +203,8 @@ test("the exported stylesheets carry the v0.4.0 shell, mascot and theme rules", 
   // Production CSS is minified, so these assertions are written against the
   // minified shape (no space after the colon).
 
-  // CR-040-05: the last `.wrap` rule removes the 1160px cap, so the shell grows
-  // with the viewport instead of swapping one fixed width for another.
+  // The last `.wrap` rule removes the 1160px cap, so the shell grows with the
+  // viewport instead of swapping one fixed width for another.
   const wrapRules = [...websiteCss.matchAll(/\.wrap\{([^}]*)\}/g)].map((match) => match[1]);
   assert.ok(wrapRules.length > 0, "the marketing stylesheet should define .wrap");
   assert.ok(
@@ -208,7 +213,7 @@ test("the exported stylesheets carry the v0.4.0 shell, mascot and theme rules", 
   );
   assert.ok(/clamp\(20px,\s*3vw,\s*64px\)/.test(websiteCss), "the marketing shell needs a clamp gutter");
 
-  // CR-040-06: per-role mascot sizes, and no circular crop on the image.
+  // Per-role mascot sizes, and no circular crop on the image.
   assert.ok(/--mascot-hero:320px/.test(websiteCss), "the hero mascot should start at 320px");
   assert.ok(/--mascot-cta:200px/.test(websiteCss), "the CTA mascot should be 200px on desktop");
   assert.ok(/--mascot-hero:220px/.test(websiteCss), "the hero mascot should shrink on mobile");
@@ -217,7 +222,7 @@ test("the exported stylesheets carry the v0.4.0 shell, mascot and theme rules", 
   assert.ok(websiteCss.includes(".hero__mascot-glow"), "the glow must be its own layer behind the image");
 
   const docsCss = (await Promise.all(docsCssFiles.map((file) => readFile(file, "utf8")))).join("\n");
-  // CR-040-07: header, main and footer share one shell width and gutter.
+  // Header, main and footer share one shell width and gutter.
   assert.ok(/--shell-max:1560px/.test(docsCss), "the docs shell needs a shared width token");
   assert.ok(/--shell-gutter:24px/.test(docsCss), "the docs shell needs a shared gutter token");
   assert.ok(/--shell-gutter:16px/.test(docsCss), "the docs shell gutter should shrink on narrow viewports");

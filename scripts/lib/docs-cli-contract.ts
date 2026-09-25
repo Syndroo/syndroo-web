@@ -5,16 +5,34 @@
 // real `--help` text when a checkout is reachable and reports every documented
 // command or flag that does not exist. A documented option that no longer ships
 // has to fail a check rather than reach a reader.
+//
+// The check never executes a documented example: it runs `--help` for each
+// command the pages show, plus `version`, and nothing else. Examples are read as
+// text, so a page can show a post document or a `--yes` run without this
+// repository ever touching an account.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 const run = promisify(execFile);
 
 /** Commands whose first word is a group rather than the whole command. */
-const GROUP_WORDS: ReadonlySet<string> = new Set(["posts", "skill"]);
+const GROUP_WORDS: ReadonlySet<string> = new Set([
+  "auth",
+  "posts",
+  "providers",
+  "receipts",
+  "skill",
+  "state",
+]);
 
 const FLAG_PATTERN = /(?<![\w-])--[a-z][a-z0-9-]*/g;
 const UNIT_FLAG = /^--[a-z][a-z0-9-]*$/;
+/**
+ * An inline code span that documents a flag together with its argument, such as
+ * `--timeout <duration>` or `--limit <n>`. Only the leading flag is read: the
+ * rest of the span is the argument shape, not another flag.
+ */
+const INLINE_FLAG_USAGE = /^(--[a-z][a-z0-9-]*)\s+\S+/;
 const COMMAND_WORD = /^[a-z][a-z-]*$/;
 /** The forms the documentation is allowed to use to start the command. */
 const INVOCATION_LINE = /^(?:npx\s+|\.\/node_modules\/\.bin\/)?syndroo\s+(.+)$/;
@@ -128,26 +146,41 @@ export function extractCliSurface(pages: { path: string; html: string }[]): CliS
         continue;
       }
 
-      if (!UNIT_FLAG.test(flag)) {
+      // A span is a claim about a flag when it is the flag alone (`--yes`) or
+      // the flag followed by its argument shape (`--timeout <duration>`).
+      const named = UNIT_FLAG.test(flag) ? flag : INLINE_FLAG_USAGE.exec(flag)?.[1];
+      if (named === undefined) {
         continue;
       }
       // "there is no `--api-key` flag" is a statement about an option the CLI
       // deliberately does not have, not a claim that it does.
-      if (isNegated(pageText, flag)) {
+      if (isNegated(pageText, named)) {
         continue;
       }
-      inlineFlags.push({ flag, page: page.path });
+      inlineFlags.push({ flag: named, page: page.path });
     }
   }
 
   return { invocations, inlineFlags };
 }
 
-/** Run one `--help` invocation against the real CLI. */
-async function helpFor(cliBin: string, command: string): Promise<{ ok: boolean; text: string }> {
+/**
+ * Run one `--help` invocation against the real CLI.
+ *
+ * `mode` carries the local selector when a page spells one, so `doctor --local`
+ * is checked against the local help output rather than the remote one.
+ */
+async function helpFor(
+  cliBin: string,
+  command: string,
+  mode: string[] = [],
+): Promise<{ ok: boolean; text: string }> {
   const words = command.split(" ");
 
-  for (const args of [[...words, "--help"], [...words, "post_placeholder", "--help"]]) {
+  for (const args of [
+    [...words, ...mode, "--help"],
+    [...words, "post_placeholder", ...mode, "--help"],
+  ]) {
     try {
       const { stdout, stderr } = await run(process.execPath, [cliBin, ...args]);
       return { ok: true, text: `${stdout}\n${stderr}` };
@@ -186,7 +219,19 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
     return ["no documented syndroo invocation was found in the built documentation"];
   }
 
+  // The local selector changes which mode the command answers help for, so a
+  // command documented with `--local` is checked against that mode. Every
+  // current `doctor` example is local, and the flag would otherwise be checked
+  // against the wrong help text.
+  const localModeByCommand = new Map<string, string[]>();
+  for (const invocation of surface.invocations) {
+    if (invocation.flags.includes("--local")) {
+      localModeByCommand.set(invocation.command, ["--local"]);
+    }
+  }
+
   const helpByCommand = new Map<string, string>();
+  const localHelpByCommand = new Map<string, string>();
 
   for (const command of commands) {
     const help = await helpFor(options.cliBin, command);
@@ -194,10 +239,19 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
     if (!help.ok) {
       issues.push(`the documentation uses "syndroo ${command}", which the CLI does not accept`);
     }
+
+    const mode = localModeByCommand.get(command);
+    if (mode !== undefined) {
+      localHelpByCommand.set(command, (await helpFor(options.cliBin, command, mode)).text);
+    }
   }
 
   for (const invocation of surface.invocations) {
-    const help = helpByCommand.get(invocation.command) ?? "";
+    // A flag written next to `--local` is checked against the local help, so a
+    // local-only flag cannot be excused by the remote invocation's options.
+    const help = invocation.flags.includes("--local")
+      ? (localHelpByCommand.get(invocation.command) ?? helpByCommand.get(invocation.command) ?? "")
+      : (helpByCommand.get(invocation.command) ?? "");
     for (const flag of invocation.flags) {
       if (!help.includes(flag)) {
         issues.push(
@@ -207,7 +261,7 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
     }
   }
 
-  const allHelp = [...helpByCommand.values()].join("\n");
+  const allHelp = [...helpByCommand.values(), ...localHelpByCommand.values()].join("\n");
   for (const { flag, page } of surface.inlineFlags) {
     if (!allHelp.includes(flag)) {
       issues.push(`${page} documents "${flag}", which no command in the CLI help accepts`);

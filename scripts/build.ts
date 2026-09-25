@@ -7,6 +7,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { SITE_TARGETS } from "./lib/app-targets.ts";
 import { runCli } from "./lib/cli.ts";
+import { resetDirectory } from "./lib/files.ts";
 import { rewriteOriginsInDirectory } from "./lib/origin-rewrite.ts";
 import { resolveOrigins } from "./lib/origins.ts";
 import { repoRoot } from "./lib/paths.ts";
@@ -63,6 +64,10 @@ await runCli("build", async () => {
   await prepareAssets();
 
   for (const site of SITE_TARGETS) {
+    // Start from an empty `out/`: Next.js rewrites the files it generates but
+    // leaves anything an earlier build or an earlier route set left behind, and
+    // a removed page must not survive in the published output.
+    await resetDirectory(site.outRoot);
     await runNextBuild(site.appRoot, {
       ...process.env,
       WEBSITE_ORIGIN: origins.website,

@@ -9,7 +9,7 @@ import { docsOrigin } from "../lib/origins";
 export const metadata: Metadata = {
   metadataBase: new URL(docsOrigin()),
   title: "Syndroo documentation",
-  description: "Documentation for the Syndroo self-hosted publishing API.",
+  description: "Usage documentation for the Syndroo CLI: publish plain text to Bluesky and Threads from your machine.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): React.JSX.Element {

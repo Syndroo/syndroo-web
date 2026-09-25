@@ -44,11 +44,14 @@ test("the documentation spells its CLI commands in a form this checker can read"
   const commands = new Set(surface.invocations.map((entry) => entry.command));
   for (const command of [
     "doctor",
-    "posts validate",
-    "posts create",
-    "posts list",
-    "posts get",
-    "posts wait",
+    "providers list",
+    "auth set",
+    "auth status",
+    "publish",
+    "receipts list",
+    "receipts show",
+    "retry",
+    "state inspect",
     "skill path",
   ]) {
     assert.ok(commands.has(command), `the documentation should show "syndroo ${command}"`);
@@ -63,12 +66,15 @@ test("the documentation spells its CLI commands in a form this checker can read"
   for (const flag of [
     "--json",
     "--yes",
-    "--file",
-    "--idempotency-key",
+    "--no-input",
+    "--local",
+    "--dry-run",
+    "--input",
+    "--plan",
+    "--to",
     "--timeout",
     "--limit",
-    "--base-url",
-    "--dry-run",
+    "--from-env",
   ]) {
     assert.ok(flags.has(flag), `the documentation should explain ${flag}`);
   }
@@ -77,6 +83,38 @@ test("the documentation spells its CLI commands in a form this checker can read"
     surface.inlineFlags.length >= 4,
     "the prose should name the flags it explains, not only the command lines",
   );
+});
+
+test("an inline flag is read with or without its argument shape, and never after a negation", () => {
+  const cases: { name: string; html: string; expected: string[] }[] = [
+    { name: "a bare flag", html: "<p>Pass <code>--yes</code> to confirm.</p>", expected: ["--yes"] },
+    {
+      name: "a flag with its argument",
+      html: "<p><code>--timeout &lt;duration&gt;</code> bounds a run or a verification.</p>",
+      expected: ["--timeout"],
+    },
+    {
+      name: "a negated flag",
+      html: "<p>There is no <code>--api-key</code> flag.</p>",
+      expected: [],
+    },
+    {
+      name: "a negated flag with an argument",
+      html: "<p>This command has no <code>--base-url &lt;origin&gt;</code> option.</p>",
+      expected: [],
+    },
+    // A whole command in prose is an invocation, not an inline flag claim.
+    { name: "a prose command", html: "<p>Run <code>syndroo help</code> for usage.</p>", expected: [] },
+  ];
+
+  for (const { name, html, expected } of cases) {
+    const surface = extractCliSurface([{ path: "/fixture/", html }]);
+    assert.deepEqual(
+      surface.inlineFlags.map((entry) => entry.flag),
+      expected,
+      `${name} should yield ${JSON.stringify(expected)}`,
+    );
+  }
 });
 
 test("every documented command and flag exists in the real CLI", async (context) => {
