@@ -11,6 +11,7 @@ import { websiteOrigin } from "../lib/origins";
 export const metadata: Metadata = {
   metadataBase: new URL(websiteOrigin()),
   title: "Syndroo",
+  icons: { icon: [{ url: "/assets/favicon.svg", type: "image/svg+xml" }] },
   description: "Publish text to Bluesky and Threads from your own machine.",
 };
 

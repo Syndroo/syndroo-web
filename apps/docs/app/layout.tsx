@@ -9,6 +9,7 @@ import { docsOrigin } from "../lib/origins";
 export const metadata: Metadata = {
   metadataBase: new URL(docsOrigin()),
   title: "Syndroo documentation",
+  icons: { icon: [{ url: "/assets/favicon.svg", type: "image/svg+xml" }] },
   description: "Usage documentation for the Syndroo CLI: publish plain text to Bluesky and Threads from your machine.",
 };
 
