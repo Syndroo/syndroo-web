@@ -70,7 +70,7 @@ test("the documentation spells its CLI commands in a form this checker can read"
     "--local",
     "--dry-run",
     "--input",
-    "--plan",
+    "--data",
     "--to",
     "--timeout",
     "--limit",

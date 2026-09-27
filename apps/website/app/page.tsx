@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { ORIGIN_PLACEHOLDERS, platforms, versions } from "@syndroo/content/site-data";
 
 const DESCRIPTION =
-  "Publish text to Bluesky and Threads from your own machine: configure an account, preview the post, then confirm the publish.";
+  "Publish text to Bluesky and Threads from your own machine: configure an account, publish in one command, and preview first whenever you want.";
 
 export const metadata: Metadata = {
   title: "Syndroo - publish text to Bluesky and Threads from the CLI",
@@ -34,8 +34,8 @@ export default function IndexPage() {
             </span>
             <h1>Publish text to Bluesky and Threads from your CLI.</h1>
             <p className="hero__subtitle">
-              One command previews the post and one command sends it. Nothing reaches a platform until you confirm the
-              frozen plan.
+              One command publishes the post, and a preview is there when you want one. Nothing reaches a platform
+              until you confirm.
             </p>
             <div className="hero__actions">
               <a className="button button--primary" href={`${docs}/`}>
@@ -71,7 +71,7 @@ export default function IndexPage() {
         <div className="wrap">
           <div className="section-head">
             <span className="eyebrow">Three steps</span>
-            <h2>Configure, preview, publish</h2>
+            <h2>Configure, publish, check the receipt</h2>
           </div>
           <div className="grid grid--3">
             <article className="card">
@@ -81,15 +81,18 @@ export default function IndexPage() {
             </article>
             <article className="card">
               <span className="card__step">02</span>
-              <h3>Preview the post</h3>
+              <h3>Publish the post</h3>
               <p>
-                <code>syndroo publish --input post.json --dry-run</code> writes a frozen plan and sends nothing.
+                <code>syndroo publish --input post.json</code> publishes now. Add <code>--dry-run</code> for a preview
+                that sends nothing.
               </p>
             </article>
             <article className="card">
               <span className="card__step">03</span>
-              <h3>Confirm the publish</h3>
-              <p>Publishes the plan you approved.</p>
+              <h3>Check the receipt</h3>
+              <p>
+                <code>syndroo receipts show &lt;operation-id&gt;</code> reports one honest status per target.
+              </p>
             </article>
           </div>
         </div>

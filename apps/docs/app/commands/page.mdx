@@ -20,6 +20,7 @@ export const metadata = {
         </nav>
         <h1 id="commands">Local command reference</h1>
         <p className="lede">Every command below belongs to the local path and needs no server. <code>{"syndroo help"}</code> prints usage, and <code>{"syndroo <command> --help"}</code> prints the flags for one command.</p>
+        <p><code>{"syndroo"}</code> on its own, <code>{"syndroo help"}</code> and <code>{"syndroo -h"}</code> print the general help page and exit <code>{"0"}</code> without touching the network or the local state. An unknown command, or <code>{"publish"}</code> without an input source, stays a usage error.</p>
 
         <h2 id="commands-list">Commands</h2>
         <div className="table-wrap">
@@ -34,12 +35,12 @@ export const metadata = {
               <tr><th scope="row"><code>{"syndroo auth set <provider> --local"}</code></th><td>Verify one account and register a credential reference.</td></tr>
               <tr><th scope="row"><code>{"syndroo auth status [<provider>] --local"}</code></th><td>Show the bindings. Offline unless <code>{"--verify"}</code> is added.</td></tr>
               <tr><th scope="row"><code>{"syndroo auth remove <provider> --local"}</code></th><td>Remove one binding and keep a tombstone.</td></tr>
-              <tr><th scope="row"><code>{"syndroo publish --input <path|-> --dry-run"}</code></th><td>Freeze a plan and print it. The only way to start a local publish.</td></tr>
-              <tr><th scope="row"><code>{"syndroo publish --plan <plan-id>"}</code></th><td>Execute one frozen plan.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish --input <path|->"}</code></th><td>Publish from a file, or from stdin with <code>{"-"}</code>.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish --data '<json>'"}</code></th><td>Publish from inline JSON. The form agents and tests use.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish ... --dry-run"}</code></th><td>Validate, print the parsed document and exit. Sends nothing and writes no state.</td></tr>
               <tr><th scope="row"><code>{"syndroo receipts list"}</code></th><td>List recent local operations, newest first; default 20.</td></tr>
               <tr><th scope="row"><code>{"syndroo receipts show <operation-id>"}</code></th><td>Show one operation with its per-target records.</td></tr>
-              <tr><th scope="row"><code>{"syndroo retry <operation-id> --to <csv> --dry-run"}</code></th><td>Freeze a retry plan for explicitly selected safe targets.</td></tr>
-              <tr><th scope="row"><code>{"syndroo retry --plan <plan-id>"}</code></th><td>Execute one frozen retry plan.</td></tr>
+              <tr><th scope="row"><code>{"syndroo retry <operation-id> --to <csv>"}</code></th><td>Retry the safe targets you name. Succeeded and unknown targets are never resent.</td></tr>
               <tr><th scope="row"><code>{"syndroo state inspect"}</code></th><td>Show lock, versions and defects. Never repairs.</td></tr>
               <tr><th scope="row"><code>{"syndroo state recover --confirm-no-writers --yes"}</code></th><td>Recover after every other writer has stopped.</td></tr>
               <tr><th scope="row"><code>{"syndroo skill path"}</code></th><td>Print the absolute path of the bundled Skill directory.</td></tr>
@@ -47,6 +48,8 @@ export const metadata = {
             </tbody>
           </table>
         </div>
+        <p>Content arrives through exactly one input source per run. <code>{"--data"}</code>, <code>{"--input"}</code> and stdin cannot be combined, and a conflict fails before anything is read, sent or written.</p>
+        <p>Inline JSON is convenient for agents and tests, but the value in argv can stay visible in shell history, process listings and CI logs. Use <code>{"--input -"}</code> when the content should stay out of the process arguments. Credentials belong to the sources described in <a href="/accounts/">Account configuration</a>, never to <code>{"--data"}</code>.</p>
 
         <h2 id="flags">Flags</h2>
         <ul>
@@ -56,7 +59,8 @@ export const metadata = {
           <li><code>{"--yes"}</code> confirms without a prompt and <code>{"--no-input"}</code> never prompts; a non-interactive run needs both.</li>
           <li><code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> chooses the credential source, and <code>{"--expect-account <id>"}</code> pins the account a non-interactive run verified.</li>
           <li><code>{"--verify"}</code> re-checks an identity over the network without changing the binding.</li>
-          <li><code>{"--input <path|->"}</code>, <code>{"--plan <plan-id>"}</code> and <code>{"--to <csv>"}</code> name the document, a frozen plan, and retry targets.</li>
+          <li><code>{"--data '<json>'"}</code> and <code>{"--input <path|->"}</code> choose the content source; only one is allowed per run, and neither carries credentials.</li>
+          <li><code>{"--dry-run"}</code> validates and previews a document without sending or writing state, and <code>{"--to <csv>"}</code> names the retry targets.</li>
           <li><code>{"--confirm-no-writers"}</code> is the recovery confirmation, <code>{"--limit <n>"}</code> bounds a listing, and <code>{"--timeout <duration>"}</code> bounds an execution or an explicit verification.</li>
         </ul>
 
@@ -67,7 +71,7 @@ export const metadata = {
               <tr><th scope="col">Code</th><th scope="col">Meaning</th></tr>
             </thead>
             <tbody>
-              <tr><th scope="row"><code>{"0"}</code></th><td>The command finished: a plan was written, a read succeeded, or a run fully succeeded.</td></tr>
+              <tr><th scope="row"><code>{"0"}</code></th><td>The command finished: help was printed, a read succeeded, or a run fully succeeded.</td></tr>
               <tr><th scope="row"><code>{"1"}</code></th><td>Local I/O or runtime failure, or a trusted success that could not be persisted.</td></tr>
               <tr><th scope="row"><code>{"2"}</code></th><td>Admission failure: usage, config, document, confirmation or binding. No content request.</td></tr>
               <tr><th scope="row"><code>{"4"}</code></th><td>An unknown write result. Read the receipt before doing anything else.</td></tr>
@@ -80,7 +84,7 @@ export const metadata = {
         <p>The local surface does not return exit <code>{"3"}</code>.</p>
 
         <h2 id="examples">Short examples</h2>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json\nsyndroo publish --plan <result.planId> --yes --no-input --json\nsyndroo receipts show <result.operationId> --json\nsyndroo retry <result.operationId> --to threads --dry-run --json"}</code></pre>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --data '<json>' --yes --no-input --json\nsyndroo publish --input post.json --dry-run --json\nsyndroo receipts show <operation-id> --json\nsyndroo retry <operation-id> --to threads --json"}</code></pre>
         <p>With <code>{"--json"}</code>, stdout carries one envelope: <code>{"{schemaVersion, command, mode, ok, result, error}"}</code>. Read <code>{"result.status"}</code> as well as the exit code, because a preview can be <code>{"ok"}</code> while nothing was published.</p>
 
         <h2 id="next-steps">Next steps</h2>

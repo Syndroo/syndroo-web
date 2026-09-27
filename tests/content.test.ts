@@ -334,16 +334,18 @@ test("cross-site links resolve inside the other built site", async () => {
   }
 });
 
-test("the docs lookup pages name the local path and no retired surface", async () => {
+test("the docs lookup pages teach direct publishing and no retired surface", async () => {
   const quickstart = await docsPage("index.html");
   const flat = authoredText(quickstart).replace(/\s+/g, " ");
 
   assert.ok(flat.includes("syndroo init"), "the quickstart should show the local init command");
   assert.ok(flat.includes("syndroo doctor --local"), "the quickstart should show the local doctor command");
   assert.ok(
-    flat.includes("syndroo publish --input post.json --dry-run"),
-    "the quickstart should show the preview command",
+    flat.includes("syndroo publish --input post.json"),
+    "the quickstart should show the direct publish command",
   );
+  assert.ok(flat.includes("--data"), "the quickstart should show the inline JSON input");
+  assert.ok(flat.includes("--dry-run"), "the quickstart should show the optional preview");
   assert.ok(flat.includes(PUBLIC_NODE_RUNTIME), "the quickstart should state the runtime it needs");
 
   for (const page of docsPages) {
@@ -353,6 +355,50 @@ test("the docs lookup pages name the local path and no retired surface", async (
       assert.ok(!text.includes(legacy), `${page.path} still mentions the retired surface ${legacy}`);
     }
   }
+});
+
+test("no page teaches the removed public plan workflow or a preview expiry", async () => {
+  const removed = ["--plan", "planId", "frozen plan", "expired plan", "24 hours"];
+
+  for (const [label, read, registry] of [
+    ["website", websitePage, websitePages],
+    ["docs", docsPage, docsPages],
+  ] as const) {
+    for (const page of registry) {
+      const text = authoredText(await read(page.file)).replace(/\s+/g, " ");
+      for (const phrase of removed) {
+        assert.ok(!text.includes(phrase), `${label} ${page.path} still teaches ${phrase}`);
+      }
+    }
+  }
+});
+
+test("the documentation states the input, authorization and retry rules", async () => {
+  const flatten = async (file: string): Promise<string> =>
+    authoredText(await docsPage(file)).replace(/\s+/g, " ");
+
+  const quickstart = await flatten("index.html");
+  const commands = await flatten("commands/index.html");
+  const publishing = await flatten("publishing/index.html");
+  const agent = await flatten("agent-setup/index.html");
+
+  assert.ok(commands.includes("--data"), "the command reference should document --data");
+  assert.ok(quickstart.includes("--input -"), "the quickstart should document the stdin input");
+  assert.ok(/only one/i.test(commands), "the command reference should state input exclusivity");
+  assert.ok(/argv/i.test(commands), "the command reference should warn about argv exposure");
+  assert.ok(/credential/i.test(commands), "the command reference should separate content from credentials");
+  assert.ok(
+    /is not authorization/i.test(agent),
+    "the agent page should state that --yes is not a user authorization",
+  );
+  assert.ok(/do not resend/i.test(publishing), "the publishing page should forbid blind resends");
+  assert.ok(/reads the file once/i.test(publishing), "the publishing page should state the source snapshot rule");
+  assert.ok(/later publish reads the current input/i.test(publishing), "separate previews must not promise a reserved snapshot");
+  assert.ok(/no write lock/i.test(publishing), "dry-run must not take a write lock");
+  assert.ok(/resolves no credentials/i.test(publishing), "dry-run must not resolve credentials");
+  assert.ok(/no temporary file/i.test(agent), "agents must not require temporary files");
+  assert.ok(/one argument/i.test(agent), "generated content must not be shell-interpolated");
+  assert.ok(/process arguments/i.test(agent) && agent.includes("--input -"), "agents need an argv warning and stdin alternative");
 });
 
 test("robots.txt and sitemap.xml come from the registry and the configured origins", async () => {

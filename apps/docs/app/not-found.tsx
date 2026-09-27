@@ -28,7 +28,7 @@ export default function NotFound(): React.JSX.Element {
           </a>
           <a className="tile" href="/faq/">
             <span className="tile-title">FAQ</span>
-            <span className="tile-text">Config failures, expired plans, unknown results and state recovery.</span>
+            <span className="tile-text">Config failures, changed files, duplicate keys, unknown results and state recovery.</span>
           </a>
         </div>
       </article>

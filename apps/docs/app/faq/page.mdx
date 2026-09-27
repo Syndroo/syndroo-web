@@ -1,12 +1,12 @@
 export const metadata = {
   title: "FAQ - Syndroo docs",
-  description: "Configuration failures, expired plans, unknown results and local state recovery for the syndroo CLI.",
+  description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery for the syndroo CLI.",
   alternates: { canonical: "/faq/" },
   openGraph: {
     type: "website",
     url: "/faq/",
     title: "FAQ - Syndroo docs",
-    description: "Configuration failures, expired plans, unknown results and local state recovery for the syndroo CLI.",
+    description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery for the syndroo CLI.",
   },
   twitter: { card: "summary" },
 };
@@ -19,16 +19,19 @@ export const metadata = {
           <span>FAQ</span>
         </nav>
         <h1 id="faq">FAQ</h1>
-        <p className="lede">Four failures worth knowing before you publish.</p>
+        <p className="lede">Five situations worth knowing before you publish.</p>
 
         <h2 id="configuration">Configuration still fails</h2>
         <p>Run <code>{"syndroo doctor --local"}</code>: it names the failing check and sends nothing. When the failing check is a credential, confirm the exported group is present in this shell and re-register the account as described in <a href="/accounts/">Account configuration</a>.</p>
 
-        <h2 id="expired-plan">The plan expired</h2>
-        <p>An unexecuted plan expires 24 hours after the preview. Preview again from the same <code>{"post.json"}</code> with the same <code>{"key"}</code>, then review the new plan before executing it.</p>
+        <h2 id="changed-source">I edited the file after confirming</h2>
+        <p>Within one publish, an edit made while or after confirming cannot change what is sent: publishing reads the file once and sends the snapshot it validated. A separate publish after a dry-run reads the current file, so edits between those commands do change its input. Check the receipt before considering any new post; changing a key is not a repair for a failed or unknown result.</p>
+
+        <h2 id="duplicate-key">The same key again</h2>
+        <p>A <code>{"key"}</code> is the identity of one post. Repeating a publish with the same key and the same content does not create a second copy, and the same key with different content is refused instead of sent again. A target that already succeeded is never republished.</p>
 
         <h2 id="unknown-result">The result is unknown</h2>
-        <p>An <code>{"unknown"}</code> target may have reached the platform. Read the receipt, inspect the platform account by hand, and do not resend that content.</p>
+        <p>An <code>{"unknown"}</code> target may have reached the platform. Read the receipt, inspect the platform account by hand and stop: an unknown target stays blocked, and neither an automatic nor a deliberate retry may resend that content blindly.</p>
 
         <h2 id="state-recovery">Recover the local state</h2>
         <p>Stop every other Syndroo process first, then inspect and recover:</p>
@@ -41,7 +44,8 @@ export const metadata = {
       <p className="toc-title">On this page</p>
       <ul>
         <li><a href="#configuration">Configuration still fails</a></li>
-        <li><a href="#expired-plan">The plan expired</a></li>
+        <li><a href="#changed-source">I edited the file after confirming</a></li>
+        <li><a href="#duplicate-key">The same key again</a></li>
         <li><a href="#unknown-result">The result is unknown</a></li>
         <li><a href="#state-recovery">Recover the local state</a></li>
       </ul>

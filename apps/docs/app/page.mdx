@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Quick start - Syndroo docs",
-  description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads, and read the result.",
+  description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads in one command, and read the result.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     title: "Quick start - Syndroo docs",
-    description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads, and read the result.",
+    description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads in one command, and read the result.",
   },
   twitter: { card: "summary" },
 };
@@ -29,8 +29,13 @@ export const metadata = {
         <h2 id="publish">3. Publish</h2>
         <p>Save the document as <code>post.json</code>.</p>
         <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"first-post-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\"]\n}"}</code></pre>
-        <p>The preview writes the plan and sends nothing; its id is <code>{"result.planId"}</code>. Check the text and account in the preview, then replace <code>{"<result.planId>"}</code> with its ID and execute. The execution runs that same plan and reports <code>{"result.operationId"}</code>.</p>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json\nsyndroo publish --plan <result.planId> --yes --no-input --json"}</code></pre>
+        <p>Publish it. One command reads the file once, validates it, and sends that same parsed text:</p>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+        <p>Adding <code>{"--dry-run"}</code> previews the parsed document instead. A preview sends nothing and writes no local state:</p>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json"}</code></pre>
+        <p>For one-off content, pass the document inline with <code>{"--data"}</code>. Only one input source is allowed per run, and <code>{"--data"}</code> is never a place for credentials.</p>
+        <pre data-label="terminal"><code>{"syndroo publish --data '{\"key\":\"first-post-001\",\"content\":\"Syndroo now publishes from the command line.\",\"platforms\":[\"bluesky\"]}' --json"}</code></pre>
+        <p>When the content should stay out of the process arguments, read it from stdin with <code>{"--input -"}</code> instead.</p>
 
         <h2 id="read-the-result">4. Read the result</h2>
         <p>Each target reports its own status, attempts, remote id and url. For an <code>{"unknown"}</code> target, inspect the platform by hand and do not resend.</p>

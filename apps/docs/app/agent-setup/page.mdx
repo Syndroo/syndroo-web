@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Agent usage - Syndroo docs",
-  description: "Point an agent at the bundled Syndroo Skill and let it run the same preview, execute and read-back flow.",
+  description: "Point an agent at the bundled Syndroo Skill and let it publish with inline JSON, preview when asked and report every target.",
   alternates: { canonical: "/agent-setup/" },
   openGraph: {
     type: "website",
     url: "/agent-setup/",
     title: "Agent usage - Syndroo docs",
-    description: "Point an agent at the bundled Syndroo Skill and let it run the same preview, execute and read-back flow.",
+    description: "Point an agent at the bundled Syndroo Skill and let it publish with inline JSON, preview when asked and report every target.",
   },
   twitter: { card: "summary" },
 };
@@ -19,7 +19,7 @@ export const metadata = {
           <span>Agent usage</span>
         </nav>
         <h1 id="agent-setup">Drive publishing from an agent</h1>
-        <p className="lede">The CLI ships the Syndroo Skill, which describes the same two-phase workflow for an agent: preview a plan, check authorization, execute that same plan, and report every target.</p>
+        <p className="lede">The CLI ships the Syndroo Skill, which describes the same direct flow for an agent: build the document in memory, publish it with <code>{"--data"}</code>, and report every target.</p>
 
         <h2 id="load-the-skill">Load the Skill</h2>
         <p>Install the CLI and bind one account first, using <a href="/">Quick start</a> and <a href="/accounts/">Account configuration</a>. Then point a Skill-capable client at the bundled directory, which holds <code>{"SKILL.md"}</code> and its references:</p>
@@ -27,7 +27,7 @@ export const metadata = {
         <p>Your agent needs permission to run shell commands.</p>
 
         <h2 id="the-flow">The flow</h2>
-        <pre data-label="terminal"><code>{"syndroo doctor --local\nsyndroo auth status --local\n\nsyndroo publish --input post.json --dry-run --json\nsyndroo publish --plan <result.planId> --yes --no-input --json\nsyndroo receipts show <result.operationId> --json"}</code></pre>
+        <pre data-label="terminal"><code>{"syndroo doctor --local\nsyndroo auth status --local\n\nsyndroo publish --data '{\"key\":\"hello-001\",\"content\":\"Hello\",\"platforms\":[\"bluesky\"]}' --yes --no-input --json\nsyndroo receipts show <operation-id> --json"}</code></pre>
         <p><code>{"doctor --local"}</code> and <code>{"auth status --local"}</code> read only; the status command stays offline unless you add <code>{"--verify"}</code>.</p>
 
         <h2 id="steps">Steps the agent takes</h2>
@@ -38,14 +38,16 @@ export const metadata = {
           </li>
           <li>
             <h3 id="request-approval">Request approval of the text and the account</h3>
-            <p>Show the preview to the user and continue only when the text and the target account are the ones they approved.</p>
+            <p>Confirm that the user authorized this text, these target accounts and this action. Ask only for missing approval; an already-authorized publish does not need another conversation turn. <code>{"--yes"}</code> skips the interactive prompt for that run; it is not authorization, and the agent must not change the content after approval.</p>
           </li>
           <li>
             <h3 id="execute-and-report">Execute and report</h3>
-            <p>Run the approved plan, then report the operation id and one honest outcome per target.</p>
+            <p>Publish the approved document, then report the operation id and one honest outcome per target.</p>
           </li>
         </ol>
-        <p>Keep credentials out of prompts and command arguments, and inspect the platform by hand when a target comes back <code>{"unknown"}</code>.</p>
+        <p>Keep credentials out of prompts and command arguments: <code>{"--data"}</code> carries content only. Inspect the platform by hand when a target comes back <code>{"unknown"}</code>, and never resend that content blindly.</p>
+        <p>Generate strict JSON with a serializer and pass it as one argument, rather than interpolating post text into shell syntax. No temporary file is required. Inline JSON can appear in shell history and process arguments; use <code>{"--input -"}</code> for sensitive text, or <code>{"--input post.json"}</code> for a maintained file. Choose one input source.</p>
+        <p>Add <code>{"--dry-run"}</code> when inspection is useful. It writes no state, resolves no credentials and makes no network calls. A later publish reads its current input; within a single publish, the approved snapshot stays unchanged through sending.</p>
 
         <h2 id="next-steps">Next steps</h2>
         <ul>

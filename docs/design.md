@@ -44,8 +44,12 @@ builds compile it into their own output, so the two sites and the fixtures canno
 disagree about the surface.
 
 The authored content stays use-focused: install the CLI, bind one account,
-preview a frozen plan, execute it, read the receipt, retry only provably safe
-targets. No page describes a hosted API, a published package, a retired version
+publish directly from a reusable file or inline JSON, optionally preview without
+state writes or network, read the receipt, and retry only provably safe targets.
+Approval covers exact content and accounts; inline content has argv exposure,
+stdin is the alternative, and credentials stay outside post JSON. Separate
+invocations read current input; confirmation and sending within one invocation
+use the same snapshot. No page describes a hosted API, a published package, a retired version
 or a platform feature that has no evidence behind it.
 
 ## Composition
