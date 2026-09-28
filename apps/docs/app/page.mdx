@@ -14,8 +14,13 @@ export const metadata = {
 <main className="content" id="main">
       <article>
         <p className="eyebrow">Syndroo docs</p>
-        <h1 id="quick-start">Publish text to Bluesky and Threads from your terminal.</h1>
+        <h1 id="quick-start">Quickstart</h1>
         <p className="lede">The <code>{"syndroo"}</code> command publishes plain text from this machine, in the foreground, with no server in the path. <strong>0.6.0-rc.1 candidate; live-account testing pending.</strong></p>
+
+        <div className="tip">
+          <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
+          <p>Start with a dry run. A preview sends nothing and writes no local state, so you can check the parsed document before anything leaves the machine.</p>
+        </div>
 
         <h2 id="install">1. Install</h2>
         <p>Requires Node.js 22 or newer on macOS or Linux. Windows is not supported for local writes.</p>

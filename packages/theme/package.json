@@ -5,6 +5,7 @@
   "description": "Shared theme provider and Light/Dark/System control for both Syndroo sites.",
   "license": "Apache-2.0",
   "exports": {
-    ".": "./src/index.tsx"
+    ".": "./src/index.tsx",
+    "./shell.css": "./src/shell.css"
   }
 }

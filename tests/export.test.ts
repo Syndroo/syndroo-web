@@ -196,7 +196,7 @@ test("swapping the two origins cannot cascade through the rewrite", () => {
   assert.equal(applyOrigins(source, swapped), `a ${DEFAULT_DOCS_ORIGIN} b https://docs.example.com c`);
 });
 
-test("the exported stylesheets carry the full-width shell, mascot and theme rules", async () => {
+test("the exported stylesheets carry the shared shell", async () => {
   await requireExport();
 
   const websiteCssFiles = (await listFiles(WEBSITE.outRoot)).filter((file) => file.endsWith(".css"));
@@ -206,39 +206,52 @@ test("the exported stylesheets carry the full-width shell, mascot and theme rule
   const websiteCss = (await Promise.all(websiteCssFiles.map((file) => readFile(file, "utf8")))).join("\n");
   // Production CSS is minified, so these assertions are written against the
   // minified shape (no space after the colon).
-
-  // The last `.wrap` rule removes the 1160px cap, so the shell grows with the
-  // viewport instead of swapping one fixed width for another.
-  const wrapRules = [...websiteCss.matchAll(/\.wrap\{([^}]*)\}/g)].map((match) => match[1]);
-  assert.ok(wrapRules.length > 0, "the marketing stylesheet should define .wrap");
-  assert.ok(
-    wrapRules[wrapRules.length - 1].includes("max-width:none"),
-    "the effective .wrap rule must drop the fixed cap",
-  );
-  assert.ok(/clamp\(20px,\s*3vw,\s*64px\)/.test(websiteCss), "the marketing shell needs a clamp gutter");
-
-  // Per-role mascot sizes, and no circular crop on the image.
-  assert.ok(/--mascot-hero:320px/.test(websiteCss), "the hero mascot should start at 320px");
-  assert.ok(/--mascot-cta:200px/.test(websiteCss), "the CTA mascot should be 200px on desktop");
-  assert.ok(/--mascot-hero:220px/.test(websiteCss), "the hero mascot should shrink on mobile");
-  assert.ok(/--mascot-cta:160px/.test(websiteCss), "the CTA mascot should shrink on mobile");
-  assert.ok(/\.demo__mascot\{[^}]*border-radius:0/.test(websiteCss), "the mascot image must not be circularly cropped");
-  assert.ok(websiteCss.includes(".hero__mascot-glow"), "the glow must be its own layer behind the image");
-
   const docsCss = (await Promise.all(docsCssFiles.map((file) => readFile(file, "utf8")))).join("\n");
-  // Header, main and footer share one shell width and gutter.
-  assert.ok(/--shell-max:1560px/.test(docsCss), "the docs shell needs a shared width token");
-  assert.ok(/--shell-gutter:24px/.test(docsCss), "the docs shell needs a shared gutter token");
-  assert.ok(/--shell-gutter:16px/.test(docsCss), "the docs shell gutter should shrink on narrow viewports");
-  const shellRule = docsCss.match(/[^{}]*\{[^}]*max-width:var\(--shell-max\)[^}]*\}/);
-  assert.ok(shellRule, "the docs shell rule should use the shared width token");
-  for (const selector of [".topbar-inner", ".layout", ".footer-inner"]) {
-    assert.ok(
-      shellRule[0].includes(selector),
-      `the shared docs shell rule must cover ${selector}`,
-    );
+
+  const missing: string[] = [];
+  const want = (present: boolean, message: string) => {
+    if (!present) {
+      missing.push(message);
+    }
+  };
+
+  for (const [name, css] of [
+    ["website", websiteCss],
+    ["docs", docsCss],
+  ] as const) {
+    want(/--shell-max:1280px/.test(css), `${name} should cap the shell at 1280px`);
+    want(/--shell-gutter:[0-9]+px/.test(css), `${name} should define a shell gutter token`);
+    for (const gutter of [48, 32, 20]) {
+      want(
+        new RegExp(`--shell-gutter:${gutter}px`).test(css),
+        `${name} should use the ${gutter}px shell gutter`,
+      );
+    }
   }
-  assert.ok(/main article\{[^}]*max-width:78ch/.test(docsCss), "the docs article column should stay a readable measure");
+
+  const shellRuleFor = (css: string, selector: string) =>
+    new RegExp(
+      `[^{}]*${selector.replace(/\./g, "\\.")}[^{}]*\\{[^}]*max-width:var\\(--shell-max\\)[^}]*\\}`,
+    ).test(css);
+  for (const [name, css, selectors] of [
+    ["website", websiteCss, [".wrap"]],
+    ["docs", docsCss, [".topbar-inner", ".layout", ".footer-inner"]],
+  ] as const) {
+    for (const selector of selectors) {
+      want(shellRuleFor(css, selector), `${name} ${selector} should use the shared shell width token`);
+    }
+  }
+
+  for (const [name, css] of [
+    ["website", websiteCss],
+    ["docs", docsCss],
+  ] as const) {
+    want(/\.brand\{[^}]*font-size:17px/.test(css), `${name} should set the shared brand to 17px`);
+  }
+
+  assert.deepEqual(missing, [], "the exported stylesheets are missing approved design rules");
+
+  assert.ok(/main article\{[^}]*max-width:720px/.test(docsCss), "the docs article column should stay a readable measure");
 });
 
 test("both exports ship the shared theme control and its production cookie", async () => {

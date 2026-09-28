@@ -55,13 +55,32 @@ or a platform feature that has no evidence behind it.
 ## Composition
 
 The marketing site is one page: an intro with the two hero actions, the three
-steps that lead to a publish, a strip naming the two platforms, and a footer
-carrying documentation, source and licence.
+steps that lead to a publish, the dry-run preview beside the publishing mascot,
+a closing call to action, and a footer carrying documentation, source and
+licence.
 
 The documentation site renders its topbar, sidebar, footer and search dialog
 once in the layout, so a page cannot drift out of the chrome. Each page supplies
 its own `main`, its on-page contents and its anchors. The docs search reads only
 these local pages, so it can never index a route that is not registered.
+
+## Layout contract
+
+The two sites import one shared stylesheet from `packages/theme`
+(`@syndroo/theme/shell.css`) for the shell, the brand mark and the neutral
+palette, so neither app can restate them and drift.
+
+| Part | Value |
+| --- | --- |
+| Shell | `max-width: 1280px`, border-box, centred, gutter `48px` at 1100px and above, `32px` at 720px and above, `20px` below |
+| Header row | `72px` on both sites at every width |
+| Brand | `26px` logo, `17px`/600 wordmark with a `9px` gap, `16px` wordmark below 720px; identical x position in both headers |
+| Website hero | `68px` desktop heading, `34px`-`38px` on phones; body text `17px`, `16px` below 720px |
+| Documentation article | `720px` column, `36px` h1, sidebar/article/on-page contents stay responsive |
+| Primary action | `#6446ed`, hover `#5334d8`, white label; secondary actions are quiet neutral outlines |
+
+Dark mode remains a full palette swap through `data-theme="dark"`, so surfaces,
+borders, text, code panels and status chips all move together.
 
 ## Implementation boundary
 

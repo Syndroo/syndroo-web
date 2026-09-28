@@ -2,16 +2,16 @@
 // page cannot drift away from the registry; the mobile menu is the same
 // keyboard-operable control the authored pages had, driven by
 // components/site-behaviors.tsx.
-import { primaryNav } from "@syndroo/content/site-data";
+import { ORIGIN_PLACEHOLDERS, primaryNav } from "@syndroo/content/site-data";
 import { ThemeToggle } from "@syndroo/theme";
 
 export function SiteHeader(): React.JSX.Element {
   return (
     <header className="site-header" data-menu-open="false">
-      <div className="wrap site-header__inner">
+      <div className="shell site-header__inner">
         <a className="brand" href="/">
-          <img src="/assets/logo.svg" alt="" width="30" height="30" />
-          Syndroo
+          <img src="/assets/logo.svg" alt="" width="26" height="26" />
+          <span className="brand-name">Syndroo</span>
         </a>
         <button className="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
           <span className="nav-toggle__bars" aria-hidden="true" />
@@ -23,6 +23,9 @@ export function SiteHeader(): React.JSX.Element {
               {item.label}
             </a>
           ))}
+          <a className="site-header__cta" href={`${ORIGIN_PLACEHOLDERS.docs}/`}>
+            Quick start
+          </a>
         </nav>
         <ThemeToggle />
       </div>

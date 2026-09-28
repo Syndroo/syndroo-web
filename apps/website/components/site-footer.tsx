@@ -10,7 +10,7 @@ export function SiteFooter(): React.JSX.Element {
           <div className="site-footer__brand">
             <a className="brand" href="/" style={{ marginBottom: "12px" }}>
               <img src="/assets/logo.svg" alt="" width="26" height="26" />
-              Syndroo
+              <span className="brand-name">Syndroo</span>
             </a>
             <p>Publish text to Bluesky and Threads from your own machine.</p>
           </div>

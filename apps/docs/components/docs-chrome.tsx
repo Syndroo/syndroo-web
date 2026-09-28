@@ -32,16 +32,6 @@ export function DocsTopbar(): React.JSX.Element {
 
       <header className="topbar">
         <div className="topbar-inner">
-          <button
-            className="icon-btn"
-            id="menu-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="docs-sidebar"
-            aria-label="Open documentation navigation"
-          >
-            <MenuIcon />
-          </button>
           <a className="brand" href="/">
             <img src="/assets/logo.svg" alt="" width="26" height="26" />
             <span className="brand-name">Syndroo</span>
@@ -60,21 +50,26 @@ export function DocsTopbar(): React.JSX.Element {
               <span>Search docs</span>
               <kbd>/</kbd>
             </button>
-            <span
-              className="version-badge"
-              title={`The Syndroo CLI candidate these docs describe: ${versions.cli}.`}
-            >
-              <span className="version-badge__label">Version</span>
-              <strong>{versions.docs}</strong>
-              <span className="version-badge__stage">{versions.releaseStage}</span>
-            </span>
-            <ThemeToggle />
             <a className="text-link" href={`${ORIGIN_PLACEHOLDERS.website}/`}>
               Website
             </a>
             <a className="text-link" href="https://github.com/Syndroo/syndroo">
               GitHub
             </a>
+            <a className="topbar-cta" href="/">
+              Quick start
+            </a>
+            <ThemeToggle />
+            <button
+              className="icon-btn"
+              id="menu-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="docs-sidebar"
+              aria-label="Open documentation navigation"
+            >
+              <MenuIcon />
+            </button>
           </div>
         </div>
       </header>
