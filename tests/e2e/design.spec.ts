@@ -3,29 +3,32 @@ import { expect, test, type Page } from "playwright/test";
 const WEBSITE = "http://127.0.0.1:4173/";
 const DOCS = "http://127.0.0.1:4174/";
 
-const SHELL_MAX = 1280;
+const SHELL_MAX = 1440;
 const SHELL_GUTTERS = [
-  { min: 1100, gutter: 48 },
-  { min: 720, gutter: 32 },
+  { min: 1200, gutter: 80 },
+  { min: 900, gutter: 56 },
+  { min: 640, gutter: 40 },
+  { min: 380, gutter: 24 },
   { min: 0, gutter: 20 },
 ] as const;
-const LOGO = 26;
-const WORDMARK_WIDE = 17;
-const WORDMARK_NARROW = 16;
-const WORDMARK_BREAKPOINT = 720;
+const BRAND_BREAKPOINT = 640;
+const LOGO_WIDE = 34;
+const LOGO_NARROW = 28;
+const WORDMARK_WIDE = 20;
+const WORDMARK_NARROW = 18;
+const WORDMARK_WEIGHT = "500";
+const BODY_BREAKPOINT = 720;
 const BODY_WIDE = 17;
 const BODY_NARROW = 16;
+const HEADER_WIDE = 88;
+const HEADER_NARROW = 72;
+const ARTICLE_MAX = 720;
 const PRIMARY = "rgb(100, 70, 237)";
 const PRIMARY_HOVER = "rgb(83, 52, 216)";
 const WHITE = "rgb(255, 255, 255)";
 
 const VIEWPORTS = [
-  { width: 1440, height: 900 },
-  { width: 1280, height: 900 },
-  { width: 1024, height: 900 },
-  { width: 768, height: 900 },
-  { width: 720, height: 900 },
-  { width: 375, height: 812 },
+  1440, 1600, 1280, 1200, 1199, 1024, 900, 899, 768, 720, 640, 639, 480, 390, 380, 379, 375, 320,
 ] as const;
 
 function shell(width: number) {
@@ -44,6 +47,7 @@ async function visit(page: Page, url: string, width: number, height: number): Pr
 
 type Metrics = {
   shell: { label: string; x: number; width: number }[];
+  narrow: { x: number; width: number } | null;
   brand: { x: number; y: number };
   logo: number;
   wordmark: { size: number; weight: string; family: string };
@@ -51,6 +55,7 @@ type Metrics = {
   body: number;
   article: number;
   overview: number;
+  header: { height: number; token: number };
   menu: { visible: boolean; x: number };
 };
 
@@ -72,9 +77,12 @@ async function metrics(page: Page, site: "website" | "docs"): Promise<Metrics> {
     };
     const label = (node: Element) => [node.tagName.toLowerCase(), ...node.classList].join(".");
 
+    const narrow = document.querySelector(".shell--narrow");
     const shell =
       which === "website"
-        ? [...document.querySelectorAll(".shell, .wrap")].map((node) => ({ label: label(node), ...metricsOf(node) }))
+        ? [...document.querySelectorAll(".shell")]
+            .filter((node) => !node.classList.contains("shell--narrow"))
+            .map((node) => ({ label: label(node), ...metricsOf(node) }))
         : [".topbar-inner", ".layout", ".footer-inner"].map((selector) => ({
             label: selector,
             ...metricsOf(element(selector)),
@@ -86,9 +94,11 @@ async function metrics(page: Page, site: "website" | "docs"): Promise<Metrics> {
     const brandStyle = getComputedStyle(document.querySelector(brandSelector)!);
     const wordmarkStyle = getComputedStyle(document.querySelector(wordmarkSelector)!);
     const toggle = document.querySelector("#menu-toggle");
+    const header = which === "website" ? element(".site-header__inner") : element(".topbar-inner");
 
     return {
       shell,
+      narrow: narrow ? metricsOf(narrow) : null,
       brand: { x: brandBox.x, y: brandBox.y },
       logo: rect(`${brandSelector} img`).width,
       wordmark: {
@@ -100,6 +110,10 @@ async function metrics(page: Page, site: "website" | "docs"): Promise<Metrics> {
       body: parseFloat(getComputedStyle(document.body).fontSize),
       article: which === "docs" ? rect("main article").width : 0,
       overview: document.documentElement.scrollWidth - window.innerWidth,
+      header: {
+        height: round(header.getBoundingClientRect().height),
+        token: round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h"))),
+      },
       menu: toggle
         ? {
             visible: getComputedStyle(toggle).display !== "none",
@@ -110,15 +124,17 @@ async function metrics(page: Page, site: "website" | "docs"): Promise<Metrics> {
   }, site);
 }
 
-for (const viewport of VIEWPORTS) {
-  const width = viewport.width;
+for (const width of VIEWPORTS) {
   const expected = shell(width);
   const brandX = expected.x + expected.gutter;
-  const wordmarkSize = width < WORDMARK_BREAKPOINT ? WORDMARK_NARROW : WORDMARK_WIDE;
-  const bodySize = width < WORDMARK_BREAKPOINT ? BODY_NARROW : BODY_WIDE;
+  const isNarrow = width < BRAND_BREAKPOINT;
+  const wordmarkSize = isNarrow ? WORDMARK_NARROW : WORDMARK_WIDE;
+  const logoSize = isNarrow ? LOGO_NARROW : LOGO_WIDE;
+  const headerHeight = isNarrow ? HEADER_NARROW : HEADER_WIDE;
+  const bodySize = width < BODY_BREAKPOINT ? BODY_NARROW : BODY_WIDE;
 
   test(`${width}px: shared shell, brand geometry and body type`, async ({ page }, testInfo) => {
-    await visit(page, WEBSITE, width, viewport.height);
+    await visit(page, WEBSITE, width, 900);
     const website = await metrics(page, "website");
 
     await page.goto(DOCS);
@@ -133,21 +149,32 @@ for (const viewport of VIEWPORTS) {
         expect.soft(element.x, `${name} ${element.label} x`).toBeCloseTo(expected.x, 0);
       }
       expect.soft(site.overview, `${name} must not overflow horizontally`).toBeLessThanOrEqual(0);
+      expect.soft(site.header.token, `${name} --header-h token`).toBeCloseTo(headerHeight, 0);
+      expect.soft(site.header.height, `${name} header row height`).toBeCloseTo(headerHeight, 0);
+    }
+
+    if (website.narrow) {
+      const narrow = website.narrow;
+      expect.soft(narrow.width, "the narrow shell must fit inside the shared column").toBeLessThanOrEqual(
+        expected.width,
+      );
+      expect.soft(narrow.width, "the narrow shell must keep a usable measure").toBeGreaterThan(0);
+      expect.soft(narrow.x, "the narrow shell must stay centered").toBeCloseTo((width - narrow.width) / 2, 0);
     }
 
     expect.soft(website.body, "website body type").toBeCloseTo(bodySize, 1);
     expect.soft(docs.body, "docs body type").toBeCloseTo(bodySize, 1);
     expect.soft(docs.article, "docs article measure").toBeGreaterThan(0);
-    expect.soft(docs.article, "docs article measure").toBeLessThanOrEqual(720);
+    expect.soft(docs.article, "docs article measure").toBeLessThanOrEqual(ARTICLE_MAX);
 
     for (const [name, site] of [
       ["website", website],
       ["docs", docs],
     ] as const) {
       expect.soft(site.brand.x, `${name} brand x`).toBeCloseTo(brandX, 0);
-      expect.soft(site.logo, `${name} logo size`).toBeCloseTo(LOGO, 0);
+      expect.soft(site.logo, `${name} logo size`).toBeCloseTo(logoSize, 0);
       expect.soft(site.wordmark.size, `${name} wordmark size`).toBeCloseTo(wordmarkSize, 1);
-      expect.soft(site.wordmark.weight, `${name} wordmark weight`).toBe("600");
+      expect.soft(site.wordmark.weight, `${name} wordmark weight`).toBe(WORDMARK_WEIGHT);
     }
 
     expect.soft(docs.brand.x, "both brands share one x").toBeCloseTo(website.brand.x, 0);

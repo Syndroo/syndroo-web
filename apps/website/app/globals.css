@@ -72,33 +72,3 @@
 [data-theme="dark"] .skip-link:focus {
   color: #0e1120;
 }
-
-[data-theme="dark"] .status-tag--tested {
-  border-color: #2f6e4f;
-  background: #12291f;
-}
-
-[data-theme="dark"] .status-tag--experimental,
-[data-theme="dark"] .release__status,
-[data-theme="dark"] .draft-banner {
-  border-color: #5c4a22;
-  background: #2a2214;
-}
-
-[data-theme="dark"] .release li {
-  color: #d6dcf0;
-}
-
-[data-theme="dark"] .draft-banner p {
-  color: #e3c98a;
-}
-
-[data-theme="dark"] .console {
-  background: var(--code-bg);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .console__bar {
-  background: var(--surface);
-  border-color: var(--border-soft);
-}

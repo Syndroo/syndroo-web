@@ -16,7 +16,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await expect(page.locator("main")).toContainText("syndroo publish --input post.json");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath("website.png"), fullPage: true });
-    await page.getByRole("link", { name: "Get started", exact: true }).click();
+    await page.locator(".site-footer").getByRole("link", { name: "Docs", exact: true }).click();
     await expect(page).toHaveURL(/:4174\/$/);
 
     for (const entry of docsPages) {

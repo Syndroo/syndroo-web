@@ -1,33 +1,58 @@
-// The shared marketing footer: a one-line description and the three links the
-// site keeps (documentation, source, licence), taken from the shared registry.
-import { footerNav } from "@syndroo/content/site-data";
+// The shared marketing footer, including the cross-site documentation links.
+import { footerGroups, PRODUCT_REPOSITORY } from "@syndroo/content/site-data";
 
 export function SiteFooter(): React.JSX.Element {
   return (
     <footer className="site-footer">
-      <div className="wrap">
-        <div className="site-footer__grid">
-          <div className="site-footer__brand">
-            <a className="brand" href="/" style={{ marginBottom: "12px" }}>
-              <img src="/assets/logo.svg" alt="" width="26" height="26" />
-              <span className="brand-name">Syndroo</span>
-            </a>
-            <p>Publish text to Bluesky and Threads from your own machine.</p>
-          </div>
-          <nav className="site-footer__links" aria-label="Footer">
-            <ul>
-              {footerNav.map((item) => (
-                <li key={item.label}>
-                  <a href={item.href} rel={item.href.startsWith("http") ? "noreferrer" : undefined}>
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+      <div className="shell site-footer__grid">
+        <div className="site-footer__brand">
+          <a className="site-footer__logo" href="/">
+            <img src="/assets/logo.svg" alt="" width="46" height="44" />
+            <span>Syndroo</span>
+          </a>
+          <ul className="site-footer__icons">
+            <li>
+              <a
+                className="icon-link"
+                href={PRODUCT_REPOSITORY}
+                aria-label="Syndroo source repository"
+              >
+                <img src="/assets/logo.svg" alt="" width="16" height="16" />
+              </a>
+            </li>
+            <li>
+              <a className="icon-link" href="https://bsky.app" aria-label="Bluesky">
+                <span className="mark mark--bluesky" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a className="icon-link" href="https://www.threads.net" aria-label="Threads">
+                <span className="mark mark--threads" aria-hidden="true"></span>
+              </a>
+            </li>
+          </ul>
+          <p className="site-footer__bottom">
+            <span>&copy; 2026 Syndroo</span>
+          </p>
         </div>
-        <div className="site-footer__bottom">
-          <span>&copy; 2026 Syndroo</span>
+        <div className="site-footer__cols">
+          {footerGroups.map((group) => (
+            <div className="site-footer__col" key={group.title}>
+              <h3 className="col-title">{group.title}</h3>
+              <ul>
+                {group.items.map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </footer>

@@ -74,15 +74,54 @@ export type NavItem = {
 
 /** Site navigation. Cross-site links carry the docs placeholder origin. */
 export const primaryNav: NavItem[] = [
+  { label: "Workflow", href: "/#workflow" },
+  { label: "Platforms", href: "/#platforms" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Docs", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
   { label: "GitHub", href: PRODUCT_REPOSITORY },
 ];
 
-export const footerNav: NavItem[] = [
-  { label: "Documentation", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
-  { label: "GitHub", href: PRODUCT_REPOSITORY },
-  { label: "License", href: PRODUCT_LICENSE_URL },
+export type FooterGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+export const footerGroups: FooterGroup[] = [
+  {
+    title: "Documentation",
+    items: [
+      { label: "Docs", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
+      { label: "Command reference", href: `${ORIGIN_PLACEHOLDERS.docs}/commands/` },
+      { label: "Accounts", href: `${ORIGIN_PLACEHOLDERS.docs}/accounts/` },
+      { label: "Publishing", href: `${ORIGIN_PLACEHOLDERS.docs}/publishing/` },
+    ],
+  },
+  {
+    title: "Project",
+    items: [
+      { label: "Source code", href: PRODUCT_REPOSITORY },
+      { label: "Issues", href: `${PRODUCT_REPOSITORY}/issues` },
+      { label: "License", href: PRODUCT_LICENSE_URL },
+    ],
+  },
+  {
+    title: "Platforms",
+    items: platforms.map((platform) => ({
+      label: platform.name,
+      href: platform.id === "bluesky" ? "https://bsky.app" : "https://www.threads.net",
+    })),
+  },
+  {
+    title: "Product",
+    items: [
+      { label: "Workflow", href: "/#workflow" },
+      { label: "Platforms", href: "/#platforms" },
+      { label: "FAQ", href: "/#faq" },
+    ],
+  },
 ];
+
+export const footerNav: NavItem[] = footerGroups.flatMap((group) => group.items);
 
 export type DocsNavItem = {
   label: string;

@@ -8,8 +8,8 @@
 function initNavigation(): void {
   const header = document.querySelector<HTMLElement>(".site-header");
   const toggle = document.querySelector<HTMLButtonElement>(".nav-toggle");
-  const nav = document.querySelector<HTMLElement>("#site-nav");
-  if (!header || !toggle || !nav) {
+  const menu = document.querySelector<HTMLElement>("#site-menu");
+  if (!header || !toggle || !menu) {
     return;
   }
 
@@ -18,6 +18,7 @@ function initNavigation(): void {
   const setOpen = (open: boolean): void => {
     header.dataset.menuOpen = String(open);
     toggle.setAttribute("aria-expanded", String(open));
+    menu.hidden = !open;
     if (label) {
       label.textContent = open ? "Close" : "Menu";
     }
@@ -29,7 +30,7 @@ function initNavigation(): void {
     setOpen(header.dataset.menuOpen !== "true");
   });
 
-  nav.addEventListener("click", (event) => {
+  menu.addEventListener("click", (event) => {
     if (event.target instanceof HTMLAnchorElement) {
       setOpen(false);
     }
@@ -42,7 +43,7 @@ function initNavigation(): void {
     }
   });
 
-  window.matchMedia("(min-width: 901px)").addEventListener("change", (event) => {
+  window.matchMedia("(min-width: 1024px)").addEventListener("change", (event) => {
     if (event.matches) {
       setOpen(false);
     }

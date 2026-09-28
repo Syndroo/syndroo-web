@@ -219,13 +219,16 @@ test("the exported stylesheets carry the shared shell", async () => {
     ["website", websiteCss],
     ["docs", docsCss],
   ] as const) {
-    want(/--shell-max:1280px/.test(css), `${name} should cap the shell at 1280px`);
+    want(/--shell-max:1440px/.test(css), `${name} should cap the shell at 1440px`);
     want(/--shell-gutter:[0-9]+px/.test(css), `${name} should define a shell gutter token`);
-    for (const gutter of [48, 32, 20]) {
+    for (const gutter of [80, 56, 40, 24, 20]) {
       want(
         new RegExp(`--shell-gutter:${gutter}px`).test(css),
         `${name} should use the ${gutter}px shell gutter`,
       );
+    }
+    for (const height of [88, 72]) {
+      want(new RegExp(`--header-h:${height}px`).test(css), `${name} should use the ${height}px header height`);
     }
   }
 
@@ -234,7 +237,7 @@ test("the exported stylesheets carry the shared shell", async () => {
       `[^{}]*${selector.replace(/\./g, "\\.")}[^{}]*\\{[^}]*max-width:var\\(--shell-max\\)[^}]*\\}`,
     ).test(css);
   for (const [name, css, selectors] of [
-    ["website", websiteCss, [".wrap"]],
+    ["website", websiteCss, [".shell", ".wrap"]],
     ["docs", docsCss, [".topbar-inner", ".layout", ".footer-inner"]],
   ] as const) {
     for (const selector of selectors) {
@@ -246,7 +249,11 @@ test("the exported stylesheets carry the shared shell", async () => {
     ["website", websiteCss],
     ["docs", docsCss],
   ] as const) {
-    want(/\.brand\{[^}]*font-size:17px/.test(css), `${name} should set the shared brand to 17px`);
+    want(/\.brand\{[^}]*font-size:20px/.test(css), `${name} should set the shared brand to 20px`);
+    want(/\.brand\{[^}]*font-weight:500/.test(css), `${name} should set the shared brand weight to 500`);
+    want(/\.brand\{[^}]*font-size:18px/.test(css), `${name} should step the shared brand down to 18px below 640px`);
+    want(/\.brand img\{[^}]*width:34px/.test(css), `${name} should draw the wide brand mark at 34px`);
+    want(/\.brand img\{[^}]*width:28px/.test(css), `${name} should draw the narrow brand mark at 28px`);
   }
 
   assert.deepEqual(missing, [], "the exported stylesheets are missing approved design rules");
