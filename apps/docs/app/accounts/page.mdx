@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Account configuration - Syndroo docs",
-  description: "Bind a Bluesky app password or a Threads access token to the syndroo CLI, verify it, and remove it.",
+  description: "Bind a Bluesky app password, a Threads access token or LinkedIn credentials to the syndroo CLI, verify it, and remove it.",
   alternates: { canonical: "/accounts/" },
   openGraph: {
     type: "website",
     url: "/accounts/",
     title: "Account configuration - Syndroo docs",
-    description: "Bind a Bluesky app password or a Threads access token to the syndroo CLI, verify it, and remove it.",
+    description: "Bind a Bluesky app password, a Threads access token or LinkedIn credentials to the syndroo CLI, verify it, and remove it.",
   },
   twitter: { card: "summary" },
 };
@@ -18,7 +18,7 @@ export const metadata = {
           <span aria-hidden="true">/</span>
           <span>Accounts</span>
         </nav>
-        <h1 id="accounts">Bind a Bluesky or Threads account</h1>
+        <h1 id="accounts">Bind a Bluesky, Threads or LinkedIn account</h1>
         <p className="lede">Each provider reads exactly one credential source, and the CLI reads it again on every execution.</p>
 
         <h2 id="bluesky">Bluesky</h2>
@@ -30,10 +30,15 @@ export const metadata = {
         <pre data-label="terminal"><code>{"export THREADS_ACCESS_TOKEN=\"user-supplied-token\"\nsyndroo auth set threads --local --from-env"}</code></pre>
         <p>Registration verifies the account with the provider before registering it.</p>
 
+        <h2 id="linkedin">LinkedIn</h2>
+        <p>LinkedIn reads three variables together: an access token, the person URN to publish as, and the <code>{"YYYYMM"}</code> API version. <code>{"LINKEDIN_AUTHOR"}</code> accepts a person URN only (<code>{"urn:li:person:..."}</code>); an organization URN is refused before any network call. The CLI has no OAuth flow, so it never requests, refreshes or renews the token.</p>
+        <pre data-label="terminal"><code>{"export LINKEDIN_ACCESS_TOKEN=\"user-supplied-token\"\nexport LINKEDIN_AUTHOR=\"urn:li:person:your-member-id\"\nexport LINKEDIN_API_VERSION=\"202601\"\nsyndroo auth set linkedin --local --from-env"}</code></pre>
+
         <h2 id="credential-file">Credential file</h2>
         <p>One provider can read one strict JSON file instead of the environment:</p>
         <pre data-label="bluesky-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"bluesky\",\n  \"credentials\": {\n    \"identifier\": \"your-handle.bsky.social\",\n    \"password\": \"APP_PASSWORD_PLACEHOLDER\",\n    \"host\": \"bsky.social\"\n  }\n}"}</code></pre>
         <pre data-label="threads-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"threads\",\n  \"credentials\": { \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\" }\n}"}</code></pre>
+        <pre data-label="linkedin-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"linkedin\",\n  \"credentials\": {\n    \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\",\n    \"author\": \"urn:li:person:your-member-id\",\n    \"apiVersion\": \"202601\"\n  }\n}"}</code></pre>
         <p>The file must be a plain file you own that nobody else can read, so tighten it first:</p>
         <pre data-label="terminal"><code>{"chmod 600 ./threads-credentials.json\nsyndroo auth set threads --local --credential-file ./threads-credentials.json"}</code></pre>
 
@@ -56,6 +61,7 @@ export const metadata = {
       <ul>
         <li><a href="#bluesky">Bluesky</a></li>
         <li><a href="#threads">Threads</a></li>
+        <li><a href="#linkedin">LinkedIn</a></li>
         <li><a href="#credential-file">Credential file</a></li>
         <li><a href="#verify">Verify and remove</a></li>
         <li><a href="#next-steps">Next steps</a></li>

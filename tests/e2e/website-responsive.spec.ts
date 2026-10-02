@@ -166,6 +166,6 @@ test("the JSON sample on the page parses", async ({ page }) => {
   for (const sample of samples) {
     const parsed = JSON.parse(sample) as Record<string, unknown>;
     expect(Object.keys(parsed)).toEqual(["key", "content", "platforms"]);
-    expect(parsed.platforms).toEqual(["bluesky", "threads"]);
+    expect(parsed.platforms).toEqual(["bluesky", "threads", "linkedin"]);
   }
 });

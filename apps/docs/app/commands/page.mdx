@@ -35,6 +35,7 @@ export const metadata = {
               <tr><th scope="row"><code>{"syndroo auth set <provider> --local"}</code></th><td>Verify one account and register a credential reference.</td></tr>
               <tr><th scope="row"><code>{"syndroo auth status [<provider>] --local"}</code></th><td>Show the bindings. Offline unless <code>{"--verify"}</code> is added.</td></tr>
               <tr><th scope="row"><code>{"syndroo auth remove <provider> --local"}</code></th><td>Remove one binding and keep a tombstone.</td></tr>
+              <tr><th scope="row"><code>{"syndroo connect <provider> --local"}</code></th><td>Guided entry point in front of <code>{"auth set"}</code>. Without a credential source it prints guidance only.</td></tr>
               <tr><th scope="row"><code>{"syndroo publish --input <path|->"}</code></th><td>Publish from a file, or from stdin with <code>{"-"}</code>.</td></tr>
               <tr><th scope="row"><code>{"syndroo publish --data '<json>'"}</code></th><td>Publish from inline JSON. The form agents and tests use.</td></tr>
               <tr><th scope="row"><code>{"syndroo publish ... --dry-run"}</code></th><td>Validate, print the parsed document and exit. Sends nothing and writes no state.</td></tr>
@@ -51,6 +52,12 @@ export const metadata = {
         <p>Content arrives through exactly one input source per run. <code>{"--data"}</code>, <code>{"--input"}</code> and stdin cannot be combined, and a conflict fails before anything is read, sent or written.</p>
         <p>Inline JSON is convenient for agents and tests, but the value in argv can stay visible in shell history, process listings and CI logs. Use <code>{"--input -"}</code> when the content should stay out of the process arguments. Credentials belong to the sources described in <a href="/accounts/">Account configuration</a>, never to <code>{"--data"}</code>.</p>
 
+        <h2 id="connect">Guided connect</h2>
+        <p><code>{"syndroo connect <provider> --local"}</code> is the guided entry point in front of <code>{"auth set"}</code>. It never receives post content and never triggers a send.</p>
+        <pre data-label="terminal"><code>{"syndroo connect linkedin --local\nsyndroo connect linkedin --local --from-env\nsyndroo connect linkedin --local --credential-file ./linkedin-credentials.json"}</code></pre>
+        <p>Without a credential source, <code>{"connect"}</code> prints the required environment variables and a credential-file template, then stops. It reads no config, contacts no provider, writes no state and reports <code>{"bindingChanged:false"}</code> with <code>{"action:\"configure_credentials\""}</code>.</p>
+        <p>With <code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> it reuses the <code>{"auth set"}</code> behavior unchanged: the same credential parser, confirmation, write lock and expected-account check apply. The one result difference from <code>{"auth set"}</code> is that a successful binding reports <code>{"bindingChanged:true"}</code>. <code>{"--managed"}</code> is refused with a usage error, so Managed Connect is not available in this candidate.</p>
+
         <h2 id="flags">Flags</h2>
         <ul>
           <li><code>{"--json"}</code> writes exactly one object to stdout and sends every diagnostic, including the preview, to stderr.</li>
@@ -58,6 +65,7 @@ export const metadata = {
           <li><code>{"--state-home <path>"}</code> and <code>{"--namespace <name>"}</code> override the state location and deduplication domain for one run.</li>
           <li><code>{"--yes"}</code> confirms without a prompt and <code>{"--no-input"}</code> never prompts; a non-interactive run needs both.</li>
           <li><code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> chooses the credential source, and <code>{"--expect-account <id>"}</code> pins the account a non-interactive run verified.</li>
+          <li><code>{"--managed"}</code> selects Managed Connect, which this candidate refuses with a usage error and no network or browser action.</li>
           <li><code>{"--verify"}</code> re-checks an identity over the network without changing the binding.</li>
           <li><code>{"--data '<json>'"}</code> and <code>{"--input <path|->"}</code> choose the content source; only one is allowed per run, and neither carries credentials.</li>
           <li><code>{"--dry-run"}</code> validates and previews a document without sending or writing state, and <code>{"--to <csv>"}</code> names the retry targets.</li>
@@ -99,6 +107,7 @@ export const metadata = {
       <p className="toc-title">On this page</p>
       <ul>
         <li><a href="#commands-list">Commands</a></li>
+        <li><a href="#connect">Guided connect</a></li>
         <li><a href="#flags">Flags</a></li>
         <li><a href="#exit-codes">Exit codes</a></li>
         <li><a href="#examples">Short examples</a></li>

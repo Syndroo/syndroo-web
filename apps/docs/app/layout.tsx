@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(docsOrigin()),
   title: "Syndroo documentation",
   icons: { icon: [{ url: "/assets/favicon.svg", type: "image/svg+xml" }] },
-  description: "Usage documentation for the Syndroo CLI: publish plain text to Bluesky and Threads from your machine.",
+  description: "Usage documentation for the Syndroo CLI: publish plain text to Bluesky, Threads and LinkedIn from your machine.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): React.JSX.Element {

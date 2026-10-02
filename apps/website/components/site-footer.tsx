@@ -30,6 +30,11 @@ export function SiteFooter(): React.JSX.Element {
                 <span className="mark mark--threads" aria-hidden="true"></span>
               </a>
             </li>
+            <li>
+              <a className="icon-link" href="https://www.linkedin.com" aria-label="LinkedIn">
+                <span className="mark mark--linkedin" aria-hidden="true"></span>
+              </a>
+            </li>
           </ul>
           <p className="site-footer__bottom">
             <span>&copy; 2026 Syndroo</span>

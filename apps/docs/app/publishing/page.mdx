@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Publishing and retry - Syndroo docs",
-  description: "Publish a document directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
+  description: "Publish a document to Bluesky, Threads or LinkedIn directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
   alternates: { canonical: "/publishing/" },
   openGraph: {
     type: "website",
     url: "/publishing/",
     title: "Publishing and retry - Syndroo docs",
-    description: "Publish a document directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
+    description: "Publish a document to Bluesky, Threads or LinkedIn directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
   },
   twitter: { card: "summary" },
 };
@@ -22,8 +22,8 @@ export const metadata = {
         <p className="lede">One logical post moves through one publish command: the CLI parses the document, validates it, sends that same parsed text to every target and records one receipt per target. A preview is available before you commit, not a required first phase.</p>
 
         <h2 id="document">The document</h2>
-        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"release-announcement-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\", \"threads\"],\n  \"overrides\": { \"bluesky\": { \"content\": \"Shorter version for Bluesky.\" } }\n}"}</code></pre>
-        <p><code>{"key"}</code> is the stable identity of this post for its whole life (1-128 characters from <code>{"A-Z a-z 0-9 . _ : -"}</code>). <code>{"content"}</code> is non-blank text of at most 10000 Unicode code points, <code>{"platforms"}</code> is a non-empty list naming only <code>{"bluesky"}</code> or <code>{"threads"}</code>, and <code>{"overrides"}</code> may only name a selected platform. <code>{"schemaVersion"}</code> is optional and defaults to <code>{"1"}</code>. The file is strict JSON, limited to 64 KiB before decoding, and <code>{"--input -"}</code> reads stdin.</p>
+        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"release-announcement-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\", \"threads\", \"linkedin\"],\n  \"overrides\": { \"bluesky\": { \"content\": \"Shorter version for Bluesky.\" } }\n}"}</code></pre>
+        <p><code>{"key"}</code> is the stable identity of this post for its whole life (1-128 characters from <code>{"A-Z a-z 0-9 . _ : -"}</code>). <code>{"content"}</code> is non-blank text of at most 10000 Unicode code points, <code>{"platforms"}</code> is a non-empty list naming only <code>{"bluesky"}</code>, <code>{"threads"}</code> or <code>{"linkedin"}</code>, and <code>{"overrides"}</code> may only name a selected platform. <code>{"schemaVersion"}</code> is optional and defaults to <code>{"1"}</code>. The file is strict JSON, limited to 64 KiB before decoding, and <code>{"--input -"}</code> reads stdin.</p>
         <p>A document may arrive as a file, as <code>{"--data '<json>'"}</code> or on stdin, but only one input source per run: combining them is a usage error that fails before anything is read, sent or written.</p>
 
         <h2 id="preview">Preview</h2>

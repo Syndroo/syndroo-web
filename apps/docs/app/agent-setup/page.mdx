@@ -22,7 +22,7 @@ export const metadata = {
         <p className="lede">The CLI ships the Syndroo Skill, which describes the same direct flow for an agent: build the document in memory, publish it with <code>{"--data"}</code>, and report every target.</p>
 
         <h2 id="load-the-skill">Load the Skill</h2>
-        <p>Install the CLI and bind one account first, using <a href="/">Quick start</a> and <a href="/accounts/">Account configuration</a>. Then point a Skill-capable client at the bundled directory, which holds <code>{"SKILL.md"}</code> and its references:</p>
+        <p>Install the CLI and bind one account first, using <a href="/">Quick start</a> and <a href="/accounts/">Account configuration</a>. Each platform named in <code>{"platforms"}</code> needs its own active binding. Then point a Skill-capable client at the bundled directory, which holds <code>{"SKILL.md"}</code> and its references:</p>
         <pre data-label="terminal"><code>{"syndroo skill path"}</code></pre>
         <p>Your agent needs permission to run shell commands.</p>
 
@@ -48,6 +48,7 @@ export const metadata = {
         <p>Keep credentials out of prompts and command arguments: <code>{"--data"}</code> carries content only. Inspect the platform by hand when a target comes back <code>{"unknown"}</code>, and never resend that content blindly.</p>
         <p>Generate strict JSON with a serializer and pass it as one argument, rather than interpolating post text into shell syntax. No temporary file is required. Inline JSON can appear in shell history and process arguments; use <code>{"--input -"}</code> for sensitive text, or <code>{"--input post.json"}</code> for a maintained file. Choose one input source.</p>
         <p>Add <code>{"--dry-run"}</code> when inspection is useful. It writes no state, resolves no credentials and makes no network calls. A later publish reads its current input; within a single publish, the approved snapshot stays unchanged through sending.</p>
+        <p>The bundled Skill ships two publishing recipes an agent can follow: turn an authorized article into a multi-platform summary, or turn authorized release notes into a product update. Both recipes use the same document shape shown above, so they add no capability beyond the local publish command.</p>
 
         <h2 id="next-steps">Next steps</h2>
         <ul>
