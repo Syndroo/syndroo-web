@@ -5,7 +5,7 @@
 // imports and of TypeScript-only runtime syntax: Node's type stripping rewrites
 // it verbatim into generated browser JavaScript.
 //
-// What lives here: the candidate versions, the two supported platforms, the
+// What lives here: the candidate versions, the three supported platforms, the
 // shared navigation and the page registries used for sitemaps, expected build
 // output and the docs search index.
 
@@ -41,8 +41,8 @@ export type Versions = {
 };
 
 export const versions: Versions = {
-  cli: "0.6.0-rc.1",
-  docs: "0.6.0-rc.1",
+  cli: "0.7.0-rc.1",
+  docs: "0.7.0-rc.1",
   releaseStage: "unpublished release candidate",
 };
 
@@ -50,7 +50,7 @@ export const versions: Versions = {
 export const PUBLIC_NODE_RUNTIME = "Node.js 22 or newer";
 
 /**
- * The two platforms the local CLI publishes to, and their CSS marks. The
+ * The three platforms the local CLI publishes to, and their CSS marks. The
  * homepage names them and nothing more: limits and credential groups belong to
  * the platform's own documentation, not to a marketing one-liner.
  */
@@ -65,7 +65,15 @@ export type Platform = {
 export const platforms: Platform[] = [
   { id: "bluesky", name: "Bluesky", icon: "bluesky" },
   { id: "threads", name: "Threads", icon: "threads" },
+  { id: "linkedin", name: "LinkedIn", icon: "linkedin" },
 ];
+
+/** Public account root for one platform, used by the footer and platform strip. */
+const PLATFORM_URLS: Readonly<Record<string, string>> = {
+  bluesky: "https://bsky.app",
+  threads: "https://www.threads.net",
+  linkedin: "https://www.linkedin.com",
+};
 
 export type NavItem = {
   label: string;
@@ -108,7 +116,7 @@ export const footerGroups: FooterGroup[] = [
     title: "Platforms",
     items: platforms.map((platform) => ({
       label: platform.name,
-      href: platform.id === "bluesky" ? "https://bsky.app" : "https://www.threads.net",
+      href: PLATFORM_URLS[platform.id] as string,
     })),
   },
   {

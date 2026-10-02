@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { ORIGIN_PLACEHOLDERS, PRODUCT_REPOSITORY, platforms, versions } from "@syndroo/content/site-data";
 
 const DESCRIPTION =
-  "Syndroo is a local command-line tool that publishes one plain-text file to Bluesky and Threads from your own machine: write the post once, send it to both.";
+  "Syndroo is a local command-line tool that publishes one plain-text file to Bluesky, Threads and LinkedIn from your own machine: write the post once, send it to each.";
 
 export const metadata: Metadata = {
-  title: "Syndroo - publish one post to Bluesky and Threads from the CLI",
+  title: "Syndroo - publish one post to Bluesky, Threads and LinkedIn from the CLI",
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
-    title: "Syndroo - publish one post to Bluesky and Threads from the CLI",
+    title: "Syndroo - publish one post to Bluesky, Threads and LinkedIn from the CLI",
     description: DESCRIPTION,
   },
   twitter: { card: "summary" },
@@ -38,12 +38,12 @@ const faq = [
   {
     question: "Is Syndroo released yet?",
     answer:
-      "Not yet. 0.6.0-rc.1 is an unpublished release candidate, and live-account acceptance is still pending. There is no registry install today, so the way to run it is to build it from source.",
+      "Not yet. 0.7.0-rc.1 is an unpublished release candidate, and live-account acceptance is still pending. There is no registry install today, so the way to run it is to build it from source.",
   },
   {
     question: "Which platforms does it publish to?",
     answer:
-      "Bluesky and Threads, and only those two. Posts are plaintext, and an overrides block can tailor the text for one platform without changing the document's identity.",
+      "Bluesky, Threads and LinkedIn, and only those three. Posts are plaintext, and an overrides block can tailor the text for one platform without changing the document's identity.",
   },
   {
     question: "What does the dry run actually do?",
@@ -74,12 +74,12 @@ export default function IndexPage() {
         <div className="shell">
           <h1 className="hero__title" id="hero-title">
             <span className="title__ink">Write once,</span>{" "}
-            <span className="title__dim">post twice</span>
+            <span className="title__dim">post everywhere</span>
           </h1>
           <p className="lead hero__lede">
             A draft lives in one plain-text file in your repository.{" "}
-            <strong>Syndroo reads that file and publishes it</strong> to Bluesky and Threads from
-            your terminal. Write the post once, send it to both.
+            <strong>Syndroo reads that file and publishes it</strong> to Bluesky, Threads and
+            LinkedIn from your terminal. Write the post once, send it to each.
           </p>
           <div className="hero__cta">
             <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
@@ -112,7 +112,7 @@ export default function IndexPage() {
           </div>
           <div className="platform-copy">
             <p>
-              Publish plain-text posts to Bluesky and Threads from one document. A document is
+              Publish plain-text posts to Bluesky, Threads and LinkedIn from one document. A document is
               strict JSON: <code>key</code> identifies the post, <code>content</code> is the text,
               and <code>platforms</code> names the destinations. An <code>overrides</code> block
               can tailor the text for one platform.
@@ -152,13 +152,15 @@ export default function IndexPage() {
                     {",\n  "}
                     <span className="code__key">&quot;content&quot;</span>
                     {": "}
-                    <span className="code__str">&quot;One file, two platforms.&quot;</span>
+                    <span className="code__str">&quot;One file, three platforms.&quot;</span>
                     {",\n  "}
                     <span className="code__key">&quot;platforms&quot;</span>
                     {": ["}
                     <span className="code__str">&quot;bluesky&quot;</span>
                     {", "}
                     <span className="code__str">&quot;threads&quot;</span>
+                    {", "}
+                    <span className="code__str">&quot;linkedin&quot;</span>
                     {"]\n}"}
                   </pre>
                 </div>
@@ -354,7 +356,7 @@ export default function IndexPage() {
                 <span className="term__prompt">$</span> syndroo publish --input post.json
               </p>
               <p>
-                <span className="term__out">read once &middot; posts to bluesky, threads</span>
+                <span className="term__out">read once &middot; posts to bluesky, threads, linkedin</span>
               </p>
               <span className="terminal__gap"></span>
               <p>

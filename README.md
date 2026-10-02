@@ -59,11 +59,11 @@ change the source and rebuild instead of editing `apps/*/out`.
 
 ## Content status
 
-`0.6.0-rc.1` is the CLI candidate these docs describe: unpublished, untagged and
+`0.7.0-rc.1` is the CLI candidate these docs describe: unpublished, untagged and
 undeployed, so the documentation installs a tarball built from the product
-repository rather than a package name. Bluesky and Threads are the two supported
-platforms and both still need live-account acceptance, so no page claims a
-verified publish.
+repository rather than a package name. Bluesky, Threads and LinkedIn are the
+three supported platforms and all three still need live-account acceptance, so
+no page claims a verified publish.
 
 ## License
 

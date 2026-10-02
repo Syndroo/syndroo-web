@@ -23,3 +23,6 @@ apps/*/public/assets/
 
 # Next.js TypeScript incremental build info
 *.tsbuildinfo
+
+# Playwright run artifacts
+test-results/

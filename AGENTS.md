@@ -55,11 +55,11 @@
 
 ## Truthful claims
 
-- `0.6.0-rc.1` is the CLI candidate these docs describe. It is an unpublished
+- `0.7.0-rc.1` is the CLI candidate these docs describe. It is an unpublished
   candidate: do not describe it as released, tagged, deployed or installable from
   a registry.
-- Bluesky and Threads are the two supported platforms, and both still need
-  live-account acceptance, so no page may claim a verified publish.
+- Bluesky, Threads and LinkedIn are the three supported platforms, and all three
+  still need live-account acceptance, so no page may claim a verified publish.
 - Do not reintroduce retired surfaces: the hosted HTTP API, the SDK, the
   `@syndroo/cloudflare-worker` service, or any earlier version.
 - Report only checks that actually ran, and state the limits of the evidence.

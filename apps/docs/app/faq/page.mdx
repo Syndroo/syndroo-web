@@ -1,12 +1,12 @@
 export const metadata = {
   title: "FAQ - Syndroo docs",
-  description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery for the syndroo CLI.",
+  description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery when publishing to Bluesky, Threads or LinkedIn with the syndroo CLI.",
   alternates: { canonical: "/faq/" },
   openGraph: {
     type: "website",
     url: "/faq/",
     title: "FAQ - Syndroo docs",
-    description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery for the syndroo CLI.",
+    description: "Configuration failures, changed source files, duplicate keys, unknown results and local state recovery when publishing to Bluesky, Threads or LinkedIn with the syndroo CLI.",
   },
   twitter: { card: "summary" },
 };
@@ -22,7 +22,7 @@ export const metadata = {
         <p className="lede">Five situations worth knowing before you publish.</p>
 
         <h2 id="configuration">Configuration still fails</h2>
-        <p>Run <code>{"syndroo doctor --local"}</code>: it names the failing check and sends nothing. When the failing check is a credential, confirm the exported group is present in this shell and re-register the account as described in <a href="/accounts/">Account configuration</a>.</p>
+        <p>Run <code>{"syndroo doctor --local"}</code>: it names the failing check and sends nothing. When the failing check is a credential, confirm the exported group is present in this shell and re-register the account as described in <a href="/accounts/">Account configuration</a>. Each named platform has its own credential group and its own binding.</p>
 
         <h2 id="changed-source">I edited the file after confirming</h2>
         <p>Within one publish, an edit made while or after confirming cannot change what is sent: publishing reads the file once and sends the snapshot it validated. A separate publish after a dry-run reads the current file, so edits between those commands do change its input. Check the receipt before considering any new post; changing a key is not a repair for a failed or unknown result.</p>

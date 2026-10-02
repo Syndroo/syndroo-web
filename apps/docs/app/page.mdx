@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Quick start - Syndroo docs",
-  description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads in one command, and read the result.",
+  description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky, Threads or LinkedIn in one command, and read the result.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     title: "Quick start - Syndroo docs",
-    description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky or Threads in one command, and read the result.",
+    description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky, Threads or LinkedIn in one command, and read the result.",
   },
   twitter: { card: "summary" },
 };
@@ -15,7 +15,7 @@ export const metadata = {
       <article>
         <p className="eyebrow">Syndroo docs</p>
         <h1 id="quick-start">Quickstart</h1>
-        <p className="lede">The <code>{"syndroo"}</code> command publishes plain text from this machine, in the foreground, with no server in the path. <strong>0.6.0-rc.1 candidate; live-account testing pending.</strong></p>
+        <p className="lede">The <code>{"syndroo"}</code> command publishes plain text from this machine, in the foreground, with no server in the path. <strong>0.7.0-rc.1 candidate; live-account testing pending.</strong></p>
 
         <div className="tip">
           <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
@@ -24,12 +24,12 @@ export const metadata = {
 
         <h2 id="install">1. Install</h2>
         <p>Requires Node.js 22 or newer on macOS or Linux. Windows is not supported for local writes.</p>
-        <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm run pack:cli\nnpm install --global ./artifacts/syndroo-cli-0.6.0-rc.1.tgz\nsyndroo init --namespace default\nsyndroo doctor --local"}</code></pre>
+        <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm run pack:cli\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo init --namespace default\nsyndroo doctor --local"}</code></pre>
 
         <h2 id="bind-one-account">2. Bind one account</h2>
-        <p>Bluesky uses an app password; keep the variables in the environment the CLI runs in, because they are read again on every execution.</p>
+        <p>Each named platform needs its own binding. This example binds Bluesky, which uses an app password; keep the variables in the environment the CLI runs in, because they are read again on every execution.</p>
         <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"app-password\"\nsyndroo auth set bluesky --local --from-env\nsyndroo auth status --local"}</code></pre>
-        <p><a href="/accounts/">Account configuration</a> covers Threads and the credential-file option.</p>
+        <p><a href="/accounts/">Account configuration</a> covers Threads, LinkedIn and the credential-file option.</p>
 
         <h2 id="publish">3. Publish</h2>
         <p>Save the document as <code>post.json</code>.</p>

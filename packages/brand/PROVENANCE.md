@@ -61,10 +61,10 @@ Verification of the stored files:
 How the site uses them:
 
 - The SVGs keep their original bytes and default black fill. The stylesheet renders each one through CSS `mask-image`,
-  so a page takes the mark in whatever colour it sets and no recoloured copy is stored. The homepage's two
-  destination tiles set a white mark on each platform's own colour (`#0285ff` for Bluesky, `#000000` for Threads);
-  the footer icon row sets a 16px ink mark. Both use the same `mark` mask rule, and the unused marks stay in the kit
-  rather than being deleted.
+  so a page takes the mark in whatever colour it sets and no recoloured copy is stored. The homepage's three
+  destination tiles set a white mark on each platform's own colour (`#0285ff` for Bluesky, `#000000` for Threads,
+  `#0a66c2` for LinkedIn); the footer icon row sets a 16px ink mark. Both use the same `mark` mask rule, and the
+  unused marks stay in the kit rather than being deleted.
 - The marks identify the platforms the candidate can publish to. They do not imply endorsement by, or partnership with,
   any of those companies, and no platform logo is used as the Syndroo brand.
 

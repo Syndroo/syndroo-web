@@ -45,6 +45,7 @@ test("the documentation spells its CLI commands in a form this checker can read"
   for (const command of [
     "doctor",
     "providers list",
+    "connect",
     "auth set",
     "auth status",
     "publish",
@@ -75,6 +76,7 @@ test("the documentation spells its CLI commands in a form this checker can read"
     "--timeout",
     "--limit",
     "--from-env",
+    "--managed",
   ]) {
     assert.ok(flags.has(flag), `the documentation should explain ${flag}`);
   }

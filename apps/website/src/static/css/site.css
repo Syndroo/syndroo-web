@@ -387,6 +387,10 @@ pre {
   --mark-src: url("/assets/platform-threads.svg");
 }
 
+.mark--linkedin {
+  --mark-src: url("/assets/platform-linkedin.svg");
+}
+
 .mark--white {
   background-color: #fff;
 }
@@ -452,6 +456,10 @@ pre {
 
 .app-icon--threads {
   background: #000000;
+}
+
+.app-icon--linkedin {
+  background: #0a66c2;
 }
 
 .app-icon .mark {

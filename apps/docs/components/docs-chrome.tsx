@@ -158,7 +158,7 @@ export function DocsSearchDialog(): React.JSX.Element {
           </button>
         </div>
         <p className="search-meta" id="search-meta">
-          Search every page of the local docs. Try &quot;publish&quot;, &quot;retry&quot; or &quot;Bluesky&quot;.
+          Search every page of the local docs. Try &quot;publish&quot;, &quot;retry&quot; or &quot;LinkedIn&quot;.
         </p>
         <div className="search-empty" id="search-empty" hidden>
           <strong>No results</strong>

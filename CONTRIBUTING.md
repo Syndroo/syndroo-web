@@ -49,11 +49,11 @@ deployment pipeline and pull requests do not add one.
 
 Website copy is part of the product's public claims, so keep it accurate:
 
-- `0.2.0-rc.1` is a prepared, unpublished candidate. Do not describe it as
+- `0.7.0-rc.1` is a prepared, unpublished candidate. Do not describe it as
   released, tagged, deployed or available from a package registry.
-- Platform status stays as recorded: Threads and Bluesky are mock-tested with
-  live acceptance pending, and X, Tumblr and LinkedIn are experimental. Do not
-  claim a live integration that has not been exercised.
+- Platform status stays as recorded: Bluesky, Threads and LinkedIn are
+  fixture-tested with live acceptance pending. Do not claim a live integration
+  that has not been exercised.
 - The interactive demo stays labelled as simulated and must not call a
   publishing API.
 - Privacy and Terms remain drafts until an approved policy exists. Do not add
