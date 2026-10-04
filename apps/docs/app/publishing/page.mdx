@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Publishing and retry - Syndroo docs",
-  description: "Publish a document to Bluesky, Threads or LinkedIn directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
+  description: "Publish text to Bluesky, Threads, LinkedIn personal, Mastodon public, or a DEV.to article; preview when you want, read the receipt, and retry only targets that are provably safe.",
   alternates: { canonical: "/publishing/" },
   openGraph: {
     type: "website",
     url: "/publishing/",
     title: "Publishing and retry - Syndroo docs",
-    description: "Publish a document to Bluesky, Threads or LinkedIn directly, preview it when you want, read the receipt, and retry only targets that are provably safe.",
+    description: "Publish text to Bluesky, Threads, LinkedIn personal, Mastodon public, or a DEV.to article; preview when you want, read the receipt, and retry only targets that are provably safe.",
   },
   twitter: { card: "summary" },
 };
@@ -19,21 +19,35 @@ export const metadata = {
           <span>Publishing</span>
         </nav>
         <h1 id="publishing">Publish and retry</h1>
-        <p className="lede">One logical post moves through one publish command: the CLI parses the document, validates it, sends that same parsed text to every target and records one receipt per target. A preview is available before you commit, not a required first phase.</p>
+        <p className="lede">One logical post moves through one publish command: the CLI parses the document, validates it, sends that same parsed snapshot to every target, and records one receipt per target. A preview is available before you commit, not a required first phase.</p>
+        <p>The <code>{"0.7.0-rc.1"}</code> candidate publishes plain text to Bluesky, Threads, LinkedIn personal accounts, and Mastodon public statuses, plus articles to DEV.to. All five local providers are fixture-tested; no live account was connected and no real post was published for this candidate.</p>
 
         <h2 id="document">The document</h2>
-        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"release-announcement-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\", \"threads\", \"linkedin\"],\n  \"overrides\": { \"bluesky\": { \"content\": \"Shorter version for Bluesky.\" } }\n}"}</code></pre>
-        <p><code>{"key"}</code> is the stable identity of this post for its whole life (1-128 characters from <code>{"A-Z a-z 0-9 . _ : -"}</code>). <code>{"content"}</code> is non-blank text of at most 10000 Unicode code points, <code>{"platforms"}</code> is a non-empty list naming only <code>{"bluesky"}</code>, <code>{"threads"}</code> or <code>{"linkedin"}</code>, and <code>{"overrides"}</code> may only name a selected platform. <code>{"schemaVersion"}</code> is optional and defaults to <code>{"1"}</code>. The file is strict JSON, limited to 64 KiB before decoding, and <code>{"--input -"}</code> reads stdin.</p>
-        <p>A document may arrive as a file, as <code>{"--data '<json>'"}</code> or on stdin, but only one input source per run: combining them is a usage error that fails before anything is read, sent or written.</p>
+        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"release-announcement-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\", \"threads\", \"linkedin\", \"mastodon\"],\n  \"overrides\": { \"bluesky\": { \"content\": \"Shorter version for Bluesky.\" } }\n}"}</code></pre>
+        <p><code>{"key"}</code> is the stable identity of this post for its whole life (1-128 characters from <code>{"A-Z a-z 0-9 . _ : -"}</code>, with an alphanumeric first character). <code>{"content"}</code> is non-blank text of at most 10000 Unicode code points, <code>{"platforms"}</code> is a non-empty list with no repeats, and <code>{"overrides"}</code> may only name a selected platform. Text platforms are <code>{"bluesky"}</code>, <code>{"threads"}</code>, <code>{"linkedin"}</code>, and <code>{"mastodon"}</code>. <code>{"schemaVersion"}</code> is optional and defaults to <code>{"1"}</code>; an explicit <code>{"2"}</code> also accepts text-only documents.</p>
+        <p>The file is strict JSON, limited to 64 KiB before decoding, and <code>{"--input -"}</code> reads stdin. Comments, trailing commas, repeated keys, invalid UTF-8, and unpaired surrogates are refused. One leading byte-order mark is tolerated.</p>
+        <p>A document may arrive as a file, as <code>{"--data '<json>'"}</code> or on stdin, but only one input source per run: combining them is a usage error that fails before anything is read, sent, or written.</p>
+
+        <h2 id="devto-article">DEV.to article</h2>
+        <p>DEV.to is article-only and requires an explicit <code>{"schemaVersion"}</code> <code>{"2"}</code> document with <code>{"overrides.devto.content"}</code> and <code>{"overrides.devto.article.title"}</code>. The other four providers in the same document receive the top-level <code>{"content"}</code> unless their own override supplies content.</p>
+        <pre data-label="article.json"><code>{"{\n  \"schemaVersion\": 2,\n  \"key\": \"article-2026-10-04\",\n  \"content\": \"Summary for the text providers.\",\n  \"platforms\": [\"bluesky\", \"mastodon\", \"devto\"],\n  \"overrides\": {\n    \"devto\": {\n      \"content\": \"# Heading\\n\\nFull Markdown body.\",\n      \"article\": {\n        \"title\": \"A verified publishing workflow\",\n        \"tags\": [\"typescript\", \"opensource\"],\n        \"canonicalUrl\": \"https://example.com/posts/safe-publishing\"\n      }\n    }\n  }\n}"}</code></pre>
+        <p>DEV.to product limits: title is 1-128 code points and free of control characters; optional tags are at most four unique lowercase alphanumeric tags of 1-30 characters each; optional <code>{"canonicalUrl"}</code> is an absolute HTTPS URL of 1-2048 characters with no userinfo or control characters. The article body is at most 10000 code points, and YAML front matter or Liquid directives are refused. These are Syndroo product limits, not platform-official limits.</p>
+        <p>DEV.to publishes individual public articles only. The local path has no media, series, organization, or scheduling fields, and it publishes no drafts.</p>
+
+        <h2 id="state-upgrade">State format 2</h2>
+        <p>This is the local state format, separate from a document&apos;s <code>{"schemaVersion"}</code>. New local installs start at state format 2. If an existing state is still format 1, stop every other Syndroo writer and upgrade explicitly before publishing records that need format 2:</p>
+        <pre data-label="terminal"><code>{"syndroo state upgrade --to 2 --confirm-no-writers --yes --no-input"}</code></pre>
+        <p>The upgrade is the only migration. <code>{"publish"}</code> and <code>{"--dry-run"}</code> never upgrade state, and an older CLI refuses a format 2 state. An interrupted upgrade leaves a marker that old and new binaries refuse until the same command resumes it.</p>
 
         <h2 id="preview">Preview</h2>
-        <p>A preview is optional and read-only: it parses and validates the document using existing local config and account bindings, but takes no write lock, resolves no credentials and makes no network request. It creates no state. Read the printed text and target account before continuing.</p>
+        <p>A preview is optional and read-only: it parses and validates the document using existing local config and account bindings, but takes no write lock, resolves no credentials, and makes no network request. It creates no state. Read the printed text, article metadata, and target accounts before continuing.</p>
         <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json"}</code></pre>
-        <p>A later publish reads the current input, not a saved preview. Editing the file between these two commands changes what the later publish sends. Keep the input unchanged if you intend to publish what you previewed.</p>
+        <p>A later publish reads the current input, not a saved preview. Editing the file between these two commands changes what the later publish sends. Within one invocation, the CLI reads the file once, validates it, and uses the same parsed snapshot for confirmation and sending, even if the source changes while the prompt is open.</p>
 
         <h2 id="publish">Publish</h2>
-        <p>The CLI reads the file once, validates it, and sends exactly that parsed text, so editing <code>{"post.json"}</code> after the confirmation cannot change what is published. Execution sends at most one content request per target. When nobody can answer a prompt, the run needs both <code>{"--yes"}</code> and <code>{"--no-input"}</code>: <code>{"--yes"}</code> only skips the prompt, it is not an authorization. A missing confirmation exits <code>{"2"}</code> and sends nothing.</p>
+        <p><code>{"publish"}</code> sends directly after confirmation; it does not require a separate plan or approval step inside the CLI. When a human can answer a prompt, the CLI asks before sending. When nobody can, the run needs both <code>{"--yes"}</code> and <code>{"--no-input"}</code>: <code>{"--yes"}</code> only skips the prompt, it is not authorization. A missing confirmation exits <code>{"2"}</code> and sends nothing; a decline exits <code>{"5"}</code>.</p>
         <pre data-label="terminal"><code>{"syndroo publish --input post.json --yes --no-input --json"}</code></pre>
+        <p>The execution holds the local write lock, re-checks that the account binding is still current, and sends at most one content request per target. Publishing a delivery that already succeeded reports the original result and sends nothing.</p>
         <p>For generated content, pass serialized JSON as one argument with <code>{"--data"}</code>; a temporary file is not required. Inline content can appear in shell history and process arguments. Use <code>{"--input -"}</code> for sensitive text, and keep credentials out of every post document.</p>
 
         <h2 id="receipts">Receipts</h2>
@@ -41,15 +55,19 @@ export const metadata = {
         <p>Each target reports <code>{"status"}</code>, <code>{"reused"}</code>, <code>{"attempts"}</code>, <code>{"remoteId"}</code>, <code>{"url"}</code>, <code>{"writeDisposition"}</code> and a <code>{"retry"}</code> verdict; the aggregate is <code>{"succeeded"}</code>, <code>{"partial"}</code>, <code>{"failed"}</code>, <code>{"unknown"}</code> or <code>{"blocked"}</code>. A <code>{"null"}</code> url means no verified link is known, so do not build one.</p>
 
         <h2 id="unknown-and-retry">Unknown results and retry</h2>
-        <p>Retry is explicit and direct: it names the safe targets to try again. Only targets whose failure is provably <code>{"not_applied"}</code> are eligible, and only within three content attempts per logical delivery. A selection that includes an <code>{"unknown"}</code> target blocks the whole retry, so narrow it to other safe targets instead. A succeeded target is never republished.</p>
+        <p>Retry is explicit and direct: it names the safe targets to try again. Only targets whose failure is provably <code>{"not_applied"}</code> are eligible, and only within three content attempts per logical delivery. Retry also respects the target&apos;s <code>{"retryNotBefore"}</code> delay, so it is not just an attempt cap. A selection that includes an <code>{"unknown"}</code> target blocks the whole retry, so narrow it to other safe targets instead. A succeeded target is never republished.</p>
         <pre data-label="terminal"><code>{"syndroo retry <operation-id> --to threads --yes --no-input --json\nsyndroo retry <operation-id> --to threads --dry-run --json"}</code></pre>
-        <p>The second command is an optional read-only preview, not a required step. Retry windows must have passed; rotating credentials requires re-verifying the same stable account.</p>
-        <p><code>{"unknown"}</code> means the write may have reached the platform. Read the receipt, inspect the account by hand and stop; do not resend that content, and do not treat an unknown target as retryable.</p>
+        <p>The second command is an optional read-only preview, not a required step. If credentials were rotated, the retry preview shows the old and the new binding, and the same stable account must be re-verified before retrying.</p>
+        <p><code>{"unknown"}</code> means the write may have reached the platform. Read the receipt, inspect the account by hand, and stop; do not resend that content, and do not treat an unknown target as retryable.</p>
+
+        <h2 id="limits">Limits</h2>
+        <p>Machine off means no publishing. There is no scheduler, daemon, media upload, automatic refresh, or telemetry, and a local failure never uses a server fallback. Deleting the state, changing the namespace, or restoring an old backup does not prove that nothing was published; it removes the local record that prevents a duplicate.</p>
 
         <h2 id="next-steps">Next steps</h2>
         <ul>
-          <li><a href="/commands/">Command reference</a> - flags, exit codes and JSON fields.</li>
-          <li><a href="/faq/">FAQ</a> - changed files, duplicate keys and unknown results.</li>
+          <li><a href="/accounts/">Account configuration</a> - credential sources and OAuth.</li>
+          <li><a href="/commands/">Command reference</a> - flags, exit codes, and JSON fields.</li>
+          <li><a href="/faq/">FAQ</a> - state upgrade, duplicate keys, and unknown results.</li>
         </ul>
       </article>
     </main>
@@ -58,10 +76,13 @@ export const metadata = {
       <p className="toc-title">On this page</p>
       <ul>
         <li><a href="#document">The document</a></li>
+        <li><a href="#devto-article">DEV.to article</a></li>
+        <li><a href="#state-upgrade">State format 2</a></li>
         <li><a href="#preview">Preview</a></li>
         <li><a href="#publish">Publish</a></li>
         <li><a href="#receipts">Receipts</a></li>
         <li><a href="#unknown-and-retry">Retry</a></li>
+        <li><a href="#limits">Limits</a></li>
         <li><a href="#next-steps">Next steps</a></li>
       </ul>
     </nav>

@@ -61,9 +61,11 @@ change the source and rebuild instead of editing `apps/*/out`.
 
 `0.7.0-rc.1` is the CLI candidate these docs describe: unpublished, untagged and
 undeployed, so the documentation installs a tarball built from the product
-repository rather than a package name. Bluesky, Threads and LinkedIn are the
-three supported platforms and all three still need live-account acceptance, so
-no page claims a verified publish.
+repository rather than a package name. Five local providers are wired: Bluesky,
+Threads, LinkedIn, and Mastodon for plain text, and DEV.to for articles. They
+are fixture-tested rather than live-account accepted, so no page claims a
+verified publish. The existing remote API is outside this public documentation
+surface.
 
 ## License
 

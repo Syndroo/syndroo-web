@@ -61,10 +61,12 @@ Verification of the stored files:
 How the site uses them:
 
 - The SVGs keep their original bytes and default black fill. The stylesheet renders each one through CSS `mask-image`,
-  so a page takes the mark in whatever colour it sets and no recoloured copy is stored. The homepage's three
-  destination tiles set a white mark on each platform's own colour (`#0285ff` for Bluesky, `#000000` for Threads,
-  `#0a66c2` for LinkedIn); the footer icon row sets a 16px ink mark. Both use the same `mark` mask rule, and the
-  unused marks stay in the kit rather than being deleted.
+  so a page takes the mark in whatever colour it sets and no recoloured copy is stored. The homepage's five
+  destination tiles use three SVG marks, each set as a white mark on its platform's own colour (`#0285ff` for
+  Bluesky, `#000000` for Threads, `#0a66c2` for LinkedIn), and two text marks (`M` for Mastodon, `DEV` for
+  DEV.to) because those platforms have no stored mark asset. The footer icon row sets a 16px ink mark for the
+  three platforms that have an SVG. The SVG marks all use the same `mark` mask rule, and the unused marks stay
+  in the kit rather than being deleted.
 - The marks identify the platforms the candidate can publish to. They do not imply endorsement by, or partnership with,
   any of those companies, and no platform logo is used as the Syndroo brand.
 

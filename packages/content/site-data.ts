@@ -5,7 +5,7 @@
 // imports and of TypeScript-only runtime syntax: Node's type stripping rewrites
 // it verbatim into generated browser JavaScript.
 //
-// What lives here: the candidate versions, the three supported platforms, the
+// What lives here: the candidate versions, the five supported platforms, the
 // shared navigation and the page registries used for sitemaps, expected build
 // output and the docs search index.
 
@@ -50,30 +50,33 @@ export const versions: Versions = {
 export const PUBLIC_NODE_RUNTIME = "Node.js 22 or newer";
 
 /**
- * The three platforms the local CLI publishes to, and their CSS marks. The
- * homepage names them and nothing more: limits and credential groups belong to
- * the platform's own documentation, not to a marketing one-liner.
+ * The five platforms the local CLI publishes to, their CSS marks and the public
+ * destination the footer links to. The homepage names them and nothing more:
+ * limits and credential groups belong to the platform's own documentation, not
+ * to a marketing one-liner.
  */
 export type Platform = {
   /** Platform key used by a local publish document and by the CSS modifier. */
   id: string;
   name: string;
-  /** CSS modifier for the local platform mark, `platform-icon--<icon>`. */
+  /** CSS modifier for the local platform card, `app-icon--<icon>`. */
   icon: string;
+  /** Public destination the footer links to. */
+  url: string;
+  /**
+   * Short typographic label for a card with no local mark asset. A platform
+   * that ships a mask asset leaves this unset and renders the mark instead.
+   */
+  label?: string;
 };
 
 export const platforms: Platform[] = [
-  { id: "bluesky", name: "Bluesky", icon: "bluesky" },
-  { id: "threads", name: "Threads", icon: "threads" },
-  { id: "linkedin", name: "LinkedIn", icon: "linkedin" },
+  { id: "bluesky", name: "Bluesky", icon: "bluesky", url: "https://bsky.app" },
+  { id: "threads", name: "Threads", icon: "threads", url: "https://www.threads.net" },
+  { id: "linkedin", name: "LinkedIn", icon: "linkedin", url: "https://www.linkedin.com" },
+  { id: "mastodon", name: "Mastodon", icon: "mastodon", url: "https://joinmastodon.org", label: "M" },
+  { id: "devto", name: "DEV.to", icon: "devto", url: "https://dev.to", label: "DEV" },
 ];
-
-/** Public account root for one platform, used by the footer and platform strip. */
-const PLATFORM_URLS: Readonly<Record<string, string>> = {
-  bluesky: "https://bsky.app",
-  threads: "https://www.threads.net",
-  linkedin: "https://www.linkedin.com",
-};
 
 export type NavItem = {
   label: string;
@@ -114,10 +117,7 @@ export const footerGroups: FooterGroup[] = [
   },
   {
     title: "Platforms",
-    items: platforms.map((platform) => ({
-      label: platform.name,
-      href: PLATFORM_URLS[platform.id] as string,
-    })),
+    items: platforms.map((platform) => ({ label: platform.name, href: platform.url })),
   },
   {
     title: "Product",

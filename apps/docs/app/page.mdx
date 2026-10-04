@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Quick start - Syndroo docs",
-  description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky, Threads or LinkedIn in one command, and read the result.",
+  description: "Install the syndroo CLI candidate, connect one local account, publish plain text or a DEV.to article, and read the result.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     title: "Quick start - Syndroo docs",
-    description: "Install the syndroo CLI, bind one account, publish plain text to Bluesky, Threads or LinkedIn in one command, and read the result.",
+    description: "Install the syndroo CLI candidate, connect one local account, publish plain text or a DEV.to article, and read the result.",
   },
   twitter: { card: "summary" },
 };
@@ -15,32 +15,32 @@ export const metadata = {
       <article>
         <p className="eyebrow">Syndroo docs</p>
         <h1 id="quick-start">Quickstart</h1>
-        <p className="lede">The <code>{"syndroo"}</code> command publishes plain text from this machine, in the foreground, with no server in the path. <strong>0.7.0-rc.1 candidate; live-account testing pending.</strong></p>
+        <p className="lede">The <code>{"syndroo"}</code> command publishes from this machine, in the foreground, with no Syndroo server in the path. It supports five local providers: Bluesky, Threads, LinkedIn personal, Mastodon public text, and DEV.to articles. <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account testing pending.</strong></p>
 
         <div className="tip">
           <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
-          <p>Start with a dry run. A preview sends nothing and writes no local state, so you can check the parsed document before anything leaves the machine.</p>
+          <p>Start with a dry run when you want to inspect the parsed document. A preview sends nothing, resolves no credentials, and writes no local state.</p>
         </div>
 
         <h2 id="install">1. Install</h2>
-        <p>Requires Node.js 22 or newer on macOS or Linux. Windows is not supported for local writes.</p>
+        <p>Requires Node.js 22 or newer on macOS or Linux. Windows is not supported for local writes. The candidate is installed from the tarball this repository builds; it is not on npm.</p>
         <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm run pack:cli\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo init --namespace default\nsyndroo doctor --local"}</code></pre>
 
-        <h2 id="bind-one-account">2. Bind one account</h2>
-        <p>Each named platform needs its own binding. This example binds Bluesky, which uses an app password; keep the variables in the environment the CLI runs in, because they are read again on every execution.</p>
-        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"app-password\"\nsyndroo auth set bluesky --local --from-env\nsyndroo auth status --local"}</code></pre>
-        <p><a href="/accounts/">Account configuration</a> covers Threads, LinkedIn and the credential-file option.</p>
+        <h2 id="bind-one-account">2. Connect one account</h2>
+        <p><code>{"syndroo connect"}</code> defaults to local mode and reads exactly one credential source. An interactive run offers environment variables, an existing file, hidden terminal entry, and, for Mastodon only, browser authorization. This example uses a Bluesky app password:</p>
+        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"APP_PASSWORD_PLACEHOLDER\"\nsyndroo connect bluesky --from-env\nsyndroo auth status --local"}</code></pre>
+        <p><a href="/accounts/">Account configuration</a> covers all five providers, exact environment variables and credential-file fields, safe credential saving, and Mastodon OAuth.</p>
 
         <h2 id="publish">3. Publish</h2>
-        <p>Save the document as <code>post.json</code>.</p>
+        <p>Save a text document as <code>post.json</code>.</p>
         <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"first-post-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\"]\n}"}</code></pre>
-        <p>Publish it. One command reads the file once, validates it, and sends that same parsed text:</p>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
-        <p>Adding <code>{"--dry-run"}</code> previews the parsed document instead. A preview sends nothing and writes no local state:</p>
+        <p>Publishing sends directly after confirmation. One command reads the input once, validates it, and sends that same parsed snapshot:</p>
+        <pre data-label="terminal"><code>{"syndroo publish --input post.json --yes --no-input --json"}</code></pre>
+        <p>Adding <code>{"--dry-run"}</code> previews the parsed document instead. A preview is read-only and requires existing local config and bindings:</p>
         <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json"}</code></pre>
         <p>For one-off content, pass the document inline with <code>{"--data"}</code>. Only one input source is allowed per run, and <code>{"--data"}</code> is never a place for credentials.</p>
-        <pre data-label="terminal"><code>{"syndroo publish --data '{\"key\":\"first-post-001\",\"content\":\"Syndroo now publishes from the command line.\",\"platforms\":[\"bluesky\"]}' --json"}</code></pre>
-        <p>When the content should stay out of the process arguments, read it from stdin with <code>{"--input -"}</code> instead.</p>
+        <pre data-label="terminal"><code>{"syndroo publish --data '{\"key\":\"first-post-001\",\"content\":\"Syndroo now publishes from the command line.\",\"platforms\":[\"bluesky\"]}' --yes --no-input --json"}</code></pre>
+        <p>When the content should stay out of the process arguments, read it from stdin with <code>{"--input -"}</code> instead. DEV.to articles use a separate <code>{"schemaVersion"}</code> <code>{"2"}</code> document; see <a href="/publishing/#devto-article">the DEV.to article example</a>.</p>
 
         <h2 id="read-the-result">4. Read the result</h2>
         <p>Each target reports its own status, attempts, remote id and url. For an <code>{"unknown"}</code> target, inspect the platform by hand and do not resend.</p>
@@ -53,7 +53,7 @@ export const metadata = {
       <p className="toc-title">On this page</p>
       <ul>
         <li><a href="#install">Install</a></li>
-        <li><a href="#bind-one-account">Bind one account</a></li>
+        <li><a href="#bind-one-account">Connect one account</a></li>
         <li><a href="#publish">Publish</a></li>
         <li><a href="#read-the-result">Read the result</a></li>
       </ul>

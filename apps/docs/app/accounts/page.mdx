@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Account configuration - Syndroo docs",
-  description: "Bind a Bluesky app password, a Threads access token or LinkedIn credentials to the syndroo CLI, verify it, and remove it.",
+  description: "Connect Bluesky, Threads, LinkedIn, Mastodon, or DEV.to to the syndroo CLI with an explicit credential source, then verify or remove the local binding.",
   alternates: { canonical: "/accounts/" },
   openGraph: {
     type: "website",
     url: "/accounts/",
     title: "Account configuration - Syndroo docs",
-    description: "Bind a Bluesky app password, a Threads access token or LinkedIn credentials to the syndroo CLI, verify it, and remove it.",
+    description: "Connect Bluesky, Threads, LinkedIn, Mastodon, or DEV.to to the syndroo CLI with an explicit credential source, then verify or remove the local binding.",
   },
   twitter: { card: "summary" },
 };
@@ -18,40 +18,80 @@ export const metadata = {
           <span aria-hidden="true">/</span>
           <span>Accounts</span>
         </nav>
-        <h1 id="accounts">Bind a Bluesky, Threads or LinkedIn account</h1>
-        <p className="lede">Each provider reads exactly one credential source, and the CLI reads it again on every execution.</p>
+        <h1 id="accounts">Connect a local account</h1>
+        <p className="lede"><code>{"syndroo connect"}</code> is the guarded local entry for all five providers. It defaults to local mode, reads exactly one credential source, and never reads <code>{".env"}</code> or uses a server fallback.</p>
 
-        <h2 id="bluesky">Bluesky</h2>
-        <p>Create an app password in your Bluesky account settings, then export it in place of these placeholders. <code>{"BLUESKY_HOST"}</code> is optional and must be <code>{"bsky.social"}</code>.</p>
-        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"app-password\"\nsyndroo auth set bluesky --local --from-env"}</code></pre>
+        <h2 id="connection-methods">Connection methods</h2>
+        <p>Run <code>{"syndroo init"}</code> before connecting. New local installs start at state format 2. If an existing state is still format 1, stop every other Syndroo writer and upgrade first, because <code>{"connect"}</code> writes new records too:</p>
+        <pre data-label="terminal"><code>{"syndroo state upgrade --to 2 --confirm-no-writers --yes --no-input"}</code></pre>
+        <p>See <a href="/commands/#state-upgrade">the state upgrade command</a> for the full contract.</p>
+        <p><code>{"syndroo connect <provider>"}</code> reuses the existing local binding. <code>{"--local"}</code> is accepted but optional for <code>{"connect"}</code>. The older <code>{"auth set"}</code>, <code>{"auth status"}</code>, and <code>{"auth remove"}</code> commands still require <code>{"--local"}</code>.</p>
+        <p>On a real terminal, a command without a credential source offers environment variables, an existing file, hidden terminal entry, and, for Mastodon only, browser authorization. A non-interactive run or <code>{"--no-input"}</code> refuses instead of guessing.</p>
+        <p>An explicit non-interactive connection also needs both confirmations and the stable account id you already verified:</p>
+        <pre data-label="terminal"><code>{"syndroo connect <provider> --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>Hidden terminal entry must be preselected with <code>{"--save-credential-file <new-path>"}</code>. If you choose hidden entry without that flag, the CLI stops and tells you to rerun with it; it never saves into an implicit path.</p>
+        <pre data-label="terminal"><code>{"syndroo connect threads --save-credential-file ./private-credentials/threads.json"}</code></pre>
 
-        <h2 id="threads">Threads</h2>
-        <p>Threads reads one access token from your own app authorization. The CLI has no OAuth flow, so it never requests, refreshes or renews it.</p>
-        <pre data-label="terminal"><code>{"export THREADS_ACCESS_TOKEN=\"user-supplied-token\"\nsyndroo auth set threads --local --from-env"}</code></pre>
-        <p>Registration verifies the account with the provider before registering it.</p>
+        <h2 id="providers">Providers and credentials</h2>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th scope="col">Provider</th><th scope="col">Content</th><th scope="col">Environment variables</th><th scope="col">Credential file fields</th></tr>
+            </thead>
+            <tbody>
+              <tr id="bluesky"><th scope="row"><code>{"bluesky"}</code></th><td>Text</td><td><code>{"BLUESKY_IDENTIFIER"}</code>, <code>{"BLUESKY_PASSWORD"}</code>, optional <code>{"BLUESKY_HOST"}</code> (<code>{"bsky.social"}</code>)</td><td><code>{"identifier"}</code>, <code>{"password"}</code>, optional <code>{"host"}</code></td></tr>
+              <tr id="threads"><th scope="row"><code>{"threads"}</code></th><td>Text</td><td><code>{"THREADS_ACCESS_TOKEN"}</code></td><td><code>{"accessToken"}</code></td></tr>
+              <tr id="linkedin"><th scope="row"><code>{"linkedin"}</code></th><td>Personal text</td><td><code>{"LINKEDIN_ACCESS_TOKEN"}</code>, <code>{"LINKEDIN_AUTHOR"}</code>, <code>{"LINKEDIN_API_VERSION"}</code></td><td><code>{"accessToken"}</code>, <code>{"author"}</code>, <code>{"apiVersion"}</code></td></tr>
+              <tr id="mastodon"><th scope="row"><code>{"mastodon"}</code></th><td>Public text</td><td><code>{"MASTODON_INSTANCE"}</code>, <code>{"MASTODON_ACCESS_TOKEN"}</code></td><td><code>{"instance"}</code>, <code>{"accessToken"}</code></td></tr>
+              <tr id="devto"><th scope="row"><code>{"devto"}</code></th><td>Public personal articles</td><td><code>{"DEVTO_API_KEY"}</code></td><td><code>{"apiKey"}</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>LinkedIn accepts a personal author URN only: <code>{"urn:li:person:<sub>"}</code>, with an explicit <code>{"YYYYMM"}</code> API version. Mastodon <code>{"instance"}</code> is an HTTPS origin with no path, query, fragment, userinfo, or non-443 port. DEV.to uses <code>{"DEVTO_API_KEY"}</code> and publishes articles only.</p>
+        <p>These five providers are <strong>fixture-tested</strong> in the <code>{"0.7.0-rc.1"}</code> candidate. No live account was connected and no real post was published for this candidate; live validation stays a separate, authorized gate.</p>
 
-        <h2 id="linkedin">LinkedIn</h2>
-        <p>LinkedIn reads three variables together: an access token, the person URN to publish as, and the <code>{"YYYYMM"}</code> API version. <code>{"LINKEDIN_AUTHOR"}</code> accepts a person URN only (<code>{"urn:li:person:..."}</code>); an organization URN is refused before any network call. The CLI has no OAuth flow, so it never requests, refreshes or renews the token.</p>
-        <pre data-label="terminal"><code>{"export LINKEDIN_ACCESS_TOKEN=\"user-supplied-token\"\nexport LINKEDIN_AUTHOR=\"urn:li:person:your-member-id\"\nexport LINKEDIN_API_VERSION=\"202601\"\nsyndroo auth set linkedin --local --from-env"}</code></pre>
+        <h2 id="environment">Environment examples</h2>
+        <p>Bluesky uses an app password. <code>{"BLUESKY_HOST"}</code> is optional and must be <code>{"bsky.social"}</code>.</p>
+        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"APP_PASSWORD_PLACEHOLDER\"\nsyndroo connect bluesky --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>Threads reads one user access token from your own app authorization. The local path does not request, refresh, or renew it.</p>
+        <pre data-label="terminal"><code>{"export THREADS_ACCESS_TOKEN=\"USER_SUPPLIED_TOKEN_PLACEHOLDER\"\nsyndroo connect threads --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>LinkedIn binds one personal author and one explicit API version.</p>
+        <pre data-label="terminal"><code>{"export LINKEDIN_ACCESS_TOKEN=\"USER_SUPPLIED_TOKEN_PLACEHOLDER\"\nexport LINKEDIN_AUTHOR=\"urn:li:person:<sub>\"\nexport LINKEDIN_API_VERSION=\"YYYYMM\"\nsyndroo connect linkedin --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>Mastodon can read a user access token from the environment, or authorize with OAuth below.</p>
+        <pre data-label="terminal"><code>{"export MASTODON_INSTANCE=\"https://mastodon.example\"\nexport MASTODON_ACCESS_TOKEN=\"USER_SUPPLIED_TOKEN_PLACEHOLDER\"\nsyndroo connect mastodon --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>DEV.to uses one API key for article publishing.</p>
+        <pre data-label="terminal"><code>{"export DEVTO_API_KEY=\"USER_SUPPLIED_API_KEY_PLACEHOLDER\"\nsyndroo connect devto --from-env --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p><code>{"--from-env"}</code> reads the whole group once, and the group must be complete. A partial group is an error; there is no mixing or fallback. The CLI never reads <code>{".env"}</code> or a shell profile.</p>
 
-        <h2 id="credential-file">Credential file</h2>
-        <p>One provider can read one strict JSON file instead of the environment:</p>
+        <h2 id="credential-file">Credential files</h2>
+        <p>Use <code>{"--credential-file <path>"}</code> to import an existing strict JSON file. The file must be a regular file you own, mode <code>{"600"}</code>, not a symlink, and no larger than 64 KiB. The CLI never changes its permissions.</p>
+        <p>Local state and credential files are plain files. State records can hold post content and account identity. Directories are <code>{"0700"}</code> and files are <code>{"0600"}</code>, but those permissions limit access; they are not encryption. Protect the machine and any backups.</p>
         <pre data-label="bluesky-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"bluesky\",\n  \"credentials\": {\n    \"identifier\": \"your-handle.bsky.social\",\n    \"password\": \"APP_PASSWORD_PLACEHOLDER\",\n    \"host\": \"bsky.social\"\n  }\n}"}</code></pre>
         <pre data-label="threads-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"threads\",\n  \"credentials\": { \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\" }\n}"}</code></pre>
-        <pre data-label="linkedin-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"linkedin\",\n  \"credentials\": {\n    \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\",\n    \"author\": \"urn:li:person:your-member-id\",\n    \"apiVersion\": \"202601\"\n  }\n}"}</code></pre>
-        <p>The file must be a plain file you own that nobody else can read, so tighten it first:</p>
-        <pre data-label="terminal"><code>{"chmod 600 ./threads-credentials.json\nsyndroo auth set threads --local --credential-file ./threads-credentials.json"}</code></pre>
+        <pre data-label="linkedin-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"linkedin\",\n  \"credentials\": {\n    \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\",\n    \"author\": \"urn:li:person:<sub>\",\n    \"apiVersion\": \"YYYYMM\"\n  }\n}"}</code></pre>
+        <pre data-label="mastodon-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"mastodon\",\n  \"credentials\": {\n    \"instance\": \"https://mastodon.example\",\n    \"accessToken\": \"USER_SUPPLIED_TOKEN_PLACEHOLDER\"\n  }\n}"}</code></pre>
+        <pre data-label="devto-credentials.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"provider\": \"devto\",\n  \"credentials\": { \"apiKey\": \"USER_SUPPLIED_API_KEY_PLACEHOLDER\" }\n}"}</code></pre>
+        <pre data-label="terminal"><code>{"chmod 600 ./private-credentials/threads.json\nsyndroo connect threads --credential-file ./private-credentials/threads.json --expect-account <verified-id> --yes --no-input"}</code></pre>
+
+        <h2 id="save-credential-file">Save a new credential file</h2>
+        <p><code>{"--save-credential-file <new-path>"}</code> creates a new file after credential verification and approval; the binding commit is separate. It uses exclusive create with mode <code>{"0600"}</code>, refuses an existing path, refuses symlinks, and never overwrites or chmods an existing file. The selected directory must already be mode <code>{"0700"}</code> and owned by you; the CLI refuses a wider mode instead of changing it.</p>
+        <pre data-label="terminal"><code>{"mkdir -p ./private-credentials\nchmod 700 ./private-credentials\nsyndroo connect bluesky --from-env --save-credential-file ./private-credentials/bluesky.json --expect-account <verified-id> --yes --no-input"}</code></pre>
+        <p>If the file is written but the binding revision changed, the result reports <code>{"credentialFileSaved:true, bindingChanged:false"}</code>. The file stays, nothing is deleted, and no path or secret is printed. Inspect the file before retrying.</p>
+
+        <h2 id="mastodon-oauth">Mastodon browser authorization</h2>
+        <p>Mastodon can authorize locally with <code>{"--oauth"}</code>. The command needs an HTTPS <code>{"--instance"}</code> and a <code>{"--save-credential-file <new-path>"}</code>. It asks for explicit approval before registering a local app on that instance.</p>
+        <pre data-label="terminal"><code>{"syndroo connect mastodon --oauth --instance https://mastodon.example --save-credential-file ./private-credentials/mastodon.json"}</code></pre>
+        <p>OAuth requires same-machine loopback: run it on the machine with the browser, not over SSH. The flow uses PKCE S256 and a one-shot loopback callback. An instance that does not advertise S256 is refused with a static message. Import a user access token with <code>{"--credential-file"}</code> instead; there is no automatic downgrade, app-secret cache, or refresh.</p>
 
         <h2 id="verify">Verify and remove</h2>
-        <pre data-label="terminal"><code>{"syndroo auth status --local\nsyndroo auth status bluesky --local --verify\nsyndroo auth remove bluesky --local"}</code></pre>
-        <p><code>{"auth status"}</code> is offline, and <code>{"--verify"}</code> re-checks one identity over the network without changing the binding. A non-interactive registration pins the account you already checked:</p>
-        <pre data-label="terminal"><code>{"syndroo auth set bluesky --local --from-env --expect-account <stable-id> --yes --no-input"}</code></pre>
-        <p>Registration and verification failures are listed in the <a href="/faq/#configuration">FAQ</a>.</p>
+        <pre data-label="terminal"><code>{"syndroo auth status --local\nsyndroo auth status bluesky --local --verify\nsyndroo auth remove bluesky --local --yes --no-input"}</code></pre>
+        <p><code>{"auth status"}</code> is offline by default. <code>{"--verify"}</code> re-checks the bound identity over the network as an observation; it does not rewrite the binding or prove publish permission. <code>{"auth remove"}</code> writes a local tombstone and does not revoke anything at the platform.</p>
 
         <h2 id="next-steps">Next steps</h2>
         <ul>
           <li><a href="/publishing/">Publishing and retry</a></li>
           <li><a href="/commands/">Command reference</a></li>
+          <li><a href="/faq/">FAQ</a></li>
         </ul>
       </article>
     </main>
@@ -59,10 +99,12 @@ export const metadata = {
     <nav className="toc" id="page-toc" aria-label="On this page">
       <p className="toc-title">On this page</p>
       <ul>
-        <li><a href="#bluesky">Bluesky</a></li>
-        <li><a href="#threads">Threads</a></li>
-        <li><a href="#linkedin">LinkedIn</a></li>
-        <li><a href="#credential-file">Credential file</a></li>
+        <li><a href="#connection-methods">Connection methods</a></li>
+        <li><a href="#providers">Providers and credentials</a></li>
+        <li><a href="#environment">Environment examples</a></li>
+        <li><a href="#credential-file">Credential files</a></li>
+        <li><a href="#save-credential-file">Save a credential file</a></li>
+        <li><a href="#mastodon-oauth">Mastodon OAuth</a></li>
         <li><a href="#verify">Verify and remove</a></li>
         <li><a href="#next-steps">Next steps</a></li>
       </ul>

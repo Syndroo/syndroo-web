@@ -462,10 +462,27 @@ pre {
   background: #0a66c2;
 }
 
+.app-icon--mastodon {
+  background: #6364ff;
+}
+
+.app-icon--devto {
+  background: #0a0a0a;
+}
+
 .app-icon .mark {
   width: 56%;
   height: 56%;
   background-color: #fff;
+}
+
+.app-icon__text {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(24px, 2.6vw, 34px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff;
 }
 
 .app-card__name {

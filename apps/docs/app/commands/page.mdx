@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Command reference - Syndroo docs",
-  description: "Every local syndroo command, its flags, its exit codes, and short examples.",
+  description: "Local syndroo commands for connecting five providers, publishing text or DEV.to articles, reading receipts, retrying safe targets, and upgrading state.",
   alternates: { canonical: "/commands/" },
   openGraph: {
     type: "website",
     url: "/commands/",
     title: "Command reference - Syndroo docs",
-    description: "Every local syndroo command, its flags, its exit codes, and short examples.",
+    description: "Local syndroo commands for connecting five providers, publishing text or DEV.to articles, reading receipts, retrying safe targets, and upgrading state.",
   },
   twitter: { card: "summary" },
 };
@@ -19,7 +19,7 @@ export const metadata = {
           <span>Commands</span>
         </nav>
         <h1 id="commands">Local command reference</h1>
-        <p className="lede">Every command below belongs to the local path and needs no server. <code>{"syndroo help"}</code> prints usage, and <code>{"syndroo <command> --help"}</code> prints the flags for one command.</p>
+        <p className="lede">Every command below belongs to the local path and needs no Syndroo server. <code>{"syndroo help"}</code> prints usage, and <code>{"syndroo <command> --help"}</code> prints the flags for one command.</p>
         <p><code>{"syndroo"}</code> on its own, <code>{"syndroo help"}</code> and <code>{"syndroo -h"}</code> print the general help page and exit <code>{"0"}</code> without touching the network or the local state. An unknown command, or <code>{"publish"}</code> without an input source, stays a usage error.</p>
 
         <h2 id="commands-list">Commands</h2>
@@ -29,21 +29,22 @@ export const metadata = {
               <tr><th scope="col">Command</th><th scope="col">What it does</th></tr>
             </thead>
             <tbody>
-              <tr><th scope="row"><code>{"syndroo init [--namespace <name>]"}</code></th><td>Create the local config and state. Repeats safely with the same namespace.</td></tr>
+              <tr><th scope="row"><code>{"syndroo init [--namespace <name>]"}</code></th><td>Create the local config and state. Repeats safely with the same namespace; new state uses format 2.</td></tr>
               <tr><th scope="row"><code>{"syndroo doctor --local"}</code></th><td>Check config, state and bindings. Read-only, no network.</td></tr>
-              <tr><th scope="row"><code>{"syndroo providers list"}</code></th><td>List the local providers with maturity and availability.</td></tr>
-              <tr><th scope="row"><code>{"syndroo auth set <provider> --local"}</code></th><td>Verify one account and register a credential reference.</td></tr>
+              <tr><th scope="row"><code>{"syndroo providers list"}</code></th><td>List the five local providers with maturity and availability.</td></tr>
+              <tr><th scope="row"><code>{"syndroo connect <provider>"}</code></th><td>Guided local entry: an interactive run offers a credential source, a non-interactive run without one refuses with source guidance, and an explicit source verifies and binds one local account.</td></tr>
+              <tr><th scope="row"><code>{"syndroo auth set <provider> --local"}</code></th><td>Legacy local registration: verify one account and register a credential reference.</td></tr>
               <tr><th scope="row"><code>{"syndroo auth status [<provider>] --local"}</code></th><td>Show the bindings. Offline unless <code>{"--verify"}</code> is added.</td></tr>
-              <tr><th scope="row"><code>{"syndroo auth remove <provider> --local"}</code></th><td>Remove one binding and keep a tombstone.</td></tr>
-              <tr><th scope="row"><code>{"syndroo connect <provider> --local"}</code></th><td>Guided entry point in front of <code>{"auth set"}</code>. Without a credential source it prints guidance only.</td></tr>
+              <tr><th scope="row"><code>{"syndroo auth remove <provider> --local"}</code></th><td>Remove one binding and keep a local tombstone. Never revokes a platform token.</td></tr>
               <tr><th scope="row"><code>{"syndroo publish --input <path|->"}</code></th><td>Publish from a file, or from stdin with <code>{"-"}</code>.</td></tr>
               <tr><th scope="row"><code>{"syndroo publish --data '<json>'"}</code></th><td>Publish from inline JSON. The form agents and tests use.</td></tr>
-              <tr><th scope="row"><code>{"syndroo publish ... --dry-run"}</code></th><td>Validate, print the parsed document and exit. Sends nothing and writes no state.</td></tr>
+              <tr><th scope="row"><code>{"syndroo publish ... --dry-run"}</code></th><td>Validate and print the parsed document and target accounts. Sends nothing and writes no state.</td></tr>
               <tr><th scope="row"><code>{"syndroo receipts list"}</code></th><td>List recent local operations, newest first; default 20.</td></tr>
               <tr><th scope="row"><code>{"syndroo receipts show <operation-id>"}</code></th><td>Show one operation with its per-target records.</td></tr>
               <tr><th scope="row"><code>{"syndroo retry <operation-id> --to <csv>"}</code></th><td>Retry the safe targets you name. Succeeded and unknown targets are never resent.</td></tr>
               <tr><th scope="row"><code>{"syndroo state inspect"}</code></th><td>Show lock, versions and defects. Never repairs.</td></tr>
               <tr><th scope="row"><code>{"syndroo state recover --confirm-no-writers --yes"}</code></th><td>Recover after every other writer has stopped.</td></tr>
+              <tr id="state-upgrade"><th scope="row"><code>{"syndroo state upgrade --to 2 --confirm-no-writers --yes --no-input"}</code></th><td>Explicitly upgrade local state format 1 to format 2. No content or network work.</td></tr>
               <tr><th scope="row"><code>{"syndroo skill path"}</code></th><td>Print the absolute path of the bundled Skill directory.</td></tr>
               <tr><th scope="row"><code>{"syndroo help"}</code>, <code>{"syndroo version"}</code></th><td>Print usage or the CLI version. Neither touches the network.</td></tr>
             </tbody>
@@ -52,24 +53,20 @@ export const metadata = {
         <p>Content arrives through exactly one input source per run. <code>{"--data"}</code>, <code>{"--input"}</code> and stdin cannot be combined, and a conflict fails before anything is read, sent or written.</p>
         <p>Inline JSON is convenient for agents and tests, but the value in argv can stay visible in shell history, process listings and CI logs. Use <code>{"--input -"}</code> when the content should stay out of the process arguments. Credentials belong to the sources described in <a href="/accounts/">Account configuration</a>, never to <code>{"--data"}</code>.</p>
 
-        <h2 id="connect">Guided connect</h2>
-        <p><code>{"syndroo connect <provider> --local"}</code> is the guided entry point in front of <code>{"auth set"}</code>. It never receives post content and never triggers a send.</p>
-        <pre data-label="terminal"><code>{"syndroo connect linkedin --local\nsyndroo connect linkedin --local --from-env\nsyndroo connect linkedin --local --credential-file ./linkedin-credentials.json"}</code></pre>
-        <p>Without a credential source, <code>{"connect"}</code> prints the required environment variables and a credential-file template, then stops. It reads no config, contacts no provider, writes no state and reports <code>{"bindingChanged:false"}</code> with <code>{"action:\"configure_credentials\""}</code>.</p>
-        <p>With <code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> it reuses the <code>{"auth set"}</code> behavior unchanged: the same credential parser, confirmation, write lock and expected-account check apply. The one result difference from <code>{"auth set"}</code> is that a successful binding reports <code>{"bindingChanged:true"}</code>. <code>{"--managed"}</code> is refused with a usage error, so Managed Connect is not available in this candidate.</p>
-
         <h2 id="flags">Flags</h2>
         <ul>
           <li><code>{"--json"}</code> writes exactly one object to stdout and sends every diagnostic, including the preview, to stderr.</li>
-          <li><code>{"--local"}</code> selects the local path for <code>{"doctor"}</code> and the auth commands.</li>
+          <li><code>{"--local"}</code> is optional for <code>{"connect"}</code> and required by the legacy <code>{"auth set"}</code>, <code>{"auth status"}</code> and <code>{"auth remove"}</code> commands.</li>
+          <li><code>{"--managed"}</code> is refused by this local candidate with a usage error before any credential read, network call or state write; it does not enable a hosted service.</li>
           <li><code>{"--state-home <path>"}</code> and <code>{"--namespace <name>"}</code> override the state location and deduplication domain for one run.</li>
           <li><code>{"--yes"}</code> confirms without a prompt and <code>{"--no-input"}</code> never prompts; a non-interactive run needs both.</li>
-          <li><code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> chooses the credential source, and <code>{"--expect-account <id>"}</code> pins the account a non-interactive run verified.</li>
-          <li><code>{"--managed"}</code> selects Managed Connect, which this candidate refuses with a usage error and no network or browser action.</li>
+          <li><code>{"--from-env"}</code> or <code>{"--credential-file <path>"}</code> chooses one credential source, and <code>{"--expect-account <id>"}</code> pins the account a non-interactive run verified.</li>
+          <li><code>{"--save-credential-file <new-path>"}</code> creates a new 0600 credential file after credential verification and approval, with the binding commit separate; hidden terminal entry requires it in advance.</li>
+          <li><code>{"--oauth"}</code> and <code>{"--instance <url>"}</code> select Mastodon browser authorization and require <code>{"--save-credential-file"}</code>.</li>
           <li><code>{"--verify"}</code> re-checks an identity over the network without changing the binding.</li>
           <li><code>{"--data '<json>'"}</code> and <code>{"--input <path|->"}</code> choose the content source; only one is allowed per run, and neither carries credentials.</li>
-          <li><code>{"--dry-run"}</code> validates and previews a document without sending or writing state, and <code>{"--to <csv>"}</code> names the retry targets.</li>
-          <li><code>{"--confirm-no-writers"}</code> is the recovery confirmation, <code>{"--limit <n>"}</code> bounds a listing, and <code>{"--timeout <duration>"}</code> bounds an execution or an explicit verification.</li>
+          <li><code>{"--dry-run"}</code> validates and previews a document without sending or writing state, and <code>{"--to <csv>"}</code> names retry targets.</li>
+          <li><code>{"--confirm-no-writers"}</code> is the recovery and upgrade confirmation, <code>{"--limit <n>"}</code> bounds a listing, and <code>{"--timeout <duration>"}</code> bounds an execution or an explicit verification.</li>
         </ul>
 
         <h2 id="exit-codes">Exit codes</h2>
@@ -92,7 +89,7 @@ export const metadata = {
         <p>The local surface does not return exit <code>{"3"}</code>.</p>
 
         <h2 id="examples">Short examples</h2>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --data '<json>' --yes --no-input --json\nsyndroo publish --input post.json --dry-run --json\nsyndroo receipts show <operation-id> --json\nsyndroo retry <operation-id> --to threads --json"}</code></pre>
+        <pre data-label="terminal"><code>{"syndroo connect bluesky --from-env --expect-account <verified-id> --yes --no-input\nsyndroo connect mastodon --oauth --instance https://mastodon.example --save-credential-file ./private-credentials/mastodon.json\nsyndroo publish --input post.json --json\nsyndroo publish --data '<json>' --yes --no-input --json\nsyndroo publish --input article.json --dry-run --json\nsyndroo receipts show <operation-id> --json\nsyndroo retry <operation-id> --to threads --json\nsyndroo state upgrade --to 2 --confirm-no-writers --yes --no-input"}</code></pre>
         <p>With <code>{"--json"}</code>, stdout carries one envelope: <code>{"{schemaVersion, command, mode, ok, result, error}"}</code>. Read <code>{"result.status"}</code> as well as the exit code, because a preview can be <code>{"ok"}</code> while nothing was published.</p>
 
         <h2 id="next-steps">Next steps</h2>
@@ -107,7 +104,6 @@ export const metadata = {
       <p className="toc-title">On this page</p>
       <ul>
         <li><a href="#commands-list">Commands</a></li>
-        <li><a href="#connect">Guided connect</a></li>
         <li><a href="#flags">Flags</a></li>
         <li><a href="#exit-codes">Exit codes</a></li>
         <li><a href="#examples">Short examples</a></li>

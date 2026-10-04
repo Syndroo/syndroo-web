@@ -25,7 +25,7 @@ rebuild.
 | --- | --- |
 | CLI candidate the docs describe (`@syndroo/cli`) | `0.7.0-rc.1`, an unpublished release candidate |
 | Documentation version | `0.7.0-rc.1`, the same candidate |
-| Platform status | Bluesky, Threads and LinkedIn supported, live-account acceptance pending |
+| Platform status | Five local providers: Bluesky, Threads, LinkedIn, and Mastodon (text), DEV.to (articles); fixture-tested, live-account acceptance pending |
 
 No page may present the candidate as released, tagged, deployed or installable
 from a registry. There is no hosted service, SDK or cloud product to document.
@@ -39,7 +39,7 @@ opened and refreshed directly: every route is prerendered HTML.
 ## Content source
 
 `packages/content/site-data.ts` is the single metadata source: the candidate
-version, the three platforms, both navigation sets and the page registries. Both
+version, the five platforms, both navigation sets and the page registries. Both
 builds compile it into their own output, so the two sites and the fixtures cannot
 disagree about the surface.
 
@@ -54,7 +54,7 @@ or a platform feature that has no evidence behind it.
 
 ## Composition
 
-The marketing site is one page: an intro with the two hero actions, the three
+The marketing site is one page: an intro with the hero action, the three
 steps that lead to a publish, the dry-run preview beside the publishing mascot,
 a closing call to action, and a footer carrying documentation, source and
 licence.
@@ -110,6 +110,5 @@ data storage is added, and the docs search reads only its own pages.
 - Every `syndroo` command and `--flag` the documentation introduces exists in the
   real CLI, checked with a mode-aware `--help` lookup and the CLI's own `version`
   output.
-- Live-account publishing is not claimed anywhere: all three platforms still
-  carry an explicit pending-acceptance statement, and no page presents a publish
-  as verified.
+- Live-account publishing is not claimed anywhere: the five local providers are
+  described as fixture-tested, and no page presents a publish as verified.

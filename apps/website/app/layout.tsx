@@ -12,7 +12,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(websiteOrigin()),
   title: "Syndroo",
   icons: { icon: [{ url: "/assets/favicon.svg", type: "image/svg+xml" }] },
-  description: "Publish text to Bluesky, Threads and LinkedIn from your own machine.",
+  description:
+    "Publish plain text to Bluesky, Threads, LinkedIn, and Mastodon, and articles to DEV.to, from your own machine.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): React.JSX.Element {

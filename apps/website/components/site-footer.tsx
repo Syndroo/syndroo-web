@@ -1,5 +1,9 @@
 // The shared marketing footer, including the cross-site documentation links.
-import { footerGroups, PRODUCT_REPOSITORY } from "@syndroo/content/site-data";
+import { footerGroups, platforms, PRODUCT_REPOSITORY } from "@syndroo/content/site-data";
+
+// Only platforms with a local mark asset get an icon button; the rest are
+// named with their real destination in the footer's platform column.
+const MARKED_PLATFORMS = platforms.filter((platform) => platform.label === undefined);
 
 export function SiteFooter(): React.JSX.Element {
   return (
@@ -20,21 +24,13 @@ export function SiteFooter(): React.JSX.Element {
                 <img src="/assets/logo.svg" alt="" width="16" height="16" />
               </a>
             </li>
-            <li>
-              <a className="icon-link" href="https://bsky.app" aria-label="Bluesky">
-                <span className="mark mark--bluesky" aria-hidden="true"></span>
-              </a>
-            </li>
-            <li>
-              <a className="icon-link" href="https://www.threads.net" aria-label="Threads">
-                <span className="mark mark--threads" aria-hidden="true"></span>
-              </a>
-            </li>
-            <li>
-              <a className="icon-link" href="https://www.linkedin.com" aria-label="LinkedIn">
-                <span className="mark mark--linkedin" aria-hidden="true"></span>
-              </a>
-            </li>
+            {MARKED_PLATFORMS.map((platform) => (
+              <li key={platform.id}>
+                <a className="icon-link" href={platform.url} aria-label={platform.name}>
+                  <span className={`mark mark--${platform.icon}`} aria-hidden="true"></span>
+                </a>
+              </li>
+            ))}
           </ul>
           <p className="site-footer__bottom">
             <span>&copy; 2026 Syndroo</span>

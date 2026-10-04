@@ -57,11 +57,15 @@
 
 - `0.7.0-rc.1` is the CLI candidate these docs describe. It is an unpublished
   candidate: do not describe it as released, tagged, deployed or installable from
-  a registry.
-- Bluesky, Threads and LinkedIn are the three supported platforms, and all three
-  still need live-account acceptance, so no page may claim a verified publish.
-- Do not reintroduce retired surfaces: the hosted HTTP API, the SDK, the
-  `@syndroo/cloudflare-worker` service, or any earlier version.
+  a registry. The packaged CLI needs Node.js 22 or newer on macOS and Linux, and
+  refuses local writes on Windows.
+- Five local providers publish in the foreground: Bluesky, Threads, LinkedIn,
+  and Mastodon take plain text, and DEV.to takes articles. They are
+  fixture-tested and still need live-account acceptance, so no page may claim a
+  verified publish.
+- Public documentation covers the local CLI; keep hosted HTTP API, SDK, Worker
+  instructions, including the `@syndroo/cloudflare-worker` service, and
+  earlier-release walkthroughs outside this surface.
 - Report only checks that actually ran, and state the limits of the evidence.
 
 ## Verification

@@ -36,10 +36,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: Syndroo/syndroo
-          # Track the product's main branch: the docs fixtures require the
-          # 0.7.0-rc.1 CLI (connect, --managed, LinkedIn). Product 0.7.0 must
-          # land on main before this repository's 0.7.0 docs can pass CI.
-          ref: main
+          ref: f961d8d14c088276c919a70f3dfb0031a0ac47f4
           path: syndroo
           persist-credentials: false
 

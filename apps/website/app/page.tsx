@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { ORIGIN_PLACEHOLDERS, PRODUCT_REPOSITORY, platforms, versions } from "@syndroo/content/site-data";
 
 const DESCRIPTION =
-  "Syndroo is a local command-line tool that publishes one plain-text file to Bluesky, Threads and LinkedIn from your own machine: write the post once, send it to each.";
+  "Syndroo is a local command-line tool that publishes one document from your own machine: plain text to Bluesky, Threads, LinkedIn, and Mastodon, and articles to DEV.to.";
 
 export const metadata: Metadata = {
-  title: "Syndroo - publish one post to Bluesky, Threads and LinkedIn from the CLI",
+  title: "Syndroo - publish from your terminal to five platforms",
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
-    title: "Syndroo - publish one post to Bluesky, Threads and LinkedIn from the CLI",
+    title: "Syndroo - publish from your terminal to five platforms",
     description: DESCRIPTION,
   },
   twitter: { card: "summary" },
@@ -37,13 +37,17 @@ const facts = [
 const faq = [
   {
     question: "Is Syndroo released yet?",
-    answer:
-      "Not yet. 0.7.0-rc.1 is an unpublished release candidate, and live-account acceptance is still pending. There is no registry install today, so the way to run it is to build it from source.",
+    answer: `Not yet. ${versions.cli} is an unpublished release candidate, and live-account acceptance is still pending. There is no registry install today, so the way to run it is to build it from source.`,
   },
   {
     question: "Which platforms does it publish to?",
     answer:
-      "Bluesky, Threads and LinkedIn, and only those three. Posts are plaintext, and an overrides block can tailor the text for one platform without changing the document's identity.",
+      "Only five. Bluesky and Threads take plain text; LinkedIn takes plain text from a personal profile; Mastodon publishes public statuses; DEV.to publishes public personal articles. A document names its destinations, and an overrides block can tailor the text for one platform without changing the document's identity.",
+  },
+  {
+    question: "Where do my credentials live?",
+    answer:
+      "On your machine, never in the post file. A run reads a credential from the environment or from a private file you own, and local state stores only a reference to the account, not the platform secret.",
   },
   {
     question: "What does the dry run actually do?",
@@ -74,12 +78,12 @@ export default function IndexPage() {
         <div className="shell">
           <h1 className="hero__title" id="hero-title">
             <span className="title__ink">Write once,</span>{" "}
-            <span className="title__dim">post everywhere</span>
+            <span className="title__dim">publish</span>
           </h1>
           <p className="lead hero__lede">
             A draft lives in one plain-text file in your repository.{" "}
-            <strong>Syndroo reads that file and publishes it</strong> to Bluesky, Threads and
-            LinkedIn from your terminal. Write the post once, send it to each.
+            <strong>Syndroo reads that file and publishes it</strong> to Bluesky, Threads,
+            LinkedIn, and Mastodon, and articles to DEV.to, from your terminal.
           </p>
           <div className="hero__cta">
             <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
@@ -104,7 +108,11 @@ export default function IndexPage() {
             {platforms.map((platform) => (
               <article className="app-card" key={platform.id}>
                 <span className={`app-icon app-icon--${platform.icon}`} aria-hidden="true">
-                  <span className={`mark mark--white mark--${platform.icon}`}></span>
+                  {platform.label === undefined ? (
+                    <span className={`mark mark--white mark--${platform.icon}`}></span>
+                  ) : (
+                    <span className="app-icon__text">{platform.label}</span>
+                  )}
                 </span>
                 <span className="app-card__name">{platform.name}</span>
               </article>
@@ -112,12 +120,16 @@ export default function IndexPage() {
           </div>
           <div className="platform-copy">
             <p>
-              Publish plain-text posts to Bluesky, Threads and LinkedIn from one document. A document is
-              strict JSON: <code>key</code> identifies the post, <code>content</code> is the text,
-              and <code>platforms</code> names the destinations. An <code>overrides</code> block
-              can tailor the text for one platform.
+              Publish from one document: plain text to Bluesky and Threads, plain text from a
+              personal LinkedIn profile, public Mastodon statuses, and public personal DEV.to
+              articles. A document is strict JSON: <code>key</code> identifies the post,{" "}
+              <code>content</code> is the text, and <code>platforms</code> names the destinations.
+              An <code>overrides</code> block can tailor the text for one platform, and a{" "}
+              <code>schemaVersion: 2</code> document carries the DEV.to article body.
             </p>
-            <p className="platform-fact">Plaintext only &middot; no other platforms supported</p>
+            <p className="platform-fact">
+              LinkedIn personal &middot; Mastodon public &middot; DEV.to public articles
+            </p>
           </div>
         </div>
       </section>
@@ -152,7 +164,7 @@ export default function IndexPage() {
                     {",\n  "}
                     <span className="code__key">&quot;content&quot;</span>
                     {": "}
-                    <span className="code__str">&quot;One file, three platforms.&quot;</span>
+                    <span className="code__str">&quot;One document, chosen targets.&quot;</span>
                     {",\n  "}
                     <span className="code__key">&quot;platforms&quot;</span>
                     {": ["}
@@ -356,7 +368,9 @@ export default function IndexPage() {
                 <span className="term__prompt">$</span> syndroo publish --input post.json
               </p>
               <p>
-                <span className="term__out">read once &middot; posts to bluesky, threads, linkedin</span>
+                <span className="term__out">
+                  read once &middot; posts to bluesky, threads, linkedin
+                </span>
               </p>
               <span className="terminal__gap"></span>
               <p>
