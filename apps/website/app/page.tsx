@@ -42,32 +42,32 @@ const faq = [
   {
     question: "Which platforms does it publish to?",
     answer:
-      "Only five. Bluesky and Threads take plain text; LinkedIn takes plain text from a personal profile; Mastodon publishes public statuses; DEV.to publishes public personal articles. A document names its destinations, and an overrides block can tailor the text for one platform without changing the document's identity.",
+      "Five official providers. Bluesky, Threads, LinkedIn and Mastodon publish text; DEV.to publishes articles. A request carries the content once and a targets list that names the providers and, when it matters, the connection and the provider options.",
   },
   {
     question: "Where do my credentials live?",
     answer:
-      "On your machine, never in the post file. A run reads a credential from the environment or from a private file you own, and local state stores only a reference to the account, not the platform secret.",
+      "On your machine, never in the publish request. A connection reads its credentials once, from the environment variable SYNDROO_CREDENTIALS or from a private file you own, and the local credential store keeps them after that. Publishing never re-reads the environment or the file.",
   },
   {
     question: "What does the dry run actually do?",
     answer:
-      "syndroo publish --input post.json --dry-run --json parses and validates the document, then exits. It is optional and read-only: no session lock, no credentials resolved, no network request, and no local state.",
+      "syndroo publish --input post.json --dry-run --json freezes and validates the request, prints the preview, then exits. It is optional and read-only: no write lock, no credentials resolved, no network request, and no local state.",
   },
   {
     question: "What gets sent when I publish?",
     answer:
-      "A publish reads the current input, not a saved preview. Within the run the file is read once and validated, so editing it during the confirmation cannot change what is sent.",
+      "The content is frozen when the request is prepared. Confirming sends exactly that frozen preview, so editing the file afterwards cannot change what goes out — and a later prepare is a new request with its own identity.",
   },
   {
     question: "Is there a Syndroo server involved?",
     answer:
-      "No. There is no hosted API, no SDK, and no SaaS in the path. The command talks to the platform APIs directly using the credentials you provide.",
+      "Not in this path. The command talks to the platform APIs directly, from your machine, using the credentials you provide, and outbound requests are limited to the origins each provider declares. The product also contains a self-hosted server and an SDK; this site does not document them yet.",
   },
   {
     question: "How do I check what a run did?",
     answer:
-      "Inspect recorded publish results by operation ID with syndroo receipts show <result.operationId>. Each target gets its own receipt; dry runs create no receipt and no local state.",
+      "syndroo status --operation <operationId> --json reports the operation and one delivery per target. A delivery is succeeded, failed with a not-applied disposition, or unknown; an unknown write is never retried automatically.",
   },
 ];
 
@@ -106,7 +106,11 @@ export default function IndexPage() {
           </h2>
           <div className="app-cards">
             {platforms.map((platform) => (
-              <article className="app-card" key={platform.id}>
+              <a
+                className="app-card"
+                key={platform.id}
+                href={`${docs}/platforms/${platform.id}/`}
+              >
                 <span className={`app-icon app-icon--${platform.icon}`} aria-hidden="true">
                   {platform.label === undefined ? (
                     <span className={`mark mark--white mark--${platform.icon}`}></span>
@@ -115,17 +119,17 @@ export default function IndexPage() {
                   )}
                 </span>
                 <span className="app-card__name">{platform.name}</span>
-              </article>
+              </a>
             ))}
           </div>
           <div className="platform-copy">
             <p>
               Publish from one document: plain text to Bluesky and Threads, plain text from a
               personal LinkedIn profile, public Mastodon statuses, and public personal DEV.to
-              articles. A document is strict JSON: <code>key</code> identifies the post,{" "}
-              <code>content</code> is the text, and <code>platforms</code> names the destinations.
-              An <code>overrides</code> block can tailor the text for one platform, and a{" "}
-              <code>schemaVersion: 2</code> document carries the DEV.to article body.
+              articles. A request is strict JSON: <code>content.text</code> carries the text once
+              and <code>targets</code> names each destination, with optional per-target{" "}
+              <code>options</code> for the platforms that need them. An article target carries its
+              own <code>title</code> and <code>body_markdown</code> options.
             </p>
             <p className="platform-fact">
               LinkedIn personal &middot; Mastodon public &middot; DEV.to public articles
@@ -142,11 +146,10 @@ export default function IndexPage() {
           <div className="rows">
             <article className="row">
               <div className="row__copy">
-                <h3>Write a plain-text post</h3>
+                <h3>Write a request</h3>
                 <p>
-                  A post is a small JSON document you keep next to your project. <code>key</code>{" "}
-                  identifies it, <code>content</code> is the text, and <code>platforms</code> names
-                  where it goes.
+                  A request is a small JSON file you keep next to your project.{" "}
+                  <code>content</code> is the text and <code>targets</code> names where it goes.
                 </p>
               </div>
               <div className="visual">
@@ -158,21 +161,23 @@ export default function IndexPage() {
                   <p className="panel__head">post.json</p>
                   <pre className="code">
                     {"{\n  "}
-                    <span className="code__key">&quot;key&quot;</span>
-                    {": "}
-                    <span className="code__str">&quot;hello-001&quot;</span>
-                    {",\n  "}
                     <span className="code__key">&quot;content&quot;</span>
+                    {": { "}
+                    <span className="code__key">&quot;text&quot;</span>
                     {": "}
                     <span className="code__str">&quot;One document, chosen targets.&quot;</span>
-                    {",\n  "}
-                    <span className="code__key">&quot;platforms&quot;</span>
+                    {" },\n  "}
+                    <span className="code__key">&quot;targets&quot;</span>
                     {": ["}
+                    {"{ "}
+                    <span className="code__key">&quot;provider&quot;</span>
+                    {": "}
                     <span className="code__str">&quot;bluesky&quot;</span>
-                    {", "}
-                    <span className="code__str">&quot;threads&quot;</span>
-                    {", "}
+                    {" }, { "}
+                    <span className="code__key">&quot;provider&quot;</span>
+                    {": "}
                     <span className="code__str">&quot;linkedin&quot;</span>
+                    {" }"}
                     {"]\n}"}
                   </pre>
                 </div>
@@ -183,7 +188,7 @@ export default function IndexPage() {
               <div className="row__copy">
                 <h3>Preview before sending</h3>
                 <p>
-                  A dry run parses and validates the document, then stops. It is optional and
+                  A dry run freezes and validates the request, then stops. It is optional and
                   read-only: no network request, no credentials resolved, no local state.
                 </p>
               </div>
@@ -207,8 +212,8 @@ export default function IndexPage() {
                 <div className="panel">
                   Dry run &middot; no network requests &middot; no local state
                   <span className="panel__note">
-                    Read the printed text and target account before continuing. A later publish
-                    reads the current input, not a saved preview.
+                    Read the printed text and target account before continuing. Preparing a later
+                    request freezes the input it read at that moment.
                   </span>
                 </div>
                 <img
@@ -226,9 +231,9 @@ export default function IndexPage() {
               <div className="row__copy">
                 <h3>Publish with intent</h3>
                 <p>
-                  Publishing is an explicit command that reads the current input rather than reusing
-                  a saved preview. Within a run the file is read once, so editing it during the
-                  confirmation cannot change what is sent.
+                  Publishing is two phases. Preparing freezes the content and returns a single-use
+                  approval token; executing consumes that token and sends exactly the frozen
+                  preview.
                 </p>
               </div>
               <div className="visual">
@@ -248,13 +253,19 @@ export default function IndexPage() {
                   </p>
                   <p>
                     <span className="term__out">
-                      reads post.json once &middot; one content request per target
+                      frozen preview &middot; one approval token &middot; nothing sent yet
                     </span>
+                  </p>
+                  <p>
+                    <span className="term__prompt">$</span> syndroo publish --input - &lt;
+                    execute.json
                   </p>
                 </div>
                 <div className="panel">
-                  Editing the file after a dry run changes what gets sent.
-                  <span className="panel__note">A publish does not reuse a saved preview.</span>
+                  Editing the file after preparing does not change what gets sent.
+                  <span className="panel__note">
+                    The execute phase can only be read from standard input.
+                  </span>
                 </div>
               </div>
             </article>
@@ -263,13 +274,14 @@ export default function IndexPage() {
               <div className="row__copy">
                 <h3>Inspect the result</h3>
                 <p>
-                  Each publish records one receipt per target, readable with{" "}
-                  <code>syndroo receipts show &lt;result.operationId&gt;</code>.
+                  The publish result carries an operation id. Reading it back is a read-only
+                  query, and it never contacts a platform:{" "}
+                  <code>syndroo status --operation &lt;operationId&gt;</code>.
                 </p>
               </div>
               <div className="visual">
                 <div className="visual__head">
-                  <span className="visual__title">Receipt</span>
+                  <span className="visual__title">Status</span>
                   <span className="tag">Illustrative</span>
                 </div>
                 <div className="term">
@@ -277,24 +289,25 @@ export default function IndexPage() {
                     <i></i>
                     <i></i>
                     <i></i>
-                    <em>receipts</em>
+                    <em>status</em>
                   </div>
                   <p>
-                    <span className="term__prompt">$</span> syndroo receipts show 6f2a&hellip;c41
+                    <span className="term__prompt">$</span> syndroo status --operation
+                    6f2a&hellip;c41 --json
                   </p>
                 </div>
                 <div className="panel">
                   <pre className="receipt">
                     <span className="code__key">operationId</span>
                     {"  6f2a\u2026c41\n"}
-                    <span className="code__key">key</span>
-                    {"          hello-001\n"}
+                    <span className="code__key">status</span>
+                    {"       succeeded\n"}
                     <span className="code__key">per target</span>
-                    {"   status \u00b7 attempts \u00b7 url"}
+                    {"   deliveryId \u00b7 attempts \u00b7 outcome"}
                   </pre>
                   <span className="panel__note">
-                    Dry runs create no receipt and no local state. Live-account acceptance is still
-                    pending for this release candidate.
+                    An unknown outcome is reported as unknown and is never retried automatically.
+                    Live-account acceptance is still pending for this release candidate.
                   </span>
                 </div>
               </div>
@@ -338,7 +351,7 @@ export default function IndexPage() {
               </h2>
               <p>
                 No dashboard, no browser tab to keep open. Edit a file, run a command, read the
-                receipt. Your editor, your shell, and your own platform credentials stay in charge.
+                result. Your editor, your shell, and your own platform credentials stay in charge.
               </p>
               <a className="button button--ghost" href="#workflow">
                 See the commands
@@ -369,12 +382,13 @@ export default function IndexPage() {
               </p>
               <p>
                 <span className="term__out">
-                  read once &middot; posts to bluesky, threads, linkedin
+                  frozen &middot; awaiting confirmation &middot; posts to bluesky, linkedin
                 </span>
               </p>
               <span className="terminal__gap"></span>
               <p>
-                <span className="term__prompt">$</span> syndroo receipts show 6f2a&hellip;c41
+                <span className="term__prompt">$</span> syndroo status --operation
+                6f2a&hellip;c41 --json
               </p>
             </div>
           </div>

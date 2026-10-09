@@ -57,7 +57,7 @@ export function DocsTopbar(): React.JSX.Element {
               GitHub
             </a>
             <a className="topbar-cta" href="/">
-              Quick start
+              Overview
             </a>
             <ThemeToggle />
             <button
@@ -120,12 +120,12 @@ export function DocsFooter(): React.JSX.Element {
           Syndroo {versions.docs} docs ({versions.releaseStage}). Apache-2.0. Copyright 2026 Syndroo.
         </span>
         <nav aria-label="Footer">
-          <a href="/">Quick start</a>
-          <a href="/accounts/">Accounts</a>
-          <a href="/publishing/">Publishing and retry</a>
-          <a href="/agent-setup/">Agent usage</a>
-          <a href="/commands/">Commands</a>
-          <a href="/faq/">FAQ</a>
+          <a href="/">Overview</a>
+          <a href="/getting-started/local-cli/">Local CLI</a>
+          <a href="/platforms/">Platforms</a>
+          <a href="/build/provider-plugins/">Build</a>
+          <a href="/reference/cli/">CLI</a>
+          <a href="/reference/requests/">Requests</a>
           <a href={`${ORIGIN_PLACEHOLDERS.website}/`}>Website</a>
           <a href="https://github.com/Syndroo/syndroo/blob/main/LICENSE">License</a>
         </nav>
@@ -158,12 +158,13 @@ export function DocsSearchDialog(): React.JSX.Element {
           </button>
         </div>
         <p className="search-meta" id="search-meta">
-          Search every page of the local docs. Try &quot;connect&quot;, &quot;publish&quot; or &quot;retry&quot;.
+          Search every page of the local docs. Try &quot;connect&quot;, &quot;publish&quot; or
+          &quot;egress&quot;.
         </p>
         <div className="search-empty" id="search-empty" hidden>
           <strong>No results</strong>
           <span>
-            Try a shorter term, or search for a command such as <code>receipts</code>.
+            Try a shorter term, or search for a command such as <code>status</code>.
           </span>
         </div>
         <ul className="search-results" id="search-results"></ul>

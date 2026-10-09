@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Provider plugins - Syndroo docs",
+  description:
+    "Write a Syndroo provider plugin against @syndroo/provider-sdk: the package shape, the manifest, the declared egress origins and the provider operations.",
+  alternates: { canonical: "/build/provider-plugins/" },
+  openGraph: {
+    type: "website",
+    url: "/build/provider-plugins/",
+    title: "Provider plugins - Syndroo docs",
+    description:
+      "Write a Syndroo provider plugin against @syndroo/provider-sdk: the package shape, the manifest, the declared egress origins and the provider operations.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>Build</span>
+    </nav>
+    <h1 id="provider-plugins">Write a provider plugin</h1>
+    <p className="lede">A provider plugin implements one social network. It cannot add commands, change the CLI, or alter how Core stores state: the plugin contract is the whole extension surface, and the five official providers use exactly the same contract as a third-party one.</p>
+
+    <h2 id="package">Package shape</h2>
+    <p>A provider is an ESM package whose root default export is the plugin object. Declare it with{" "} <code>{"defineProvider"}</code> from <code>{"@syndroo/provider-sdk"}</code> and export the result:</p>
+    <pre data-label="index.ts"><code>{"import { defineProvider } from \"@syndroo/provider-sdk\";\n\nexport default defineProvider({\n  manifest: {\n    id: \"example\",\n    name: \"Example\",\n    version: \"0.7.0-rc.1\",\n    apiVersion: 1,\n    declaredCapabilities: [\"text\"],\n    egress: { fixedOrigins: [\"https://api.example.com\"] },\n    schemas: {\n      connectOptions: { type: \"object\", additionalProperties: false, properties: {} },\n      credentialInput: {\n        type: \"object\",\n        additionalProperties: false,\n        required: [\"token\"],\n        properties: { token: { type: \"string\", minLength: 1 } }\n      },\n      content: {\n        type: \"object\",\n        additionalProperties: false,\n        properties: { text: { type: \"string\" } }\n      },\n      publishOptions: { type: \"object\", additionalProperties: false, properties: {} }\n    }\n  },\n  connect: async (input, context) => {\n    return { status: \"done\", identity: { /* account */ }, credentials: { /* stored */ } };\n  },\n  freeze: (input) => {\n    return { payload: { text: input.content.text } };\n  },\n  publish: async (input, context) => {\n    return { status: \"succeeded\" };\n  }\n});"}</code></pre>
+    <p>The default export is the plugin object itself, not a factory. One package declares one provider with a single <code>{"defineProvider"}</code> call; the id is also the registry key and the package-name suffix.</p>
+
+    <h2 id="manifest">The manifest</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Field</th>
+            <th scope="col">Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"id"}</code></th>
+            <td>Lowercase provider id, at most 64 characters, matching the package suffix.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"name"}</code></th>
+            <td>Display name only, at most 128 characters.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"version"}</code></th>
+            <td>Must equal the package's own version.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"apiVersion"}</code></th>
+            <td>The integer <code>{"1"}</code>. A mismatch is refused instead of guessed at.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"declaredCapabilities"}</code></th>
+            <td>A list drawn from <code>{"text"}</code> and <code>{"article"}</code>, with no repeats and at most eight entries.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"schemas"}</code></th>
+            <td>The four schemas <code>{"connectOptions"}</code>, <code>{"credentialInput"}</code>,{" "} <code>{"content"}</code> and <code>{"publishOptions"}</code>. Each is JSON Schema, at most 64 KiB and at most 32 levels deep, with local references only.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"egress"}</code></th>
+            <td>The outbound origins the plugin may use; see below.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The declaration is bounded before anything reads it: the validator inspects own data properties, never runs a getter, never compiles or evaluates a schema, and never imports, touches the filesystem, reads the clock or opens a socket while the module loads.</p>
+
+    <h2 id="egress">The egress declaration</h2>
+    <p><code>{"egress.fixedOrigins"}</code> is required and lists the canonical origins the provider intends to reach. The runtime builds the outbound policy from this list, so a request to an origin the plugin did not declare is refused before it leaves the process.</p>
+    <ul>
+      <li>An origin is <code>{"https://"}</code> plus a host: no port, no path, no query, no user info.</li>
+      <li>An IP literal or a host without a dot is refused.</li>
+      <li>The list holds at most 20 entries and duplicates are removed.</li>
+      <li>A provider with no fixed origin (a federated network, where the user names the host) declares an empty list together with <code>{"federated: true"}</code>.</li>
+    </ul>
+    <p>The official declarations are the worked examples: <code>{"https://bsky.social"}</code> for Bluesky, <code>{"https://dev.to"}</code> for DEV.to, the{" "} <code>{"linkedin.com"}</code> pair for LinkedIn, the <code>{"threads.net"}</code> pair for Threads, and an empty federated list for Mastodon.</p>
+
+    <h2 id="operations">The three operations</h2>
+    <p><code>{"connect"}</code> runs one step of a connection. It either finishes with an identity and the credentials to store, or returns an action for the caller: ask for credential fields,{" "} <code>{"open_url"}</code> for browser authorization, or <code>{"wait_for_callback"}</code>. A plugin never drives user interface and never decides how a session is stored.</p>
+    <p><code>{"freeze"}</code> is a pure function of the frozen content, the target options and what the same run already learned. It compiles the provider-native payload, and it must be deterministic: the same input produces byte-identical output. No secret may appear in a frozen payload, a preview, a write outcome or a thrown error.</p>
+    <p><code>{"publish"}</code> sends the frozen payload through the injected transport and reports one of three outcomes: <code>{"succeeded"}</code>,{" "} <code>{"failed"}</code> with disposition <code>{"not_applied"}</code>, or <code>{"unknown"}</code>. A plugin never retries on its own and never reclassifies an earlier unknown write.</p>
+
+    <h2 id="testing">Testing your plugin</h2>
+    <p><code>{"@syndroo/provider-sdk/testing"}</code> exports the shared contract tests, and the production entry point deliberately does not, so a runtime dependency graph never reaches test scaffolding. The official providers assert the same contract with it.</p>
+
+    <h2 id="not-included">Not included</h2>
+    <ul>
+      <li>No CLI command, middleware, state adapter or execution rule can be contributed.</li>
+      <li>No automatic discovery: the registry is explicit and configuration-driven.</li>
+      <li>No marketplace. This site documents the contract and the official providers; a third-party provider documents its own platform.</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#package">Package shape</a></li>
+    <li><a href="#manifest">The manifest</a></li>
+    <li><a href="#egress">The egress declaration</a></li>
+    <li><a href="#operations">The three operations</a></li>
+    <li><a href="#testing">Testing your plugin</a></li>
+    <li><a href="#not-included">Not included</a></li>
+  </ul>
+</nav>

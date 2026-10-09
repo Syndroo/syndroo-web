@@ -295,7 +295,7 @@ function renderResults(query: string): void {
   activeResultIndex = -1;
 
   if (!query.trim()) {
-    meta.textContent = "Search every page of the local docs. Try \"connect\", \"publish\" or \"retry\".";
+    meta.textContent = "Search every page of the local docs. Try \"connect\", \"publish\" or \"egress\".";
     empty.hidden = true;
     return;
   }

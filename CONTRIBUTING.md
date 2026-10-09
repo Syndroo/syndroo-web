@@ -4,8 +4,9 @@ Thanks for helping with the Syndroo website and documentation.
 
 ## Sources and build output
 
-Edit authored sources only: pages in `apps/website/src/pages/` and
-`apps/docs/src/pages/`, their stylesheet (`apps/website/src/static/css/`,
+Edit authored sources only: the website page in `apps/website/app/page.tsx`
+and the docs pages in `apps/docs/app/**/page.mdx`, their stylesheet
+(`apps/website/src/static/css/`,
 `apps/docs/src/static/styles.css`), browser TypeScript in each app's `src/js/`,
 and the shared `packages/`, `scripts/` and `tests/`. Built output is generated
 by the build and is not hand-edited. If a change needs different output, change
@@ -36,7 +37,9 @@ npm test
 ```
 
 Run a focused build (`npm run build:website` or `npm run build:docs`) while
-iterating, and describe what changed and how you checked it.
+iterating, and describe what changed and how you checked it. `npx playwright
+test` exercises the built pages in Chromium, including the docs search and the
+narrow viewports.
 
 ## Previewing
 
@@ -54,7 +57,14 @@ Website copy is part of the product's public claims, so keep it accurate:
 - Platform status stays as recorded: Bluesky, Threads, LinkedIn, Mastodon
   (public text) and DEV.to (public personal articles) are fixture-tested with
   live acceptance pending. Do not claim a live integration that has not been
-  exercised.
+  exercised. Each platform page states only what the provider source and the
+  recorded provider evidence support; a credential field, egress origin, limit
+  or revoke flow without evidence is written as **UNRESOLVED** on the page.
+- The documentation prints only the accepted v1 command surface - the three
+  commands `connect`, `publish` and `status` plus the global flags - and
+  `tests/docs-commands.test.ts` fails the suite when a page prints another
+  command, a flag the CLI does not accept, or a retired command family. Do not
+  weaken that list to make a page pass: fix the page.
 - The interactive demo stays labelled as simulated and must not call a
   publishing API.
 - Privacy and Terms remain drafts until an approved policy exists. Do not add

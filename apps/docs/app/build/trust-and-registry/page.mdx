@@ -1,0 +1,65 @@
+export const metadata = {
+  title: "Trust and registry - Syndroo docs",
+  description:
+    "How Syndroo selects one provider implementation, inspects a third-party package, records an approval and fails closed when a plugin is invalid.",
+  alternates: { canonical: "/build/trust-and-registry/" },
+  openGraph: {
+    type: "website",
+    url: "/build/trust-and-registry/",
+    title: "Trust and registry - Syndroo docs",
+    description:
+      "How Syndroo selects one provider implementation, inspects a third-party package, records an approval and fails closed when a plugin is invalid.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/build/provider-plugins/">Build</a>
+      <span aria-hidden="true">/</span>
+      <span>Trust and registry</span>
+    </nav>
+    <h1 id="trust">Trust and registry</h1>
+    <p className="lede">A provider runs in the same process as the CLI, with the same access. Syndroo therefore makes the choice explicit instead of pretending an in-process plugin is sandboxed: one implementation per provider, inspected and approved before it is imported.</p>
+
+    <h2 id="registry">One implementation per provider</h2>
+    <p>The registry holds exactly one active implementation for each provider id. Official providers come from the build catalog; a configuration entry replaces the official one:</p>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"providers\": {\n    \"bluesky\": { \"path\": \"./providers/my-bluesky\" }\n  }\n}"}</code></pre>
+    <p><code>{"path"}</code> is the only accepted key per provider, and it resolves against the directory of the configuration file, never against the working directory or the CLI installation. Deleting the entry restores the built-in selection. There is no automatic discovery, no package-manager integration and no second implementation to fall back to.</p>
+
+    <h2 id="trusted">What "trusted" means here</h2>
+    <p>Approving a third-party provider is a statement that you trust this code to run with your credentials and your state. The bounded parameter passing between Core and the plugin is a contract, not a security boundary. The host shows the inspected candidate, and the first active load of a provider requires explicit authorization before the module is imported.</p>
+    <p>The approval record is written under the state root and binds the inspected fingerprint, provider id, resolved package root, entry point, version and dependency snapshot. The fingerprint is a SHA-256 digest over the sorted relative file names and the content of every included file, plus the package name, version, entry point and dependency graph. It is re-checked immediately before the module is imported, so a changed package is not silently reused.</p>
+
+    <h2 id="inspection">What inspection does</h2>
+    <ul>
+      <li>Static filesystem reads only: no import, no lifecycle script, no install, no network.</li>
+      <li>Included files must be regular files. Symlinked files and directories, sockets, devices and FIFOs are refused, and a package root is canonicalized first.</li>
+      <li>Directory names such as <code>node_modules</code>, <code>.git</code> and the test directories are excluded from the walk, along with <code>.md</code>, <code>LICENSE</code>{" "} and <code>NOTICE</code> files.</li>
+      <li>Nested <code>node_modules</code> below the package root are rejected, because they could change module resolution for the package's own code.</li>
+      <li>Reads are bounded and use no-follow opens, with per-graph and per-file limits on packages, files, directories, depth and bytes.</li>
+    </ul>
+
+    <h2 id="fail-closed">Fail closed</h2>
+    <p>An invalid override is refused; it never falls back to the built-in provider, because a silent fallback would send content through an implementation the caller did not choose. An <code>{"apiVersion"}</code> mismatch, a missing approval, a fingerprint change or a provider whose default export does not match its manifest all stop the run before anything is sent.</p>
+    <p>Before a publication sends anything, every selected target's provider is loaded and preflighted. One unavailable provider fails the whole prepare step, so a document cannot half-publish because a plugin was missing at the second target.</p>
+
+    <h2 id="provenance">Official is a source, not a claim</h2>
+    <p>Provenance is assigned by where an implementation came from: a built-in catalog entry is official, a configured override is third-party. A package name or a field inside a plugin cannot establish official provenance, and an override keeps its third-party provenance even when it ships the same code.</p>
+    <p>A hosted deployment is stricter: it runs only providers that are official or reviewed and registered with the deployment. Third-party providers belong to a local or self-hosted runtime, where the operator is the one who approves them.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#registry">One implementation per provider</a></li>
+    <li><a href="#trusted">What "trusted" means here</a></li>
+    <li><a href="#inspection">What inspection does</a></li>
+    <li><a href="#fail-closed">Fail closed</a></li>
+    <li><a href="#provenance">Official is a source, not a claim</a></li>
+  </ul>
+</nav>

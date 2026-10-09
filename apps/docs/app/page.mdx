@@ -1,60 +1,101 @@
 export const metadata = {
-  title: "Quick start - Syndroo docs",
-  description: "Install the syndroo CLI candidate, connect one local account, publish plain text or a DEV.to article, and read the result.",
+  title: "Overview - Syndroo docs",
+  description:
+    "Syndroo is a local-first publish client with three commands: connect an account, publish a prepared document, and read the status of a run.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
-    title: "Quick start - Syndroo docs",
-    description: "Install the syndroo CLI candidate, connect one local account, publish plain text or a DEV.to article, and read the result.",
+    title: "Overview - Syndroo docs",
+    description:
+      "Syndroo is a local-first publish client with three commands: connect an account, publish a prepared document, and read the status of a run.",
   },
   twitter: { card: "summary" },
 };
 
 <main className="content" id="main">
-      <article>
-        <p className="eyebrow">Syndroo docs</p>
-        <h1 id="quick-start">Quickstart</h1>
-        <p className="lede">The <code>{"syndroo"}</code> command publishes from this machine, in the foreground, with no Syndroo server in the path. It supports five local providers: Bluesky, Threads, LinkedIn personal, Mastodon public text, and DEV.to articles. <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account testing pending.</strong></p>
+  <article>
+    <p className="eyebrow">Syndroo docs</p>
+    <h1 id="overview">Overview</h1>
+    <p className="lede">The <code>{"syndroo"}</code> command publishes from this machine, in the foreground, with no Syndroo server in the path. It has exactly three first-level commands, plus global flags:{" "} <code>{"syndroo connect"}</code>, <code>{"syndroo publish"}</code> and{" "} <code>{"syndroo status"}</code>.{" "} <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account acceptance still pending.</strong></p>
 
-        <div className="tip">
-          <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
-          <p>Start with a dry run when you want to inspect the parsed document. A preview sends nothing, resolves no credentials, and writes no local state.</p>
-        </div>
+    <div className="tip">
+      <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
+      <p>No live social-network call has been made from this project. Everything on this site describes the built candidate, its schemas and its fixture tests. Treat every platform guide as unverified against a real account until you run it yourself.</p>
+    </div>
 
-        <h2 id="install">1. Install</h2>
-        <p>Requires Node.js 22 or newer on macOS or Linux. Windows is not supported for local writes. The candidate is installed from the tarball this repository builds; it is not on npm.</p>
-        <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm run pack:cli\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo init --namespace default\nsyndroo doctor --local"}</code></pre>
+    <h2 id="commands">The three commands</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Command</th>
+            <th scope="col">What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"syndroo connect <provider>"}</code></th>
+            <td>Start, resume or maintain one provider connection. Credentials come from an explicit source; Core stores them and the plugin never sees the connection record.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo publish --input <file>"}</code></th>
+            <td>Prepare, execute or retry a publication. Preparing freezes the content and returns an approval token; executing needs that token on standard input.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo status"}</code></th>
+            <td>Read providers, connections and operations. Read-only: it never contacts a platform and never repairs local state.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The full flag list, the exit codes and the global flags live in the{" "} <a href="/reference/cli/">CLI reference</a>. Every command and flag printed on this site is checked against the built CLI before the site is published.</p>
 
-        <h2 id="bind-one-account">2. Connect one account</h2>
-        <p><code>{"syndroo connect"}</code> defaults to local mode and reads exactly one credential source. An interactive run offers environment variables, an existing file, hidden terminal entry, and, for Mastodon only, browser authorization. This example uses a Bluesky app password:</p>
-        <pre data-label="terminal"><code>{"export BLUESKY_IDENTIFIER=\"your-handle.bsky.social\"\nexport BLUESKY_PASSWORD=\"APP_PASSWORD_PLACEHOLDER\"\nsyndroo connect bluesky --from-env\nsyndroo auth status --local"}</code></pre>
-        <p><a href="/accounts/">Account configuration</a> covers all five providers, exact environment variables and credential-file fields, safe credential saving, and Mastodon OAuth.</p>
+    <h2 id="install">1. Build the candidate</h2>
+    <p>Node.js 24.19 or newer on macOS or Linux. The candidate is not on a registry, so it is built from the product repository and packed from its workspace:</p>
+    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz"}</code></pre>
+    <p><a href="/getting-started/local-cli/">Local CLI</a> covers the configuration file, the state root and the first run in full.</p>
 
-        <h2 id="publish">3. Publish</h2>
-        <p>Save a text document as <code>post.json</code>.</p>
-        <pre data-label="post.json"><code>{"{\n  \"schemaVersion\": 1,\n  \"key\": \"first-post-001\",\n  \"content\": \"Syndroo now publishes from the command line.\",\n  \"platforms\": [\"bluesky\"]\n}"}</code></pre>
-        <p>Publishing sends directly after confirmation. One command reads the input once, validates it, and sends that same parsed snapshot:</p>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --yes --no-input --json"}</code></pre>
-        <p>Adding <code>{"--dry-run"}</code> previews the parsed document instead. A preview is read-only and requires existing local config and bindings:</p>
-        <pre data-label="terminal"><code>{"syndroo publish --input post.json --dry-run --json"}</code></pre>
-        <p>For one-off content, pass the document inline with <code>{"--data"}</code>. Only one input source is allowed per run, and <code>{"--data"}</code> is never a place for credentials.</p>
-        <pre data-label="terminal"><code>{"syndroo publish --data '{\"key\":\"first-post-001\",\"content\":\"Syndroo now publishes from the command line.\",\"platforms\":[\"bluesky\"]}' --yes --no-input --json"}</code></pre>
-        <p>When the content should stay out of the process arguments, read it from stdin with <code>{"--input -"}</code> instead. DEV.to articles use a separate <code>{"schemaVersion"}</code> <code>{"2"}</code> document; see <a href="/publishing/#devto-article">the DEV.to article example</a>.</p>
+    <h2 id="connect">2. Connect one account</h2>
+    <p><code>{"syndroo connect"}</code> reads exactly one credential source: the environment variable <code>{"SYNDROO_CREDENTIALS"}</code> with <code>{"--from-env"}</code>, or a private JSON file with <code>{"--credential-file"}</code>. It never reads a{" "} <code>{".env"}</code> file and never guesses.</p>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
+    <p>The exact field names for all five providers are in{" "} <a href="/reference/credentials/">Credentials</a>, and each{" "} <a href="/platforms/">platform guide</a> shows where the credential comes from.</p>
 
-        <h2 id="read-the-result">4. Read the result</h2>
-        <p>Each target reports its own status, attempts, remote id and url. For an <code>{"unknown"}</code> target, inspect the platform by hand and do not resend.</p>
-        <pre data-label="terminal"><code>{"syndroo receipts show <result.operationId> --json"}</code></pre>
-        <p>Next: <a href="/publishing/">publishing and retry</a>, <a href="/commands/">command reference</a>, <a href="/faq/">FAQ</a>.</p>
-      </article>
-    </main>
+    <h2 id="publish">3. Prepare, then execute</h2>
+    <p>A publication is two phases. Write a request document, prepare it, and read the approval token that comes back:</p>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>On a terminal the command prints the frozen preview and asks for a confirmation; in{" "} <code>{"--json"}</code> it returns <code>{"confirmation_required"}</code> with an{" "} <code>{"approvalToken"}</code> and exits 0 without sending anything. Execute by feeding that token back on standard input:</p>
+    <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input - < execute.json --json"}</code></pre>
+    <p>An execute request is only ever read from standard input, never from a file path or{" "} <code>{"--data"}</code>, so a token cannot be left in a shell history or in process arguments.</p>
 
-    <nav className="toc" id="page-toc" aria-label="On this page">
-      <p className="toc-title">On this page</p>
-      <ul>
-        <li><a href="#install">Install</a></li>
-        <li><a href="#bind-one-account">Connect one account</a></li>
-        <li><a href="#publish">Publish</a></li>
-        <li><a href="#read-the-result">Read the result</a></li>
-      </ul>
-    </nav>
+    <h2 id="status">4. Read the result</h2>
+    <p><code>{"syndroo status"}</code> answers five queries. Pass the operation id from the publish result to see one operation, or page through the recent ones:</p>
+    <pre data-label="terminal"><code>{"syndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
+    <p>A delivery is <code>{"succeeded"}</code>, <code>{"failed"}</code> with disposition{" "} <code>{"not_applied"}</code>, or <code>{"unknown"}</code>. An unknown write stays non-retryable: inspect the platform by hand instead of resending. The exit code carries the same distinction, and <a href="/reference/cli/#exit-codes">the exit code table</a> lists it.</p>
+
+    <h2 id="sections">Where to go next</h2>
+    <div className="tile-grid">
+    <a className="tile" href="/platforms/"><span className="tile-title">Platforms</span> <span className="tile-text">One guide per official provider: requirements, credentials, connect, first publish, options and what is still unresolved.</span></a>
+    <a className="tile" href="/build/provider-plugins/"><span className="tile-title">Build</span> <span className="tile-text">Write a provider plugin against the provider SDK: the manifest, the egress declaration, trust and registry rules.</span></a>
+    <a className="tile" href="/reference/cli/"><span className="tile-title">Reference</span> <span className="tile-text">The three commands with every flag, the configuration file, credential field names, and the request and envelope shapes.</span></a>
+    </div>
+
+    <h2 id="not-covered">Not covered yet</h2>
+    <p><strong>UNRESOLVED.</strong> The architecture also describes a self-hosted HTTP server, an SDK and a Cloudflare Worker. They exist in the product repository but are not documented on this site yet: no page here makes a claim about their behaviour or their endpoints, and this site does not describe a hosted Syndroo service as available.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#commands">The three commands</a></li>
+    <li><a href="#install">Build the candidate</a></li>
+    <li><a href="#connect">Connect one account</a></li>
+    <li><a href="#publish">Prepare, then execute</a></li>
+    <li><a href="#status">Read the result</a></li>
+    <li><a href="#sections">Where to go next</a></li>
+    <li><a href="#not-covered">Not covered yet</a></li>
+  </ul>
+</nav>

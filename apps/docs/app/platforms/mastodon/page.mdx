@@ -1,0 +1,104 @@
+export const metadata = {
+  title: "Mastodon - Syndroo docs",
+  description:
+    "Connect a Mastodon instance and publish a public status: the per-instance app registration, the PKCE authorization flow, declared federated egress and the unresolved details.",
+  alternates: { canonical: "/platforms/mastodon/" },
+  openGraph: {
+    type: "website",
+    url: "/platforms/mastodon/",
+    title: "Mastodon - Syndroo docs",
+    description:
+      "Connect a Mastodon instance and publish a public status: the per-instance app registration, the PKCE authorization flow, declared federated egress and the unresolved details.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/platforms/">Platforms</a>
+      <span aria-hidden="true">/</span>
+      <span>Mastodon</span>
+    </nav>
+    <h1 id="mastodon">Mastodon</h1>
+
+    <h2 id="overview">Overview</h2>
+    <p>Provider id <code>{"mastodon"}</code>. There is no global Mastodon host: the instance you name is the origin of every request, the stored account identity and the connection. The provider registers an application on that instance, runs the authorization-code flow with PKCE, and publishes one text status.</p>
+
+    <h2 id="requirements">Requirements</h2>
+    <ul>
+      <li>The base URL of your instance, for example <code>{"https://mastodon.social"}</code>.</li>
+      <li>A redirect URI that the authorization step can return to.</li>
+      <li>An authorization scope list that includes everything the flow needs later.</li>
+    </ul>
+    <p>The instance's authorize endpoint must be given every scope that is requested afterwards; otherwise it refuses with <code>{"invalid_scope"}</code> and issues no token at all.</p>
+
+    <h2 id="credentials">Credentials</h2>
+    <p>There is no credential input schema for this provider: the accepted credential object is empty, and the connection is completed through browser authorization instead. The client id, client secret and PKCE verifier stay inside the connection's private state and are never copied into a preview, a write outcome or an error.</p>
+
+    <h2 id="connect">Connect</h2>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"mastodon\",\n  \"options\": {\n    \"instance\": \"https://mastodon.social\",\n    \"redirectUri\": \"https://example.com/oauth/callback/mastodon\",\n    \"scopes\": [\"read:accounts\", \"write:statuses\"]\n  }\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo connect --input connect.json --json"}</code></pre>
+    <p><code>{"instance"}</code>, <code>{"redirectUri"}</code> and <code>{"scopes"}</code> are required; <code>{"clientId"}</code> and <code>{"clientSecret"}</code> are optional for a caller that already registered an application. The start step returns an authorization action that a browser completes on the instance.</p>
+    <p>The start step returns an authorization action that a browser completes on the instance, and the local CLI completes that OAuth callback itself, with <code>{"--redirect-uri"}</code> and a controlling terminal or with <code>{"--callback-url -"}</code>, as the <a href="/reference/credentials/#browser">credential reference</a> describes. That local callback path is fixture-tested against local servers only; no live Mastodon account was connected.</p>
+
+    <h2 id="first-publish">First publish</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Hello from Syndroo.\" },\n  \"targets\": [{ \"provider\": \"mastodon\", \"options\": { \"visibility\": \"public\" } }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>Publishing is one <code>{"POST /api/v1/statuses"}</code> with a deterministic{" "} <code>{"Idempotency-Key"}</code> header. The server documents that key as stored for up to one hour and returning the saved response on reuse. That is a provider capability, not permission to retry: Syndroo still reports an unknown write as unknown and never reclassifies it.</p>
+
+    <h2 id="capabilities">Capabilities</h2>
+    <p>The manifest declares <code>{"text"}</code>. The character limit is a property of the instance, not a global number: the provider reads it from{" "} <code>{"GET /api/v2/instance"}</code> during connect and enforces it when the content is frozen. An unreadable limit fails closed instead of assuming a default, so no limit is printed here.</p>
+
+    <h2 id="options">Options</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Where</th>
+            <th scope="col">Accepted keys</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Connect options</th>
+            <td><code>{"instance"}</code>, <code>{"redirectUri"}</code> and{" "} <code>{"scopes"}</code> (all required), <code>{"clientId"}</code>,{" "} <code>{"clientSecret"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row">Publish options</th>
+            <td><code>{"visibility"}</code>, required.</td>
+          </tr>
+          <tr>
+            <th scope="row">Content</th>
+            <td><code>{"text"}</code>, required.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>PKCE is verified for this provider and is mandatory for native clients: the provider uses the{" "} <code>{"S256"}</code> challenge method. Refresh tokens exist only when an instance enables expiring tokens, so the provider treats them as a per-instance capability rather than a global promise.</p>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <p>Errors use a generic <code>{"{ \"error\": \"...\" }"}</code> shape, and validation failures such as blank text are reported as 422. <strong>UNRESOLVED.</strong> The full error entity field list was not confirmed, so this guide does not enumerate one.</p>
+
+    <h2 id="revoke">Revoke and security</h2>
+    <p>Revocation is documented and verified: <code>{"POST /oauth/revoke"}</code> with the client id, client secret and token returns 200 with no body. Removing the app from your instance settings achieves the same, and disconnecting removes the local record:</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#credentials">Credentials</a></li>
+    <li><a href="#connect">Connect</a></li>
+    <li><a href="#first-publish">First publish</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#options">Options</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#revoke">Revoke and security</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,102 @@
+export const metadata = {
+  title: "Requests and envelopes - Syndroo docs",
+  description:
+    "The syndroo request and result shapes: the JSON envelope, connect requests and results, the prepare, execute and retry publication flow, and the five status queries.",
+  alternates: { canonical: "/reference/requests/" },
+  openGraph: {
+    type: "website",
+    url: "/reference/requests/",
+    title: "Requests and envelopes - Syndroo docs",
+    description:
+      "The syndroo request and result shapes: the JSON envelope, connect requests and results, the prepare, execute and retry publication flow, and the five status queries.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/reference/cli/">Reference</a>
+      <span aria-hidden="true">/</span>
+      <span>Requests and envelopes</span>
+    </nav>
+    <h1 id="requests">Requests and envelopes</h1>
+    <p className="lede">One request document in, one envelope out. <code>{"--json"}</code> is the machine surface; the same shapes are what an agent or a script branches on, and every request is validated against the protocol before anything runs.</p>
+
+    <h2 id="envelope">The envelope</h2>
+    <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
+    <pre data-label="failure"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": false,\n  \"result\": null,\n  \"error\": { \"code\": \"INPUT_INVALID\", \"message\": \"The request document is not valid.\" }\n}"}</code></pre>
+    <p><code>{"operation"}</code> is one of <code>{"connect"}</code>, <code>{"publish"}</code> and{" "} <code>{"status"}</code>. A message is static text chosen by the code, never built from a stack, a path, a response body or an argument, so a diagnostic cannot carry a secret.</p>
+
+    <h2 id="connect">connect</h2>
+    <p>Four request shapes. <code>{"start"}</code> begins a connection, <code>{"resume"}</code>{" "} completes a pending step, and <code>{"update"}</code> and <code>{"disconnect"}</code> maintain a stored one.</p>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"bluesky\",\n  \"label\": \"work\",\n  \"connectionId\": \"conn_existing\",\n  \"options\": {}\n}"}</code></pre>
+    <pre data-label="resume.json"><code>{"{\n  \"type\": \"resume\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 0,\n  \"input\": { \"type\": \"credentials\", \"credentials\": { \"identifier\": \"you.bsky.social\", \"password\": \"...\" } }\n}"}</code></pre>
+    <pre data-label="maintenance.json"><code>{"{\n  \"type\": \"update\",\n  \"connectionId\": \"conn_...\",\n  \"changes\": { \"label\": \"writing\", \"isDefault\": true }\n}"}</code></pre>
+    <p>A resume input is either <code>{"credentials"}</code> with the provider's credential object, or <code>{"callback_complete"}</code> for a session whose authorization callback was delivered out of band. <code>{"stepRevision"}</code> must match the session, so a stale step is refused rather than applied twice.</p>
+    <pre data-label="connect result"><code>{"{\n  \"status\": \"action_required\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 1,\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"action\": { \"type\": \"credential_input\", \"fields\": [{ \"name\": \"password\", \"label\": \"Bluesky app password\", \"secret\": true }] }\n}"}</code></pre>
+    <p>An action is <code>{"credential_input"}</code>, <code>{"open_url"}</code> or{" "} <code>{"wait_for_callback"}</code>. A finished step answers{" "} <code>{'"status": "done"'}</code> with the stored <code>{"connection"}</code>.</p>
+
+    <h2 id="publish">publish</h2>
+    <p>Three request shapes: <code>{"prepare"}</code> freezes the content, <code>{"execute"}</code>{" "} sends it, and <code>{"retry"}</code> re-sends only the eligible targets of an earlier operation. A document without a <code>{"type"}</code> is an ordinary prepare request.</p>
+    <pre data-label="prepare.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"One document, chosen targets.\" },\n  \"targets\": [\n    { \"provider\": \"bluesky\" },\n    { \"provider\": \"devto\", \"connection\": \"conn_...\", \"options\": { \"title\": \"Hello\", \"body_markdown\": \"Body\" } }\n  ]\n}"}</code></pre>
+    <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
+    <pre data-label="retry.json"><code>{"{\n  \"type\": \"retry\",\n  \"retryOf\": \"op_...\",\n  \"targets\": [{ \"provider\": \"bluesky\", \"connection\": \"conn_...\" }]\n}"}</code></pre>
+    <p>A target names its <code>{"provider"}</code>, optionally a <code>{"connection"}</code> and optional provider <code>{"options"}</code>. A document carries one to twenty targets. When a target names no connection, the provider's default connection is used, and an ambiguous choice is refused rather than guessed.</p>
+    <pre data-label="prepared result"><code>{"{\n  \"status\": \"confirmation_required\",\n  \"operationId\": \"op_...\",\n  \"approvalToken\": \"...\",\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"preview\": [\n    { \"deliveryId\": \"dl_...\", \"connectionId\": \"conn_...\", \"account\": {}, \"provider\": \"bluesky\", \"preview\": { \"content\": {}, \"fields\": [] } }\n  ]\n}"}</code></pre>
+    <pre data-label="execution result"><code>{"{\n  \"phase\": \"execution\",\n  \"operationId\": \"op_...\",\n  \"status\": \"succeeded\",\n  \"deliveries\": [\n    { \"deliveryId\": \"dl_...\", \"connectionId\": \"conn_...\", \"account\": {}, \"attempts\": 1, \"outcome\": { \"status\": \"succeeded\", \"remoteId\": \"...\", \"url\": \"https://example.com/post\" } }\n  ]\n}"}</code></pre>
+    <p>The execution status is one of <code>{"pending"}</code>, <code>{"running"}</code>,{" "} <code>{"succeeded"}</code>, <code>{"partial"}</code>, <code>{"failed"}</code> or{" "} <code>{"unknown"}</code>. Each delivery outcome is <code>{"succeeded"}</code>,{" "} <code>{"failed"}</code> with disposition <code>{"not_applied"}</code>, or{" "} <code>{"unknown"}</code>; an eligible failed outcome may carry{" "} <code>{"retryable"}</code>, a reason and a <code>{"retryAfter"}</code> time. Failed means the write is known not to have been applied, and unknown is never retryable.</p>
+
+    <h2 id="status">status</h2>
+    <p>Five query shapes and no query language. With no selector the overview is returned.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Request</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"overview\" }"}</code></th>
+            <td>Whether the state is initialized, the connection count, each provider's availability and provenance, the most recent operations and the state health.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"provider\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>The provider's manifest, implementation fingerprints and observations.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"connections\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>The stored connections, optionally filtered to one provider.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operation\", \"operationId\": \"op_...\" }"}</code></th>
+            <td>One operation: either a prepared operation with its confirmation state and preview, or the execution result.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operations\", \"limit\": 20, \"cursor\": \"...\" }"}</code></th>
+            <td>Operation summaries, with an opaque cursor for the next page.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Provider availability is <code>{"available"}</code>, <code>{"untrusted"}</code>,{" "} <code>{"unavailable"}</code> or <code>{"stale"}</code>, and provenance is{" "} <code>{"official"}</code> or <code>{"third_party"}</code>. Status reads stored observations; it does not refresh them by contacting a platform.</p>
+
+    <h2 id="exit-codes">Execution status and the exit code</h2>
+    <p>A publish result maps onto the process exit code: <code>{"unknown"}</code> exits 4,{" "} <code>{"failed"}</code> and <code>{"partial"}</code> exit 6, and every other execution status exits 0. A preflight or usage refusal exits 2, and an explicit decline at the confirmation prompt exits 5.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#envelope">The envelope</a></li>
+    <li><a href="#connect">connect</a></li>
+    <li><a href="#publish">publish</a></li>
+    <li><a href="#status">status</a></li>
+    <li><a href="#exit-codes">Execution status and the exit code</a></li>
+  </ul>
+</nav>

@@ -43,10 +43,12 @@
   with each app's stylesheet and browser TypeScript under its `app/`,
   `components/` and `src/`. Built output lands in `apps/*/out/` and is never
   edited by hand.
-- The published surface is fixed and small: the marketing homepage plus the six
-  documentation pages in the shared registry. Adding a page means adding one
-  registry entry in `packages/content/site-data.ts` and one page; removing one
-  must not leave the old route in the export.
+- The published surface is the marketing homepage plus fifteen documentation
+  pages in the accepted Getting Started / Platforms / Build / Reference
+  information architecture, all held in the shared registry. Adding a page means
+  adding one registry entry in `packages/content/site-data.ts` and one page;
+  removing one must not leave the old route in the export, its navigation entry,
+  its sitemap entry or a redirect that would keep serving it.
 - Each app builds a self-contained output directory. Shared brand marks come
   from `packages/brand/assets/`; no third-party asset or analytics request is
   added at runtime, and the docs search reads only its own local pages.
@@ -57,15 +59,21 @@
 
 - `0.7.0-rc.1` is the CLI candidate these docs describe. It is an unpublished
   candidate: do not describe it as released, tagged, deployed or installable from
-  a registry. The packaged CLI needs Node.js 22 or newer on macOS and Linux, and
-  refuses local writes on Windows.
+  a registry. The packaged CLI declares `engines.node >= 24.19.0`, and its local
+  writes are POSIX-only: Windows writes are refused.
 - Five local providers publish in the foreground: Bluesky, Threads, LinkedIn,
   and Mastodon take plain text, and DEV.to takes articles. They are
   fixture-tested and still need live-account acceptance, so no page may claim a
   verified publish.
-- Public documentation covers the local CLI; keep hosted HTTP API, SDK, Worker
-  instructions, including the `@syndroo/cloudflare-worker` service, and
-  earlier-release walkthroughs outside this surface.
+- Each platform page states only what the provider source and the recorded
+  provider evidence support. A credential field, an egress origin, a limit or a
+  revoke flow that the evidence does not carry is written as **UNRESOLVED** on
+  the page instead of asserted. No live social-network call has been made from
+  this project, and no page may imply one.
+- Keep hosted HTTP API, SDK and Worker instructions, including the
+  `@syndroo/cloudflare-worker` service, and earlier-release walkthroughs outside
+  this surface. The docs overview marks them unresolved rather than describing
+  them.
 - Report only checks that actually ran, and state the limits of the evidence.
 
 ## Verification

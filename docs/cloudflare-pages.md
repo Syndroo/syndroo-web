@@ -17,14 +17,16 @@ after each push.
 | Production branch | `main` | `main` |
 | Root directory | empty (repository root) | empty (repository root) |
 | Build command | `npm run build && npm run check && npm test` | `npm run build && npm run check && npm test` |
-| Build output directory | `apps/website/dist` | `apps/docs/dist` |
+| Build output directory | `apps/website/out` | `apps/docs/out` |
 | Dependency install | automatic (`package-lock.json`) | automatic (`package-lock.json`) |
 | Custom domain | <https://syndroo.com> | <https://docs.syndroo.com> |
 | Project domain | <https://syndroo-web.pages.dev> | <https://syndroo-docs.pages.dev> |
 
 Leave the root directory empty so Pages installs the npm workspace and runs the
 root build command from the repository root. Shared build entry points live in
-`scripts/` and brand assets in `packages/brand/assets/`.
+`scripts/` and brand assets in `packages/brand/assets/`. The output directory is
+the same value `scripts/lib/app-targets.ts` builds into, so a rename there needs
+the matching dashboard change.
 
 The build command builds both sites even though each project publishes one of
 them. `npm run check` audits `apps/website/out` and `apps/docs/out` together
@@ -40,8 +42,16 @@ assets and generated browser JavaScript, every build now emits
 `robots.txt` and `sitemap.xml` from the page registry and the configured origin,
 and every page carries a canonical URL plus Open Graph title, description and
 URL for its own origin. The current output is the marketing homepage plus the two
-technical 404 documents, and the six documentation pages plus their two 404
+technical 404 documents, and the fifteen documentation pages of the
+Getting Started / Platforms / Build / Reference architecture plus their two 404
 documents.
+
+Neither project ships a `_redirects` file and neither configures custom
+`404.html` routing: the earlier docs routes (`/accounts/`, `/agent-setup/`,
+`/commands/`, `/faq/`, `/publishing/`) have no page and no rule, so Pages serves
+the docs 404 document, which links the four current sections. A route that is
+not in the page registry cannot survive a rebuild, and `npm run check` fails if
+an exported page is not registered.
 
 ## Environment variables
 
@@ -68,8 +78,8 @@ Each site now uses both origins, and the check enforces both sides:
 - its own origin appears in the HTML metadata: one canonical URL and one Open
   Graph URL per registered page. Those references cover HTML only; the generated
   files are counted separately, with the origin in every `sitemap.xml` entry -
-  one for the marketing homepage and six for the documentation - and once in each
-  `robots.txt`;
+  one for the marketing homepage and fifteen for the documentation - and once in
+  each `robots.txt`;
 - the other site's origin appears in real cross-site links: the marketing
   navigation and footer point at the documentation origin, and the documentation
   topbar and footer point back at the marketing origin, so the two sites resolve
@@ -147,16 +157,21 @@ origins come from environment variables, so a preview environment could point at
 its own host instead; linking two preview projects to each other is not
 configured.
 
-The repository ships no `404.html`, `_headers` or `_redirects` file. Per the
-serving documentation
-(<https://developers.cloudflare.com/pages/configuration/serving-pages/>), Pages
-sends `X-Content-Type-Options: nosniff` by default and serves the root document
-for unknown paths when a project has no top-level `404.html`. Default edge
-caching is used; the local preview server's `cache-control: no-store,
-no-transform` (`scripts/lib/static-server.ts`) is a local review setting only. A
-custom 404 page or headers added later must keep `npm run check` passing: an
-extensionless `_headers` file in the build output currently fails the
-publishable-type rule.
+Neither project ships a `_headers` or `_redirects` file, and neither is
+configured to redirect a retired route. Both exports do carry the `404.html`
+Next.js generates for an unknown path: the docs document comes from
+`apps/docs/app/not-found.tsx` and links the four current sections, so an old
+`/accounts/` or `/commands/` link lands on it instead of a redirect. The
+website's 404 document is the framework default. The serving documentation
+(<https://developers.cloudflare.com/pages/configuration/serving-pages/>) states
+that Pages sends `X-Content-Type-Options: nosniff` by default and serves a
+top-level `404.html` for unknown paths; that edge behaviour is documented, not
+verified in this repository, and the local preview server answers unknown paths
+with its own bare `404 Not Found` (`scripts/lib/static-server.ts`). Default edge
+caching is used; the preview server's `cache-control: no-store, no-transform` is
+a local review setting only. A custom 404 page or headers added later must keep
+`npm run check` passing: an extensionless `_headers` file in the build output
+currently fails the publishable-type rule.
 
 ## Verified
 

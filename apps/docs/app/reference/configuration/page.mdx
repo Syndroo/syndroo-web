@@ -1,0 +1,127 @@
+export const metadata = {
+  title: "Configuration - Syndroo docs",
+  description:
+    "The syndroo configuration file shape, the state root, the environment variables and the rules that make a configuration fail closed.",
+  alternates: { canonical: "/reference/configuration/" },
+  openGraph: {
+    type: "website",
+    url: "/reference/configuration/",
+    title: "Configuration - Syndroo docs",
+    description:
+      "The syndroo configuration file shape, the state root, the environment variables and the rules that make a configuration fail closed.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/reference/cli/">Reference</a>
+      <span aria-hidden="true">/</span>
+      <span>Configuration</span>
+    </nav>
+    <h1 id="configuration">Configuration</h1>
+    <p className="lede">One configuration file and one state root. Configuration is never inferred from the working directory, so two terminals in different directories cannot silently use different plugins or different state.</p>
+
+    <h2 id="file">The file</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Key</th>
+            <th scope="col">Type</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"version"}</code></th>
+            <td>number</td>
+            <td>Must be <code>{"1"}</code>. Any other value is refused and never migrated.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"stateRoot"}</code></th>
+            <td>string, optional</td>
+            <td>State root directory. A relative value resolves against the configuration file's directory.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"providers"}</code></th>
+            <td>object, optional</td>
+            <td>Provider overrides. Each key is a provider id and each value has exactly one key,{" "} <code>{"path"}</code>, resolved against the configuration file's directory.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"stateRoot\": \"state\",\n  \"providers\": {\n    \"bluesky\": { \"path\": \"vendor/bluesky-provider\" }\n  }\n}"}</code></pre>
+    <p>Unknown top-level keys are refused. A key whose name looks like a token, secret, password, API key or credential is refused by name, so a secret cannot be smuggled into the configuration file even accidentally. A provider entry accepts only <code>{"path"}</code>, and a path with a URL scheme is refused.</p>
+
+    <h2 id="selection">How the file is selected</h2>
+    <ul>
+    <li>Without a flag, the CLI reads{" "} <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>, falling back to{" "} <code>{"$HOME/.config/syndroo/config.json"}</code> when{" "} <code>{"XDG_CONFIG_HOME"}</code> is unset or not absolute.</li>
+    <li><code>{"--config"}</code> names an explicit file. The path must be absolute; a relative path is refused instead of resolved, so an accidental{" "} <code>{"--config config.json"}</code> cannot pick up a file from the working directory.</li>
+    <li>A missing default file is not an error for a command that resolves no provider. A missing file named by <code>{"--config"}</code> is an error.</li>
+    </ul>
+    <p>The file is read as strict JSON: at most 64 KiB, no duplicate keys, no invalid UTF-8, and no value the JSON data model cannot represent.</p>
+
+    <h2 id="state-root">The state root</h2>
+    <p>The state root defaults to <code>{"$XDG_STATE_HOME/syndroo/runtime-v1"}</code>, falling back to <code>{"$HOME/.local/state/syndroo/runtime-v1"}</code>. A relative{" "} <code>{"XDG_STATE_HOME"}</code> is ignored, as the XDG base directory specification requires.</p>
+    <p>The root carries one format marker. A root whose marker is missing, or that names any other format, is refused: the runtime does not guess, and it never probes, migrates or deletes state written by an earlier Syndroo version. A read-only command on a machine that has never connected anything reports the state as uninitialized rather than creating a directory.</p>
+
+    <h2 id="environment">Environment variables</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Variable</th>
+            <th scope="col">Used by</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"XDG_CONFIG_HOME"}</code></th>
+            <td>configuration</td>
+            <td>Chooses the default configuration directory when it is absolute.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"XDG_STATE_HOME"}</code></th>
+            <td>state root</td>
+            <td>Chooses the default state directory when it is absolute.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"HOME"}</code></th>
+            <td>both</td>
+            <td>The fallback base for both defaults. A missing or relative value is an error.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"SYNDROO_CREDENTIALS"}</code></th>
+            <td><code>{"--from-env"}</code></td>
+            <td>One credential object as JSON, read only when <code>{"--from-env"}</code> is passed and at most 64 KiB.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"NO_COLOR"}</code></th>
+            <td>human output</td>
+            <td>Disables colour, like <code>{"--no-color"}</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Nothing else is read from the environment: no <code>{".env"}</code> file, no per-provider variable registry, and no credential is ever taken from the configuration file.</p>
+
+    <h2 id="fail-closed">Fail closed</h2>
+    <p>Every one of these is refused rather than guessed at: an unsupported{" "} <code>{"version"}</code>, an unknown key, a secret-looking key, a relative{" "} <code>{"--config"}</code> path, a provider entry with more than one key, an oversized file, and a state root whose format marker does not match.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#file">The file</a></li>
+    <li><a href="#selection">How the file is selected</a></li>
+    <li><a href="#state-root">The state root</a></li>
+    <li><a href="#environment">Environment variables</a></li>
+    <li><a href="#fail-closed">Fail closed</a></li>
+  </ul>
+</nav>

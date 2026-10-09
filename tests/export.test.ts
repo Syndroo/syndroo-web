@@ -162,7 +162,7 @@ test("the origin rewrite repoints authored placeholders and leaves product sampl
     [
       "<!doctype html>",
       '<link rel="canonical" href="http://localhost:4173/"/>',
-      `<a href="${ORIGIN_PLACEHOLDERS.docs}/commands/">Commands</a>`,
+      `<a href="${ORIGIN_PLACEHOLDERS.docs}/reference/cli/">Commands</a>`,
       `<a href="${ORIGIN_PLACEHOLDERS.docs}/">Docs</a>`,
       `<code>${PRODUCT_SAMPLE}</code>`,
       "",
@@ -170,21 +170,21 @@ test("the origin rewrite repoints authored placeholders and leaves product sampl
   );
   await writeFile(
     join(root, "_next", "static", "chunks", "app.js"),
-    `const docs="${ORIGIN_PLACEHOLDERS.docs}/accounts/";const home="${ORIGIN_PLACEHOLDERS.website}/";\n`,
+    `const docs="${ORIGIN_PLACEHOLDERS.docs}/platforms/";const home="${ORIGIN_PLACEHOLDERS.website}/";\n`,
   );
 
   const changed = await rewriteOriginsInDirectory(root, CUSTOM);
   assert.equal(changed, 2, "the rewrite should report both text files it changed");
 
   const html = await readFile(join(root, "index.html"), "utf8");
-  assert.ok(html.includes(`<a href="${CUSTOM.docs}/commands/">`), "authored docs links should use the custom docs origin");
+  assert.ok(html.includes(`<a href="${CUSTOM.docs}/reference/cli/">`), "authored docs links should use the custom docs origin");
   assert.ok(html.includes(`<link rel="canonical" href="${CUSTOM.website}/"/>`), "the authored canonical should use the custom website origin");
   assert.ok(html.includes(PRODUCT_SAMPLE), "the product repository URL must not be rewritten");
   assert.ok(!html.includes(ORIGIN_PLACEHOLDERS.docs), "the authored docs placeholder must not survive");
   assert.ok(!html.includes(ORIGIN_PLACEHOLDERS.website), "the authored website placeholder must not survive");
 
   const script = await readFile(join(root, "_next", "static", "chunks", "app.js"), "utf8");
-  assert.ok(script.includes(`"${CUSTOM.docs}/accounts/"`), "a generated chunk should use the custom docs origin");
+  assert.ok(script.includes(`"${CUSTOM.docs}/platforms/"`), "a generated chunk should use the custom docs origin");
   assert.ok(script.includes(`"${CUSTOM.website}/"`), "a generated chunk should use the custom website origin");
 });
 

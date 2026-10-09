@@ -12,7 +12,16 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 import { SITE_TARGETS } from "../scripts/lib/app-targets.ts";
-import { checkCliContract, extractCliSurface, resolveCliBin } from "../scripts/lib/docs-cli-contract.ts";
+import {
+  ACCEPTED_COMMANDS,
+  ACCEPTED_GLOBAL_FLAGS,
+  RETIRED_COMMANDS,
+  allDocumentedFlags,
+  checkCliContract,
+  documentedFlagsFor,
+  extractCliSurface,
+  resolveCliBin,
+} from "../scripts/lib/docs-cli-contract.ts";
 import { listFiles } from "../scripts/lib/files.ts";
 import { repoRoot } from "../scripts/lib/paths.ts";
 import { docsPages, versions } from "../packages/content/site-data.ts";
@@ -33,30 +42,32 @@ async function docsExport(): Promise<{ path: string; html: string }[]> {
   return pages;
 }
 
-test("the documentation spells its CLI commands in a form this checker can read", async () => {
+test("the documentation prints only the accepted v1 command surface", async () => {
   const surface = extractCliSurface(await docsExport());
 
   assert.ok(
-    surface.invocations.length >= 8,
+    surface.invocations.length >= 12,
     `expected the docs to show several invocations, saw ${surface.invocations.length}`,
   );
 
   const commands = new Set(surface.invocations.map((entry) => entry.command));
-  for (const command of [
-    "doctor",
-    "providers list",
-    "connect",
-    "auth set",
-    "auth status",
-    "publish",
-    "receipts list",
-    "receipts show",
-    "retry",
-    "state inspect",
-    "skill path",
-  ]) {
+  for (const command of ACCEPTED_COMMANDS) {
     assert.ok(commands.has(command), `the documentation should show "syndroo ${command}"`);
   }
+  for (const command of commands) {
+    assert.ok(
+      ACCEPTED_COMMANDS.includes(command),
+      `"syndroo ${command}" is not one of the three accepted commands`,
+    );
+  }
+
+  // A retired family may not survive anywhere on the page, not even in prose.
+  assert.deepEqual(
+    surface.retired,
+    [],
+    `retired command families still reach a reader: ${JSON.stringify(surface.retired)}`,
+  );
+  assert.ok(RETIRED_COMMANDS.includes("doctor"), "the retired list should still name the old families");
 
   // A flag counts as documented when it appears on a command line or as its own
   // inline code span; the two spellings are both used on purpose.
@@ -66,17 +77,14 @@ test("the documentation spells its CLI commands in a form this checker can read"
   ]);
   for (const flag of [
     "--json",
-    "--yes",
-    "--no-input",
-    "--local",
+    "--config",
     "--dry-run",
     "--input",
     "--data",
+    "--retry",
     "--to",
-    "--timeout",
     "--limit",
     "--from-env",
-    "--managed",
   ]) {
     assert.ok(flags.has(flag), `the documentation should explain ${flag}`);
   }
@@ -85,6 +93,21 @@ test("the documentation spells its CLI commands in a form this checker can read"
     surface.inlineFlags.length >= 4,
     "the prose should name the flags it explains, not only the command lines",
   );
+
+  // Every mentioned flag has to belong to the surface it is used with.
+  const allowedWhenStandalone = new Set(allDocumentedFlags());
+  for (const { flag } of surface.inlineFlags) {
+    assert.ok(allowedWhenStandalone.has(flag), `${flag} is not on the accepted surface`);
+  }
+  for (const invocation of surface.invocations) {
+    const allowed = new Set([...ACCEPTED_GLOBAL_FLAGS, ...documentedFlagsFor(invocation.command)]);
+    for (const flag of invocation.flags) {
+      assert.ok(
+        allowed.has(flag),
+        `${flag} is not documented for "syndroo ${invocation.command}"`,
+      );
+    }
+  }
 });
 
 test("an inline flag is read with or without its argument shape, and never after a negation", () => {

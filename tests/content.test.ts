@@ -1,9 +1,10 @@
 // Content fixtures for the published surfaces.
 //
-// Everything here reads the built output of the two sites: the seven public
-// pages (the marketing home, the six documentation pages, and the technical
-// 404 documents Next.js generates), the shared navigation, the metadata, the
-// generated files, the theme control and the way cross-site links resolve.
+// Everything here reads the built output of the two sites: the sixteen public
+// pages of the accepted Q39 information architecture (the marketing home, the
+// fifteen documentation pages, and the technical 404 documents Next.js
+// generates), the shared navigation, the metadata, the generated files, the
+// theme control and the way cross-site links resolve.
 //
 // These fixtures read the built output as it was produced, so they cover the
 // configured origin pair as well as the content: the pair is resolved from the
@@ -49,7 +50,7 @@ const LOOPBACK_DEFAULTS = [DEFAULT_WEBSITE_ORIGIN, DEFAULT_DOCS_ORIGIN].filter(
 );
 
 /**
- * The seven public pages, in the order the sites publish them. A page that is
+ * The sixteen public pages, in the order the sites publish them. A page that is
  * not in this list does not exist, so a retired route cannot quietly survive in
  * the export.
  */
@@ -202,19 +203,28 @@ test("the shared page registry matches the built output and nothing else ships",
   }
 });
 
-test("the published surfaces are exactly the seven pages readers were promised", () => {
+test("the published surfaces are exactly the sixteen pages readers were promised", () => {
   assert.deepEqual(PUBLIC_PAGES, [
     "website /",
     "docs /",
-    "docs /accounts/",
-    "docs /publishing/",
-    "docs /agent-setup/",
-    "docs /commands/",
-    "docs /faq/",
+    "docs /getting-started/local-cli/",
+    "docs /getting-started/agent/",
+    "docs /platforms/",
+    "docs /platforms/bluesky/",
+    "docs /platforms/threads/",
+    "docs /platforms/linkedin/",
+    "docs /platforms/mastodon/",
+    "docs /platforms/devto/",
+    "docs /build/provider-plugins/",
+    "docs /build/trust-and-registry/",
+    "docs /reference/cli/",
+    "docs /reference/configuration/",
+    "docs /reference/credentials/",
+    "docs /reference/requests/",
   ]);
-  assert.equal(PUBLIC_PAGES.length, 7, "the public surface is seven pages");
+  assert.equal(PUBLIC_PAGES.length, 16, "the public surface is sixteen pages");
   assert.equal(websitePages.length, 1, "the marketing site is a single page");
-  assert.equal(docsPages.length, 6, "the documentation site is six pages");
+  assert.equal(docsPages.length, 15, "the documentation site is fifteen pages");
 });
 
 test("every docs page carries one layout, main, sidebar, toc and search dialog", async () => {
@@ -321,38 +331,57 @@ test("cross-site links resolve inside the other built site", async () => {
 
   assert.ok(checked > 8, `expected several cross-site links, checked ${checked}`);
 
-  // The hero actions are the primary funnel into the docs site, and the
-  // platform strip links every platform to its own guide.
+  // The navigation, the footer and the platform strip are the funnels into the
+  // docs site: the site links the docs home and the command reference, and
+  // every platform card links to that platform's own guide.
   const home = await websitePage("index.html");
-  assert.ok(home.includes(`href="${BUILT.docs}/"`), "the hero should link to the docs home");
-  assert.ok(home.includes(`href="${BUILT.docs}/commands/"`), "the hero should offer the command reference");
+  assert.ok(home.includes(`href="${BUILT.docs}/"`), "the site should link to the docs home");
+  assert.ok(
+    home.includes(`href="${BUILT.docs}/reference/cli/"`),
+    "the site should offer the command reference",
+  );
   for (const platform of platforms) {
     assert.ok(
-      home.includes(`href="${BUILT.docs}/accounts/"`),
+      home.includes(`href="${BUILT.docs}/platforms/${platform.id}/"`),
       `${platform.name} should be reachable from the platform strip`,
     );
   }
 });
 
-test("the docs lookup pages teach direct publishing and no retired surface", async () => {
-  const quickstart = await docsPage("index.html");
-  const flat = authoredText(quickstart).replace(/\s+/g, " ");
+test("the overview teaches the three-command flow and no retired surface", async () => {
+  const overview = await docsPage("index.html");
+  const flat = authoredText(overview).replace(/\s+/g, " ");
 
-  assert.ok(flat.includes("syndroo init"), "the quickstart should show the local init command");
-  assert.ok(flat.includes("syndroo doctor --local"), "the quickstart should show the local doctor command");
+  // DOC-01: the getting-started flow walks the three accepted commands.
+  assert.ok(flat.includes("syndroo connect"), "the overview should start with connect");
+  assert.ok(flat.includes("syndroo publish"), "the overview should show the publish command");
+  assert.ok(flat.includes("syndroo status"), "the overview should show the status command");
   assert.ok(
     flat.includes("syndroo publish --input post.json"),
-    "the quickstart should show the direct publish command",
+    "the overview should show the file input",
   );
-  assert.ok(flat.includes("--data"), "the quickstart should show the inline JSON input");
-  assert.ok(flat.includes("--dry-run"), "the quickstart should show the optional preview");
-  assert.ok(flat.includes(PUBLIC_NODE_RUNTIME), "the quickstart should state the runtime it needs");
+  assert.ok(
+    flat.includes("syndroo publish --input -"),
+    "the overview should show the stdin execute step",
+  );
+  assert.ok(
+    flat.includes(PUBLIC_NODE_RUNTIME),
+    "the overview should state the runtime it needs",
+  );
+
+  // Retired surfaces: the hosted HTTP API and the mock gate. The old command
+  // families are audited separately in tests/docs-commands.test.ts, which reads
+  // the rendered text rather than a hand-kept list.
+  const retiredRoutes = ["/accounts/", "/agent-setup/", "/commands/", "/faq/", "/publishing/"];
 
   for (const page of docsPages) {
-    const text = authoredText(await docsPage(page.file));
-    // Retired surfaces: the hosted HTTP API, the mock gate and the old clients.
-    for (const legacy of ["/v1/posts", "Mock SNS", "Idempotency-Key", "@syndroo/sdk", "@syndroo/cloudflare-worker"]) {
+    const html = await docsPage(page.file);
+    const text = authoredText(html);
+    for (const legacy of ["/v1/posts", "Mock SNS", "@syndroo/sdk", "@syndroo/cloudflare-worker"]) {
       assert.ok(!text.includes(legacy), `${page.path} still mentions the retired surface ${legacy}`);
+    }
+    for (const route of retiredRoutes) {
+      assert.ok(!html.includes(`href="${route}"`), `${page.path} still links the retired route ${route}`);
     }
   }
 });
@@ -377,28 +406,49 @@ test("the documentation states the input, authorization and retry rules", async 
   const flatten = async (file: string): Promise<string> =>
     authoredText(await docsPage(file)).replace(/\s+/g, " ");
 
-  const quickstart = await flatten("index.html");
-  const commands = await flatten("commands/index.html");
-  const publishing = await flatten("publishing/index.html");
-  const agent = await flatten("agent-setup/index.html");
+  const overview = await flatten("index.html");
+  const local = await flatten("getting-started/local-cli/index.html");
+  const cli = await flatten("reference/cli/index.html");
+  const requests = await flatten("reference/requests/index.html");
+  const agent = await flatten("getting-started/agent/index.html");
 
-  assert.ok(commands.includes("--data"), "the command reference should document --data");
-  assert.ok(quickstart.includes("--input -"), "the quickstart should document the stdin input");
-  assert.ok(/only one/i.test(commands), "the command reference should state input exclusivity");
-  assert.ok(/argv/i.test(commands), "the command reference should warn about argv exposure");
-  assert.ok(/credential/i.test(commands), "the command reference should separate content from credentials");
+  assert.ok(cli.includes("--data"), "the command reference should document --data");
+  assert.ok(overview.includes("--input -"), "the overview should document the stdin input");
   assert.ok(
-    /is not authorization/i.test(agent),
-    "the agent page should state that --yes is not a user authorization",
+    /exactly one input source/i.test(cli),
+    "the command reference should state input exclusivity",
   );
-  assert.ok(/do not resend/i.test(publishing), "the publishing page should forbid blind resends");
-  assert.ok(/reads the file once/i.test(publishing), "the publishing page should state the source snapshot rule");
-  assert.ok(/later publish reads the current input/i.test(publishing), "separate previews must not promise a reserved snapshot");
-  assert.ok(/no write lock/i.test(publishing), "dry-run must not take a write lock");
-  assert.ok(/resolves no credentials/i.test(publishing), "dry-run must not resolve credentials");
-  assert.ok(/no temporary file/i.test(agent), "agents must not require temporary files");
-  assert.ok(/one argument/i.test(agent), "generated content must not be shell-interpolated");
-  assert.ok(/process arguments/i.test(agent) && agent.includes("--input -"), "agents need an argv warning and stdin alternative");
+  assert.ok(/process arguments/i.test(local), "the CLI guide should warn about argv exposure");
+  assert.ok(
+    /never a place for credentials/i.test(cli),
+    "the command reference should separate content from credentials",
+  );
+  assert.ok(
+    /not a grant of authority/i.test(agent),
+    "the agent page should state that a confirmation prompt is not user authorization",
+  );
+  assert.ok(
+    /single-use/i.test(local),
+    "the CLI guide should state that the approval token is single-use",
+  );
+  assert.ok(
+    /frozen before it is sent/i.test(local),
+    "the CLI guide should state the source snapshot rule",
+  );
+  assert.ok(
+    /never retryable/i.test(requests),
+    "the request reference should forbid retrying an unknown write",
+  );
+  assert.ok(/without writing state/i.test(local), "dry-run must not write local state");
+  assert.ok(
+    /resolving credentials/i.test(local),
+    "dry-run must not resolve credentials",
+  );
+  assert.ok(/do not parse the message/i.test(agent), "agents must branch on the code, not the text");
+  assert.ok(
+    /process arguments/i.test(agent) && agent.includes("--input -"),
+    "agents need an argv warning and stdin alternative",
+  );
 });
 
 test("robots.txt and sitemap.xml come from the registry and the configured origins", async () => {

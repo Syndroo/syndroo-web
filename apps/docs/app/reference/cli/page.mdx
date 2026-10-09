@@ -1,0 +1,271 @@
+export const metadata = {
+  title: "CLI reference - Syndroo docs",
+  description:
+    "The three syndroo commands with every flag, the global flags and the exit codes, checked against the built CLI.",
+  alternates: { canonical: "/reference/cli/" },
+  openGraph: {
+    type: "website",
+    url: "/reference/cli/",
+    title: "CLI reference - Syndroo docs",
+    description:
+      "The three syndroo commands with every flag, the global flags and the exit codes, checked against the built CLI.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>CLI</span>
+    </nav>
+    <h1 id="cli">CLI reference</h1>
+    <p className="lede">Three first-level commands and no others: <code>{"syndroo connect"}</code>,{" "} <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. Retrying is a mode of{" "} <code>{"syndroo publish"}</code>, and querying is read-only in{" "} <code>{"syndroo status"}</code>. Every command and flag on this page is checked against the built CLI when the site is published.</p>
+
+    <h2 id="global-flags">Global flags</h2>
+    <p>These are read before the command, so they work in any position on the line and are never passed to a command.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Flag</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--config"}</code></th>
+            <td>Select the configuration file. The path must be absolute.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--json"}</code></th>
+            <td>Print one JSON envelope and never prompt.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--verbose"}</code></th>
+            <td>Add diagnostics, such as the request id a call recorded.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--no-color"}</code></th>
+            <td>Disable colour in human output. <code>{"NO_COLOR"}</code> does the same.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--help"}</code></th>
+            <td>Print usage for the whole CLI, or for one command.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--version"}</code></th>
+            <td>Print the candidate version and the Node.js version that ran it.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Repeating a global flag is a usage error rather than a silent last-one-wins. A bare{" "} <code>{"syndroo"}</code> prints the same usage and exits 0 without touching the configuration or creating any state.</p>
+
+    <h2 id="connect">syndroo connect</h2>
+    <pre data-label="usage"><code>{"syndroo connect [options] [provider]"}</code></pre>
+    <p>Starts, resumes or maintains one connection. Exactly one mode per run: a provider positional starts a connection, <code>{"--update"}</code> and <code>{"--disconnect"}</code> maintain an existing one, and <code>{"--input"}</code> reads a whole request document.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Flag</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--label"}</code></th>
+            <td>Name the connection.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--connection"}</code></th>
+            <td>Reconnect or refresh an existing connection id.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--from-env"}</code></th>
+            <td>Read the credentials from <code>{"SYNDROO_CREDENTIALS"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--credential-file"}</code></th>
+            <td>Read the credentials from one private JSON file.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--update"}</code></th>
+            <td>Change a connection's label or default flag.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--disconnect"}</code></th>
+            <td>Remove one stored connection. Never revokes a platform credential.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--input"}</code></th>
+            <td>Read a machine request document; <code>{"-"}</code> reads standard input.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--redirect-uri <uri>"}</code></th>
+            <td>Choose the OAuth redirect the CLI binds itself. Defaults to a pre-registerable loopback URI; the CLI serves that host, port and path and receives one redirect, which needs a controlling terminal.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--callback-url <url>"}</code></th>
+            <td>Complete a redirect with the URL the browser landed on. <code>{"-"}</code> reads it from standard input; a URL that carries <code>{"code"}</code> or <code>{"state"}</code> is refused on the command line.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--default"}</code></th>
+            <td>Mark the connection as the default target.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--no-default"}</code></th>
+            <td>Clear the default flag.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--from-env"}</code> and <code>{"--credential-file"}</code> are mutually exclusive, and a resume request is only ever accepted from standard input. A connect step that still needs input reports the pending action and exits 0 instead of blocking; on a terminal the same run prompts for the fields the provider declared. For the OAuth providers (<code>{"linkedin"}</code>, <code>{"threads"}</code> and <code>{"mastodon"}</code>) <code>{"--redirect-uri"}</code> names the loopback callback the CLI binds itself and <code>{"--callback-url -"}</code> takes the redirected URL on standard input; that local callback path is fixture-tested against local servers only.</p>
+
+    <h2 id="publish">syndroo publish</h2>
+    <pre data-label="usage"><code>{"syndroo publish [options]"}</code></pre>
+    <p>Prepares, executes or retries a publication. Exactly one input source is required, and a request whose <code>{"type"}</code> is <code>{"execute"}</code> may only come from standard input.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Flag</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--input"}</code></th>
+            <td>Read the request document from a file; <code>{"-"}</code> reads standard input.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--data"}</code></th>
+            <td>Take the request document inline. Never a place for credentials.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--retry"}</code></th>
+            <td>Retry the eligible targets of an earlier operation.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--to"}</code></th>
+            <td>Name the connection to retry. Repeatable, one per target.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--request-id"}</code></th>
+            <td>Give this logical call a stable identity.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--dry-run"}</code></th>
+            <td>Preview only: no state, no credentials, no network request.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--to"}</code> requires <code>{"--retry"}</code>, and{" "} <code>{"--dry-run"}</code> refuses a retry. A retry target must be eligible: a delivery whose outcome is <code>{"unknown"}</code> is never retried.</p>
+
+    <h2 id="status">syndroo status</h2>
+    <pre data-label="usage"><code>{"syndroo status [options]"}</code></pre>
+    <p>Read-only. It never creates the state root, never takes a write lock, never reads a secret and never contacts a platform. With no selector it answers the overview.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Flag</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--provider"}</code></th>
+            <td>Ask about one provider; may also filter <code>{"--connections"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--connections"}</code></th>
+            <td>List the stored connections.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--operation"}</code></th>
+            <td>Read one operation by id.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--operations"}</code></th>
+            <td>Page through the recent operation summaries.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--limit"}</code></th>
+            <td>Page size for <code>{"--operations"}</code>, from 1 to 100.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--cursor"}</code></th>
+            <td>Opaque cursor for the next <code>{"--operations"}</code> page.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--connections"}</code>, <code>{"--operation"}</code> and{" "} <code>{"--operations"}</code> are mutually exclusive, <code>{"--provider"}</code> cannot be combined with either operation selector, and <code>{"--limit"}</code> or{" "} <code>{"--cursor"}</code> without <code>{"--operations"}</code> is a usage error.</p>
+
+    <h2 id="exit-codes">Exit codes</h2>
+    <p>An exit code describes the local call, not the platform. Exit 0 can still mean a pending authorization or a preview that has not been executed yet.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Code</th>
+            <th scope="col">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"0"}</code></th>
+            <td>Handled as documented. A result may still need confirmation or authorization.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"1"}</code></th>
+            <td>Internal or durability failure. Side effects are unknown.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"2"}</code></th>
+            <td>Usage, configuration, authentication or preflight refusal. Nothing was sent.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"4"}</code></th>
+            <td>A write may have reached the provider and no result is known.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"5"}</code></th>
+            <td>A human explicitly declined at the confirmation step. Nothing was sent.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"6"}</code></th>
+            <td>Execution finished and is known not to be fully successful.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"130"}</code></th>
+            <td>The local process stopped on a signal. Server-side work was not cancelled.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="related">Related</h2>
+    <ul>
+      <li><a href="/reference/configuration/">Configuration</a> for the file shape and the state root.</li>
+      <li><a href="/reference/credentials/">Credentials</a> for the field names per provider.</li>
+      <li><a href="/reference/requests/">Requests and envelopes</a> for every request and result shape.</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#global-flags">Global flags</a></li>
+    <li><a href="#connect">syndroo connect</a></li>
+    <li><a href="#publish">syndroo publish</a></li>
+    <li><a href="#status">syndroo status</a></li>
+    <li><a href="#exit-codes">Exit codes</a></li>
+    <li><a href="#related">Related</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,100 @@
+export const metadata = {
+  title: "Platforms - Syndroo docs",
+  description:
+    "The five official Syndroo providers, their content type, credential fields, declared egress origins and what still needs verification against a real account.",
+  alternates: { canonical: "/platforms/" },
+  openGraph: {
+    type: "website",
+    url: "/platforms/",
+    title: "Platforms - Syndroo docs",
+    description:
+      "The five official Syndroo providers, their content type, credential fields, declared egress origins and what still needs verification against a real account.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>Platforms</span>
+    </nav>
+    <h1 id="platforms">Platforms</h1>
+    <p className="lede">Five official providers ship with the candidate: Bluesky, Threads, LinkedIn and Mastodon publish text, and DEV.to publishes articles. Each has its own guide, and each guide states only what the provider's source and the recorded provider evidence support.</p>
+
+    <div className="tip">
+      <strong>No live call has been made.</strong>
+      <p>Every provider here is fixture-tested against recorded API evidence. No Syndroo account has been connected and no post has been published to a real account from this project, so "the code supports it" is not "your account accepts it".</p>
+    </div>
+
+    <h2 id="providers">The five providers</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Provider</th>
+            <th scope="col">Content</th>
+            <th scope="col">Credential fields</th>
+            <th scope="col">Declared egress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><a href="/platforms/bluesky/">Bluesky</a></th>
+            <td>Text post</td>
+            <td><code>{"identifier"}</code>, <code>{"password"}</code></td>
+            <td><code>{"https://bsky.social"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/platforms/threads/">Threads</a></th>
+            <td>Text post</td>
+            <td><code>{"client_id"}</code>, <code>{"client_secret"}</code></td>
+            <td><code>{"https://www.threads.net"}</code>, <code>{"https://graph.threads.net"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/platforms/linkedin/">LinkedIn</a></th>
+            <td>Member text post</td>
+            <td><code>{"client_id"}</code>, <code>{"client_secret"}</code></td>
+            <td><code>{"https://www.linkedin.com"}</code>, <code>{"https://api.linkedin.com"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/platforms/mastodon/">Mastodon</a></th>
+            <td>Public status text</td>
+            <td>None: the flow is browser authorization</td>
+            <td>Federated: the instance you name</td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/platforms/devto/">DEV.to</a></th>
+            <td>Article</td>
+            <td><code>{"apiKey"}</code></td>
+            <td><code>{"https://dev.to"}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>"Declared egress" is the origin list a provider writes in its manifest. The runtime builds the outbound allowlist from that declaration, so a provider cannot quietly call a host it did not declare. <a href="/build/provider-plugins/">Build</a> explains the rule.</p>
+
+    <h2 id="names">Provider ids</h2>
+    <p>A request names the provider with its id, and the id is also the package name suffix and the registry key: <code>{"bluesky"}</code>, <code>{"threads"}</code>,{" "} <code>{"linkedin"}</code>, <code>{"mastodon"}</code> and <code>{"devto"}</code>. The display name is only presentation.</p>
+
+    <h2 id="unresolved">Unresolved before these guides are complete</h2>
+    <p>This page does not paper over the gaps in the recorded evidence. The following are marked{" "} <strong>UNRESOLVED</strong> in the guides and must be re-verified against the provider before they are presented as fact:</p>
+    <ul>
+      <li>Bluesky: the exact settings path for creating an app password.</li>
+      <li>Threads: whether the API host is <code>{"graph.threads.net"}</code> or <code>{"graph.threads.com"}</code>, the text limit, the error table and the revoke flow.</li>
+      <li>LinkedIn: the commentary length limit, the error format and the token revocation procedure.</li>
+      <li>Mastodon: the full error entity and each instance's own character limit.</li>
+      <li>DEV.to: the API-key issuance and regeneration path, and the v1 rate limits.</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#providers">The five providers</a></li>
+    <li><a href="#names">Provider ids</a></li>
+    <li><a href="#unresolved">Unresolved before these guides are complete</a></li>
+  </ul>
+</nav>

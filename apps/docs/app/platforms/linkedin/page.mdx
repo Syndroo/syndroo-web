@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "LinkedIn - Syndroo docs",
+  description:
+    "Connect LinkedIn with an app client and publish a member text post: credential fields, declared egress, options, the pinned API version and what is unresolved.",
+  alternates: { canonical: "/platforms/linkedin/" },
+  openGraph: {
+    type: "website",
+    url: "/platforms/linkedin/",
+    title: "LinkedIn - Syndroo docs",
+    description:
+      "Connect LinkedIn with an app client and publish a member text post: credential fields, declared egress, options, the pinned API version and what is unresolved.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/platforms/">Platforms</a>
+      <span aria-hidden="true">/</span>
+      <span>LinkedIn</span>
+    </nav>
+    <h1 id="linkedin">LinkedIn</h1>
+
+    <h2 id="overview">Overview</h2>
+    <p>Provider id <code>{"linkedin"}</code>. The provider publishes one member post to{" "} <code>{"POST https://api.linkedin.com/rest/posts"}</code> with the required{" "} <code>{"LinkedIn-Version"}</code> header. Organization posts are not implemented: only{" "} <code>{"member"}</code> is accepted as the author selection.</p>
+
+    <h2 id="requirements">Requirements</h2>
+    <ul>
+      <li>A LinkedIn developer app with a client id and client secret.</li>
+      <li>A registered redirect URI for the authorization step.</li>
+      <li>Member authorization for posting. The documented scope for posting on behalf of a member is <code>{"w_member_social"}</code>.</li>
+    </ul>
+
+    <h2 id="credentials">Credentials</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Field</th>
+            <th scope="col">Meaning</th>
+            <th scope="col">Secret</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"client_id"}</code></th>
+            <td>The app's client id.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"client_secret"}</code></th>
+            <td>The app's client secret.</td>
+            <td>Yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The posting author is <code>{"urn:li:person:{id}"}</code>, and the member id is resolved through <code>{"GET /v2/me"}</code>, which LinkedIn documents as deprecated.{" "} <code>{"GET /v2/userinfo"}</code> is deliberately not used for the author: its{" "} <code>{"sub"}</code> is unique per app, not a stable global member id. When the member id cannot be read, the connection fails closed instead of guessing.</p>
+
+    <h2 id="connect">Connect</h2>
+    <p><code>{"redirectUri"}</code> is required; the client id, client secret and scope list can be supplied as connect options by a machine caller.</p>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"linkedin\",\n  \"options\": {\n    \"redirectUri\": \"https://example.com/oauth/callback/linkedin\",\n    \"scopes\": [\"w_member_social\", \"openid\", \"profile\"]\n  }\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo connect --input connect.json --json"}</code></pre>
+    <p><strong>UNRESOLVED.</strong> PKCE is not documented on the token endpoint that was read, and the provider never adds a <code>{"code_challenge"}</code> for that reason. The start step returns an authorization action that the local CLI completes itself, with <code>{"--redirect-uri"}</code> and a controlling terminal or with <code>{"--callback-url -"}</code>, as the <a href="/reference/credentials/#browser">credential reference</a> describes. That local callback path is fixture-tested against local servers only; no live LinkedIn account was connected.</p>
+
+    <h2 id="first-publish">First publish</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": {},\n  \"targets\": [\n    {\n      \"provider\": \"linkedin\",\n      \"options\": { \"commentary\": \"Hello from Syndroo.\", \"visibility\": \"PUBLIC\" }\n    }\n  ]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>Success is an HTTP 201 whose response header carries the created post URN. That header only arrives with the response, so a timeout after the post was created leaves the outcome{" "} <code>{"unknown"}</code> and non-retryable.</p>
+
+    <h2 id="capabilities">Capabilities</h2>
+    <p>The manifest declares <code>{"text"}</code>, published as a member post with{" "} <code>{"lifecycleState: PUBLISHED"}</code>. <strong>UNRESOLVED.</strong> The maximum commentary length is not documented on the retrieved page, so no character limit is printed here or enforced by the provider.</p>
+
+    <h2 id="options">Options</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Where</th>
+            <th scope="col">Accepted keys</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Connect options</th>
+            <td><code>{"redirectUri"}</code> (required), <code>{"clientId"}</code>,{" "} <code>{"clientSecret"}</code>, <code>{"scopes"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row">Publish options</th>
+            <td><code>{"commentary"}</code> and <code>{"visibility"}</code> (both required),{" "} <code>{"author"}</code> (<code>{"member"}</code> only), <code>{"distribution"}</code>,{" "} <code>{"linkedinVersion"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row">Content</th>
+            <td>None required; LinkedIn sends the target options.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>UNRESOLVED.</strong> <code>{"linkedinVersion"}</code> is pinned to{" "} <code>{"202601"}</code> in the provider's manifest and is the only accepted value. LinkedIn versions this header by month, so treat that constant as awaiting re-verification against the current API version rather than as a recommendation.</p>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <p>The provider never retries and reports a failure only when the failure is known not to have been applied. A rejected or already-used authorization code is reported as a callback rejection rather than retried. <strong>UNRESOLVED.</strong> LinkedIn's error response format was not confirmed on a primary page, so this guide does not describe one.</p>
+
+    <h2 id="revoke">Revoke and security</h2>
+    <p><strong>UNRESOLVED.</strong> No official permission-removal or token-revocation procedure was retrieved, so this guide does not print a revoke URL. Remove the app's access from your LinkedIn settings, then disconnect the local connection:</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#credentials">Credentials</a></li>
+    <li><a href="#connect">Connect</a></li>
+    <li><a href="#first-publish">First publish</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#options">Options</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#revoke">Revoke and security</a></li>
+  </ul>
+</nav>

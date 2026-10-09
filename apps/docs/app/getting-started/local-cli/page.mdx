@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Local CLI - Syndroo docs",
+  description:
+    "Build the syndroo candidate, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
+  alternates: { canonical: "/getting-started/local-cli/" },
+  openGraph: {
+    type: "website",
+    url: "/getting-started/local-cli/",
+    title: "Local CLI - Syndroo docs",
+    description:
+      "Build the syndroo candidate, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>Local CLI</span>
+    </nav>
+    <h1 id="local-cli">Run the CLI on this machine</h1>
+    <p className="lede">The candidate is a single Node.js program. It reads one configuration file, keeps its state under one state-root directory, and talks to platform APIs directly through an egress policy built from each provider's manifest. Nothing watches, schedules or runs in the background.</p>
+
+    <h2 id="install">Build and install</h2>
+    <p>Node.js 24.19 or newer, on macOS or Linux. The package is not published to a registry, so the supported path is to build it and pack the workspace:</p>
+    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo --version"}</code></pre>
+    <p><code>{"--version"}</code> prints the candidate version and the Node.js version that ran it. <code>{"--help"}</code> prints the command list, and each command answers its own{" "} <code>{"--help"}</code>. Both work before any configuration exists and create nothing.</p>
+
+    <h2 id="configuration">Configuration</h2>
+    <p>There is one configuration source. Without <code>{"--config"}</code> the CLI reads{" "} <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>, falling back to{" "} <code>{"$HOME/.config/syndroo/config.json"}</code>. A missing default file is fine for the commands that resolve no provider; a missing file named by <code>{"--config"}</code> is an error. The path given to <code>{"--config"}</code> must be absolute.</p>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"stateRoot\": \"state\",\n  \"providers\": {\n    \"ghost\": { \"path\": \"vendor/ghost-provider\" }\n  }\n}"}</code></pre>
+    <p><code>{"version"}</code> must be <code>{"1"}</code>. <code>{"stateRoot"}</code> and each{" "} <code>{"providers.<id>.path"}</code> resolve relative to the directory of the configuration file, so changing the working directory cannot change which state or which plugin a run uses. Unknown keys are refused, and a key that looks like a token, secret, password or API key is refused by name rather than ignored.{" "} <a href="/reference/configuration/">Configuration</a> has the full contract.</p>
+
+    <h2 id="state">Local state</h2>
+    <p>The state root defaults to{" "} <code>{"$XDG_STATE_HOME/syndroo/runtime-v1"}</code>, falling back to{" "} <code>{"$HOME/.local/state/syndroo/runtime-v1"}</code>. It carries a single format marker, and the runtime refuses a root whose marker is missing or names another format. Earlier Syndroo versions used a different root; this runtime never probes, migrates or deletes it.</p>
+    <p>Reads never create the root and never repair it. A read-only command on a machine that has never connected anything reports the state as uninitialized instead of writing a directory into place.</p>
+
+    <h2 id="connect">Connect one provider</h2>
+    <p>One credential source per run: <code>{"--from-env"}</code> reads the{" "} <code>{"SYNDROO_CREDENTIALS"}</code> environment variable, and{" "} <code>{"--credential-file"}</code> reads a private JSON file. Both are parsed as strict JSON and validated against the provider's own credential schema before anything is stored.</p>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work --default"}</code></pre>
+    <p>Adding <code>{"--label"}</code> names the connection, and <code>{"--default"}</code> makes it the target a document gets when its target names no connection. A provider can hold several connections: connect again with <code>{"--connection"}</code> to refresh an existing one, use{" "} <code>{"--update"}</code> to change a label or the default flag, and{" "} <code>{"--disconnect"}</code> to remove the local connection. Disconnecting never revokes a platform token.</p>
+    <p>A machine caller can drive the same command with a whole request document instead of flags:{" "} <code>{"--input"}</code> takes a file, and <code>{"-"}</code> reads standard input. Every connection step is recorded, so replaying the same request returns the stored answer rather than connecting twice.</p>
+
+    <h2 id="publish">Prepare, then execute</h2>
+    <p>A publication is frozen before it is sent. Preparing validates the content and the targets and returns a preview plus a single-use approval token; executing consumes that token.</p>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"One document, chosen targets.\" },\n  \"targets\": [\n    { \"provider\": \"bluesky\" },\n    { \"provider\": \"devto\", \"options\": { \"title\": \"Hello\", \"body_markdown\": \"One document.\" } }\n  ]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --input - < execute.json --json"}</code></pre>
+    <p>On a terminal the prepare shows the frozen preview and asks for a yes or no; declining exits 5 and sends nothing. In <code>{"--json"}</code> the command never prompts and returns the prepared result, so a caller decides. Executing is only possible from standard input, and the token is minted and consumed by the same process family.</p>
+    <p><code>{"--data"}</code> takes the same request document inline, which is convenient for a one-off but leaves the content in the process arguments.{" "} <code>{"--dry-run"}</code> parses and previews without writing state, resolving credentials or making a network request. <code>{"--request-id"}</code> gives the call a stable identity so a retry of the same logical intent is recognised.</p>
+
+    <h2 id="status">Read status</h2>
+    <p>Reads never mutate and never repair, and they never contact a platform. With no selector the overview lists provider availability, the connection count and the recent operations.</p>
+    <pre data-label="terminal"><code>{"syndroo status --json\nsyndroo status --connections --json\nsyndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
+    <p><code>{"--provider"}</code> asks about one provider and may also filter the connection list.{" "} <code>{"--limit"}</code> and <code>{"--cursor"}</code> belong to{" "} <code>{"--operations"}</code> only, and an opaque cursor is passed back unchanged to fetch the next page.</p>
+
+    <h2 id="retry">Retry</h2>
+    <p>Retrying is a mode of the same publish command, not a fourth command:{" "} <code>{"--retry"}</code> names the earlier operation and <code>{"--to"}</code> names the connection to retry, repeatable once per target. Only targets whose failure is known not to have been applied are eligible. A delivery whose outcome is <code>{"unknown"}</code> is never eligible: the platform may already hold the post, and the CLI will not find out by sending it again.</p>
+    <pre data-label="terminal"><code>{"syndroo publish --retry <operationId> --to <connectionId> --json"}</code></pre>
+
+    <h2 id="exit-codes">Exit codes</h2>
+    <p>An exit code says what the local call established, not whether a platform accepted the post. <a href="/reference/cli/#exit-codes">The exit code table</a> lists all seven values, including the two that matter most: 4 means a write may have reached the provider with no known result, and 6 means a finished execution is known not to be fully successful.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#install">Build and install</a></li>
+    <li><a href="#configuration">Configuration</a></li>
+    <li><a href="#state">Local state</a></li>
+    <li><a href="#connect">Connect one provider</a></li>
+    <li><a href="#publish">Prepare, then execute</a></li>
+    <li><a href="#status">Read status</a></li>
+    <li><a href="#retry">Retry</a></li>
+    <li><a href="#exit-codes">Exit codes</a></li>
+  </ul>
+</nav>

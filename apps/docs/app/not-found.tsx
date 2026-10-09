@@ -15,20 +15,31 @@ export default function NotFound(): React.JSX.Element {
         <p className="eyebrow">Syndroo docs</p>
         <h1 id="not-found">That page does not exist.</h1>
         <p className="lede">
-          That page is not part of these docs. The links below cover the local publishing path.
+          That page is not part of these docs. The documentation was reorganised into Getting
+          Started, Platforms, Build and Reference, and an older link will not redirect: pick a
+          section below.
         </p>
         <div className="tile-grid">
           <a className="tile" href="/">
-            <span className="tile-title">Quick start</span>
-            <span className="tile-text">Install the CLI, bind one account, publish once, and read the result.</span>
+            <span className="tile-title">Getting Started</span>
+            <span className="tile-text">
+              Install the CLI, connect one account, prepare and execute a publication, and read the
+              result.
+            </span>
           </a>
-          <a className="tile" href="/commands/">
-            <span className="tile-title">Command reference</span>
-            <span className="tile-text">Every local command, its flags and its exit codes.</span>
+          <a className="tile" href="/platforms/">
+            <span className="tile-title">Platforms</span>
+            <span className="tile-text">
+              One guide per official provider, with credential fields, egress origins and what is
+              still unverified.
+            </span>
           </a>
-          <a className="tile" href="/faq/">
-            <span className="tile-title">FAQ</span>
-            <span className="tile-text">Config failures, changed files, duplicate keys, unknown results and state recovery.</span>
+          <a className="tile" href="/reference/cli/">
+            <span className="tile-title">Reference</span>
+            <span className="tile-text">
+              The three commands with every flag, the configuration file, credentials and the
+              request shapes.
+            </span>
           </a>
         </div>
       </article>

@@ -187,7 +187,7 @@ test("docs pages hold the shared shell metrics without viewport overflow", async
 
 test("the mobile drawer and the search dialog stay inside narrow viewports", async ({ page }, testInfo) => {
   for (const width of [320, 375, 430, 768]) {
-    await visit(page, "/commands/", width);
+    await visit(page, "/reference/cli/", width);
 
     await openDrawer(page);
     const opened = await report(page);

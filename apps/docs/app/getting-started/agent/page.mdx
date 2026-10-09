@@ -1,0 +1,64 @@
+export const metadata = {
+  title: "Use with an Agent - Syndroo docs",
+  description:
+    "Drive the syndroo CLI from an agent or a script: the JSON envelope, the stdin-only execute token, the exit code families and the stable request identity.",
+  alternates: { canonical: "/getting-started/agent/" },
+  openGraph: {
+    type: "website",
+    url: "/getting-started/agent/",
+    title: "Use with an Agent - Syndroo docs",
+    description:
+      "Drive the syndroo CLI from an agent or a script: the JSON envelope, the stdin-only execute token, the exit code families and the stable request identity.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>Use with an Agent</span>
+    </nav>
+    <h1 id="agent">Use with an Agent</h1>
+    <p className="lede">Syndroo contains no language model and no natural-language step. An agent calls the same three commands a person does and reads a stable JSON envelope instead of English. The protocol is the contract; the prose in a terminal is a convenience.</p>
+
+    <h2 id="json">Always ask for JSON</h2>
+    <p><code>{"--json"}</code> is a global flag, so it is accepted before or after the command. On success the envelope carries the operation name and the result; on failure it carries a stable code and a fixed message that was never built from a stack, a path or an argument.</p>
+    <pre data-label="envelope"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": { \"status\": \"confirmation_required\" },\n  \"error\": null\n}"}</code></pre>
+    <p>The failure shape is the same envelope with <code>{"ok"}</code> set to{" "} <code>{"false"}</code>, <code>{"result"}</code> as <code>{"null"}</code>, and an{" "} <code>{"error"}</code> object holding a <code>{"code"}</code> and a{" "} <code>{"message"}</code>. Branch on <code>{"code"}</code>; do not parse the message.</p>
+
+    <h2 id="exit-codes">Read the exit code as a family</h2>
+    <p><code>{"0"}</code> means the call was handled as documented, which can still be a pending authorization or a preview that needs confirmation. Exit{" "} <code>{"4"}</code> means a write may have reached the provider and no result is known. Exit{" "} <code>{"6"}</code> means an execution finished and is known not to be fully successful. The other values cover usage and preflight refusals, an explicit decline, an internal failure and an interrupted process; the <a href="/reference/cli/#exit-codes">CLI reference</a> lists all seven.</p>
+
+    <h2 id="two-phase">Two phases, and a token that stays on stdin</h2>
+    <p>Prepare first, execute second. The prepared result carries the frozen preview and a single-use <code>{"approvalToken"}</code>, and the execute request may only be read from standard input:</p>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json > prepared.json\nsyndroo publish --input - --json < execute.json"}</code></pre>
+    <p>An execute request that arrives from a file path or from <code>{"--data"}</code> is refused, so a live token cannot be left in the process arguments of a background call. Nothing is sent between the two phases: the content is frozen at prepare time and the second phase cannot re-read the original input.</p>
+
+    <h2 id="identity">Give each logical call a stable identity</h2>
+    <p><code>{"--request-id"}</code> names one logical intent. Repeating the same call with the same id returns the recorded outcome instead of sending a second time, and reusing an id with different content is refused rather than silently overwriting the earlier record. For a connection, the same guarantee is built in: a repeated connect request replays the stored step.</p>
+
+    <h2 id="credentials">Never put a credential in the request document</h2>
+    <p>Credentials travel in <code>{"SYNDROO_CREDENTIALS"}</code> or a private file, never in the publish document and never in <code>{"--data"}</code>. If the content must stay out of the process arguments, read the request from standard input with{" "} <code>{"--input -"}</code> instead of passing it inline.</p>
+
+    <h2 id="skill">The packaged Skill</h2>
+    <p>The packed CLI ships a <code>{"skills/"}</code> directory, so an agent harness can install the Skill together with the binary. The Skill text itself is maintained in the product repository rather than duplicated here, and this site does not restate its workflow as verified. <strong>UNRESOLVED.</strong></p>
+
+    <h2 id="authorization">Confirmation is not user authorization</h2>
+    <p>A confirmation prompt is a local guardrail, not a grant of authority. An agent that runs without a human present is responsible for deciding whether the publication is allowed in the first place; the CLI only guarantees that nothing is sent before the prepare phase has produced a token for exactly this content and these targets.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#json">Always ask for JSON</a></li>
+    <li><a href="#exit-codes">Read the exit code as a family</a></li>
+    <li><a href="#two-phase">Two phases, and a token that stays on stdin</a></li>
+    <li><a href="#identity">Give each logical call a stable identity</a></li>
+    <li><a href="#credentials">Never put a credential in the request document</a></li>
+    <li><a href="#skill">The packaged Skill</a></li>
+    <li><a href="#authorization">Confirmation is not user authorization</a></li>
+  </ul>
+</nav>

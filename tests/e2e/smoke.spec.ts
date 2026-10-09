@@ -2,7 +2,7 @@ import { expect, test } from "playwright/test";
 import { docsPages } from "../../packages/content/site-data.ts";
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`direct publishing pages and navigation at ${viewport.width}px`, async ({ page }, testInfo) => {
+  test(`published docs pages and navigation at ${viewport.width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     const pageErrors: string[] = [];
     page.on("pageerror", error => pageErrors.push(error.message));
@@ -30,7 +30,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(page.locator("#docs-sidebar a[aria-current=page]")).toHaveText(entry.label);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect(page.locator("main")).not.toContainText(/--plan|planId|frozen plan/);
-      if (entry.path === "/publishing/" || entry.path === "/agent-setup/") {
+      if (entry.path === "/reference/cli/" || entry.path === "/getting-started/local-cli/") {
         await expect(page.locator("main")).toContainText("--data");
         await page.screenshot({ path: testInfo.outputPath(`${entry.label}.png`), fullPage: true });
       }

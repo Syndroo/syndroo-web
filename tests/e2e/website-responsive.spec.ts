@@ -165,7 +165,10 @@ test("the JSON sample on the page parses", async ({ page }) => {
   expect(samples.length).toBeGreaterThan(0);
   for (const sample of samples) {
     const parsed = JSON.parse(sample) as Record<string, unknown>;
-    expect(Object.keys(parsed)).toEqual(["key", "content", "platforms"]);
-    expect(parsed.platforms).toEqual(["bluesky", "threads", "linkedin"]);
+    // The sample is a v1 publish document: `content` is an object and
+    // `targets` names the providers, matching the documented request shape.
+    expect(Object.keys(parsed)).toEqual(["content", "targets"]);
+    expect(parsed.content).toEqual({ text: "One document, chosen targets." });
+    expect(parsed.targets).toEqual([{ provider: "bluesky" }, { provider: "linkedin" }]);
   }
 });

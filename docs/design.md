@@ -5,19 +5,26 @@ run lives in [acceptance.md](acceptance.md).
 
 ## Published surface
 
-Seven public pages and nothing else:
+Sixteen public pages and nothing else, in the accepted Q39 information
+architecture:
 
 | Site | Paths |
 | --- | --- |
 | Website | `/` |
-| Documentation | `/`, `/accounts/`, `/publishing/`, `/agent-setup/`, `/commands/`, `/faq/` |
+| Docs - Getting Started | `/`, `/getting-started/local-cli/`, `/getting-started/agent/` |
+| Docs - Platforms | `/platforms/`, `/platforms/bluesky/`, `/platforms/threads/`, `/platforms/linkedin/`, `/platforms/mastodon/`, `/platforms/devto/` |
+| Docs - Build | `/build/provider-plugins/`, `/build/trust-and-registry/` |
+| Docs - Reference | `/reference/cli/`, `/reference/configuration/`, `/reference/credentials/`, `/reference/requests/` |
 
 Both sites also export the two technical 404 documents Next.js generates. The
 registries in `packages/content/site-data.ts` drive the routes, the sitemaps, the
 docs search index and the expected build output. The page files themselves create
 the Next.js routes; the fixtures enforce the whitelist, so tests reject an
 exported page that is not registered and a retired route cannot survive a
-rebuild.
+rebuild. The earlier `/accounts/`, `/agent-setup/`, `/commands/`, `/faq/` and
+`/publishing/` routes are deleted, not redirected: the export holds no
+`_redirects` file and no custom `404.html` routing, and the docs 404 page points
+at the four current sections instead.
 
 ## Version facts
 
@@ -28,7 +35,10 @@ rebuild.
 | Platform status | Five local providers: Bluesky, Threads, LinkedIn, and Mastodon (text), DEV.to (articles); fixture-tested, live-account acceptance pending |
 
 No page may present the candidate as released, tagged, deployed or installable
-from a registry. There is no hosted service, SDK or cloud product to document.
+from a registry: the documentation installs a tarball packed from the product
+workspace. The self-hosted HTTP server, the provider SDK's hosted path and the
+Cloudflare Worker are outside the documented surface, and the overview marks
+them **UNRESOLVED** instead of describing them.
 
 ## Deliverable
 
@@ -43,21 +53,30 @@ version, the five platforms, both navigation sets and the page registries. Both
 builds compile it into their own output, so the two sites and the fixtures cannot
 disagree about the surface.
 
-The authored content stays use-focused: install the CLI, bind one account,
-publish directly from a reusable file or inline JSON, optionally preview without
-state writes or network, read the receipt, and retry only provably safe targets.
+The authored content stays use-focused and describes only the three accepted
+commands: `syndroo connect` binds one provider, `syndroo publish` prepares and
+then executes a frozen document, and `syndroo status` reads the result. The
+getting-started flow builds the candidate, writes the configuration file,
+connects one account, publishes and reads the run back. Each platform page
+follows one template - overview, requirements, credentials, connect, first
+publish, capabilities, options, troubleshooting, revoke - and states only what
+the provider source and the recorded provider evidence support.
+
 Approval covers exact content and accounts; inline content has argv exposure,
-stdin is the alternative, and credentials stay outside post JSON. Separate
-invocations read current input; confirmation and sending within one invocation
-use the same snapshot. No page describes a hosted API, a published package, a retired version
-or a platform feature that has no evidence behind it.
+stdin is the alternative, and credentials stay outside the request JSON.
+Separate invocations read current input; confirmation and sending within one
+invocation use the same snapshot. Retry is a mode of `syndroo publish`, never a
+fourth command. No page describes a hosted API, a published package, a retired
+version or a platform feature that has no evidence behind it: a claim the
+evidence does not support is written as **UNRESOLVED** on the page rather than
+asserted.
 
 ## Composition
 
-The marketing site is one page: an intro with the hero action, the three
-steps that lead to a publish, the dry-run preview beside the publishing mascot,
-a closing call to action, and a footer carrying documentation, source and
-licence.
+The marketing site is one page: an intro with the hero action, the platform
+strip whose five cards link to the matching documentation guide, the steps that
+lead to a publish, the dry-run preview beside the queuing mascot, a closing call
+to action, and a footer carrying documentation, source and licence.
 
 The documentation site renders its topbar, sidebar, footer and search dialog
 once in the layout, so a page cannot drift out of the chrome. Each page supplies
@@ -108,7 +127,7 @@ data storage is added, and the docs search reads only its own pages.
 - Version claims use only the configured candidate and no page offers an install
   command for an unpublished package.
 - Every `syndroo` command and `--flag` the documentation introduces exists in the
-  real CLI, checked with a mode-aware `--help` lookup and the CLI's own `version`
-  output.
+  real CLI, checked with a per-command `--help` lookup, a probe of every global
+  flag and the CLI's own `--version` output.
 - Live-account publishing is not claimed anywhere: the five local providers are
   described as fixture-tested, and no page presents a publish as verified.

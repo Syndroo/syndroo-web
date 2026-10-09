@@ -47,7 +47,58 @@ export const versions: Versions = {
 };
 
 /** Minimum runtime the packaged CLI declares in its `engines` field. */
-export const PUBLIC_NODE_RUNTIME = "Node.js 22 or newer";
+export const PUBLIC_NODE_RUNTIME = "Node.js 24.19 or newer";
+
+/**
+ * The accepted CLI surface the documentation is allowed to print.
+ *
+ * Mirrors the accepted decision Q13 and section 12.1 of
+ * `docs/superpowers/specs/architecture-v1/01-architecture-design.md` in the
+ * product repository: exactly three first-level commands (`connect`, `publish`,
+ * `status`) plus the global flags `--config`, `--json`, `--verbose`,
+ * `--no-color`, `--help` and `--version`. `--help` and `--version` are the
+ * documented help/version surface, so there is no fourth command to print.
+ *
+ * The per-command flag lists are the CLI's own `--help` output. The build
+ * checker runs the real CLI and fails when this list and the shipped flags
+ * drift apart, so this is a mirror to audit against, not a second source of
+ * truth.
+ */
+export type CliCommandSurface = {
+  name: string;
+  flags: string[];
+};
+
+export const cliSurface = {
+  spec: "architecture-v1 section 12.1 / decision Q13",
+  globalFlags: ["--config", "--json", "--verbose", "--no-color", "--help", "--version"],
+  commands: [
+    {
+      name: "connect",
+      flags: [
+        "--label",
+        "--connection",
+        "--from-env",
+        "--credential-file",
+        "--update",
+        "--disconnect",
+        "--input",
+        "--redirect-uri",
+        "--callback-url",
+        "--default",
+        "--no-default",
+      ],
+    },
+    {
+      name: "publish",
+      flags: ["--input", "--data", "--retry", "--to", "--request-id", "--dry-run"],
+    },
+    {
+      name: "status",
+      flags: ["--provider", "--connections", "--operation", "--operations", "--limit", "--cursor"],
+    },
+  ] satisfies CliCommandSurface[],
+} as const;
 
 /**
  * The five platforms the local CLI publishes to, their CSS marks and the public
@@ -102,9 +153,8 @@ export const footerGroups: FooterGroup[] = [
     title: "Documentation",
     items: [
       { label: "Docs", href: `${ORIGIN_PLACEHOLDERS.docs}/` },
-      { label: "Command reference", href: `${ORIGIN_PLACEHOLDERS.docs}/commands/` },
-      { label: "Accounts", href: `${ORIGIN_PLACEHOLDERS.docs}/accounts/` },
-      { label: "Publishing", href: `${ORIGIN_PLACEHOLDERS.docs}/publishing/` },
+      { label: "CLI reference", href: `${ORIGIN_PLACEHOLDERS.docs}/reference/cli/` },
+      { label: "Platform guides", href: `${ORIGIN_PLACEHOLDERS.docs}/platforms/` },
     ],
   },
   {
@@ -146,25 +196,44 @@ export type DocsNavGroup = {
 /**
  * Documentation navigation. The docs build injects this into every page, so a
  * new page becomes reachable everywhere by adding one entry here and one page.
+ *
+ * The group titles are the accepted Q39 information architecture: Getting
+ * Started, Platforms, Build and Reference.
  */
 export const docsNav: DocsNavGroup[] = [
   {
-    title: "Start",
-    items: [{ label: "Quickstart", href: "/" }],
+    title: "Getting Started",
+    items: [
+      { label: "Overview", href: "/" },
+      { label: "Local CLI", href: "/getting-started/local-cli/", sub: true },
+      { label: "Use with an Agent", href: "/getting-started/agent/", sub: true },
+    ],
   },
   {
-    title: "Guides",
+    title: "Platforms",
     items: [
-      { label: "Accounts", href: "/accounts/" },
-      { label: "Publishing and retries", href: "/publishing/" },
-      { label: "Agent usage", href: "/agent-setup/" },
+      { label: "All platforms", href: "/platforms/" },
+      { label: "Bluesky", href: "/platforms/bluesky/", sub: true },
+      { label: "Threads", href: "/platforms/threads/", sub: true },
+      { label: "LinkedIn", href: "/platforms/linkedin/", sub: true },
+      { label: "Mastodon", href: "/platforms/mastodon/", sub: true },
+      { label: "DEV.to", href: "/platforms/devto/", sub: true },
+    ],
+  },
+  {
+    title: "Build",
+    items: [
+      { label: "Provider plugins", href: "/build/provider-plugins/" },
+      { label: "Trust and registry", href: "/build/trust-and-registry/", sub: true },
     ],
   },
   {
     title: "Reference",
     items: [
-      { label: "Commands", href: "/commands/" },
-      { label: "FAQ", href: "/faq/" },
+      { label: "CLI", href: "/reference/cli/" },
+      { label: "Configuration", href: "/reference/configuration/", sub: true },
+      { label: "Credentials", href: "/reference/credentials/", sub: true },
+      { label: "Requests and envelopes", href: "/reference/requests/", sub: true },
     ],
   },
 ];
@@ -182,10 +251,19 @@ export type PageEntry = {
 export const websitePages: PageEntry[] = [{ file: "index.html", path: "/", label: "Home" }];
 
 export const docsPages: PageEntry[] = [
-  { file: "index.html", path: "/", label: "Quickstart" },
-  { file: "accounts/index.html", path: "/accounts/", label: "Accounts" },
-  { file: "publishing/index.html", path: "/publishing/", label: "Publishing and retries" },
-  { file: "agent-setup/index.html", path: "/agent-setup/", label: "Agent usage" },
-  { file: "commands/index.html", path: "/commands/", label: "Commands" },
-  { file: "faq/index.html", path: "/faq/", label: "FAQ" },
+  { file: "index.html", path: "/", label: "Overview" },
+  { file: "getting-started/local-cli/index.html", path: "/getting-started/local-cli/", label: "Local CLI" },
+  { file: "getting-started/agent/index.html", path: "/getting-started/agent/", label: "Use with an Agent" },
+  { file: "platforms/index.html", path: "/platforms/", label: "All platforms" },
+  { file: "platforms/bluesky/index.html", path: "/platforms/bluesky/", label: "Bluesky" },
+  { file: "platforms/threads/index.html", path: "/platforms/threads/", label: "Threads" },
+  { file: "platforms/linkedin/index.html", path: "/platforms/linkedin/", label: "LinkedIn" },
+  { file: "platforms/mastodon/index.html", path: "/platforms/mastodon/", label: "Mastodon" },
+  { file: "platforms/devto/index.html", path: "/platforms/devto/", label: "DEV.to" },
+  { file: "build/provider-plugins/index.html", path: "/build/provider-plugins/", label: "Provider plugins" },
+  { file: "build/trust-and-registry/index.html", path: "/build/trust-and-registry/", label: "Trust and registry" },
+  { file: "reference/cli/index.html", path: "/reference/cli/", label: "CLI" },
+  { file: "reference/configuration/index.html", path: "/reference/configuration/", label: "Configuration" },
+  { file: "reference/credentials/index.html", path: "/reference/credentials/", label: "Credentials" },
+  { file: "reference/requests/index.html", path: "/reference/requests/", label: "Requests and envelopes" },
 ];

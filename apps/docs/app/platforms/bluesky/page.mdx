@@ -1,0 +1,125 @@
+export const metadata = {
+  title: "Bluesky - Syndroo docs",
+  description:
+    "Connect Bluesky with an app password and publish a text post: credential fields, declared egress, options, limits and the parts that are still unresolved.",
+  alternates: { canonical: "/platforms/bluesky/" },
+  openGraph: {
+    type: "website",
+    url: "/platforms/bluesky/",
+    title: "Bluesky - Syndroo docs",
+    description:
+      "Connect Bluesky with an app password and publish a text post: credential fields, declared egress, options, limits and the parts that are still unresolved.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/platforms/">Platforms</a>
+      <span aria-hidden="true">/</span>
+      <span>Bluesky</span>
+    </nav>
+    <h1 id="bluesky">Bluesky</h1>
+
+    <h2 id="overview">Overview</h2>
+    <p>Provider id <code>{"bluesky"}</code>. The provider authenticates against the hosted entryway{" "} <code>{"https://bsky.social"}</code>, creates a session, and publishes one text record. The body is the shared <code>{"content.text"}</code> and there are no per-target publish options.</p>
+
+    <h2 id="requirements">Requirements</h2>
+    <ul>
+      <li>A Bluesky account and an app password for it. An app password cannot create or delete other app passwords.</li>
+      <li>The candidate CLI built and installed, on Node.js 24.19 or newer.</li>
+      <li>The account handle in the <code>{"identifier"}</code> field.</li>
+    </ul>
+    <p><strong>UNRESOLVED.</strong> Two official Bluesky pages give different settings paths for creating an app password (one names Privacy and Security, the other names Advanced). This guide therefore does not print a menu path. Confirm it in your own account before you write instructions for anyone else.</p>
+
+    <h2 id="credentials">Credentials</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Field</th>
+            <th scope="col">Meaning</th>
+            <th scope="col">Secret</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"identifier"}</code></th>
+            <td>Your handle, for example <code>{"you.bsky.social"}</code>.</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"password"}</code></th>
+            <td>The app password, not the account password.</td>
+            <td>Yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The session response carries both <code>{"did"}</code> and <code>{"handle"}</code>. Syndroo stores the <code>{"did"}</code> as the account identity because a handle can change.</p>
+
+    <h2 id="connect">Connect</h2>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
+    <p>The credentials are validated against the provider's own schema before anything is stored. The session token that comes back is stored in the local credential store; the environment variable is not needed again for publishing.</p>
+
+    <h2 id="first-publish">First publish</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --input - --json < execute.json"}</code></pre>
+    <p>One call creates the record. A successful delivery reports the record URI as the remote id; a client-side timeout after the record committed is an <code>{"unknown"}</code> outcome and stays non-retryable.</p>
+
+    <h2 id="capabilities">Capabilities</h2>
+    <p>The manifest declares exactly one capability, <code>{"text"}</code>. The post lexicon caps the text at 3000 bytes and 300 graphemes, and the provider enforces that before sending.</p>
+
+    <h2 id="options">Options</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Where</th>
+            <th scope="col">Accepted keys</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Connect options</th>
+            <td>None. The provider reads only the credential fields.</td>
+          </tr>
+          <tr>
+            <th scope="row">Publish options</th>
+            <td>None. Unknown keys are refused rather than ignored.</td>
+          </tr>
+          <tr>
+            <th scope="row">Content</th>
+            <td><code>{"text"}</code>, required.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <p>Bluesky answers XRPC calls with a JSON error carrying an error name; a returned name such as{" "} <code>{"ExpiredToken"}</code>, <code>{"InvalidToken"}</code> or{" "} <code>{"AccountTakedown"}</code> classifies the response in hand only. It is not evidence about an earlier write, and a generic 400 or 5xx is never proof that a timed-out write did not apply.</p>
+    <p><strong>UNRESOLVED.</strong> Whether the PDS rejects an oversized ingest body is not documented on the sources used here.</p>
+
+    <h2 id="revoke">Revoke and security</h2>
+    <p>Delete the app password in your account settings to revoke the credential that Syndroo stored, then remove the local connection. Disconnecting in Syndroo only removes the local record; it never revokes a platform credential for you.</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#credentials">Credentials</a></li>
+    <li><a href="#connect">Connect</a></li>
+    <li><a href="#first-publish">First publish</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#options">Options</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#revoke">Revoke and security</a></li>
+  </ul>
+</nav>

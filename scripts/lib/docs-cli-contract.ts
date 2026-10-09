@@ -1,44 +1,72 @@
 // Cross-check the CLI surface the documentation introduces against the CLI's
 // own help output.
 //
-// The command itself lives in the product repository, so this module reads the
-// real `--help` text when a checkout is reachable and reports every documented
-// command or flag that does not exist. A documented option that no longer ships
-// has to fail a check rather than reach a reader.
+// The accepted surface is the three first-level commands `connect`, `publish`
+// and `status` plus the global flags `--config`, `--json`, `--verbose`,
+// `--no-color`, `--help` and `--version` (decision Q13 / architecture-v1
+// section 12.1). It is declared once in `packages/content/site-data.ts` as
+// `cliSurface` and mirrored here as the audit's input.
 //
-// The check never executes a documented example: it runs `--help` for each
-// command the pages show, plus `version`, and nothing else. Examples are read as
-// text, so a page can show a post document or a `--yes` run without this
-// repository ever touching an account.
+// Two things are checked, and neither is a rubber stamp:
+//
+//   1. the built documentation is read as text. A `syndroo` invocation or an
+//      inline `--flag` claim that is not on the accepted surface fails, and any
+//      retired command family fails even when it is only prose;
+//   2. when a product checkout is reachable, the real CLI is run with `--help`
+//      for every accepted command plus `--version`, and every accepted command
+//      and flag must appear there. Drift between the shipped CLI and the
+//      documented surface fails the check instead of passing quietly.
+//
+// The check never executes a documented example: it runs help and version only,
+// so no account is touched and no content is sent.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+import { cliSurface } from "../../packages/content/site-data.ts";
+
 const run = promisify(execFile);
 
-/** Commands whose first word is a group rather than the whole command. */
-const GROUP_WORDS: ReadonlySet<string> = new Set([
-  "auth",
+/** The accepted first-level commands, in the documented order. */
+export const ACCEPTED_COMMANDS: readonly string[] = cliSurface.commands.map(
+  (command) => command.name,
+);
+
+/** The accepted global flags. They are valid with every command. */
+export const ACCEPTED_GLOBAL_FLAGS: readonly string[] = [...cliSurface.globalFlags];
+
+/**
+ * Command words the v1 documentation must never print again. The architecture
+ * abandons the earlier command surface outright (decision Q25), so a leftover
+ * example is a defect rather than a compatibility question.
+ */
+export const RETIRED_COMMANDS: readonly string[] = [
+  "doctor",
   "posts",
+  "skill",
+  "local",
+  "init",
+  "auth",
   "providers",
   "receipts",
-  "skill",
   "state",
-]);
+  "help",
+];
 
-const FLAG_PATTERN = /(?<![\w-])--[a-z][a-z0-9-]*/g;
-const UNIT_FLAG = /^--[a-z][a-z0-9-]*$/;
-/**
- * An inline code span that documents a flag together with its argument, such as
- * `--timeout <duration>` or `--limit <n>`. Only the leading flag is read: the
- * rest of the span is the argument shape, not another flag.
- */
-const INLINE_FLAG_USAGE = /^(--[a-z][a-z0-9-]*)\s+\S+/;
-const COMMAND_WORD = /^[a-z][a-z-]*$/;
-/** The forms the documentation is allowed to use to start the command. */
-const INVOCATION_LINE = /^(?:npx\s+|\.\/node_modules\/\.bin\/)?syndroo\s+(.+)$/;
+/** Every flag the accepted surface allows, per command. */
+export function documentedFlagsFor(command: string): readonly string[] {
+  return cliSurface.commands.find((entry) => entry.name === command)?.flags ?? [];
+}
+
+/** The union of every flag the accepted surface allows. */
+export function allDocumentedFlags(): readonly string[] {
+  return [
+    ...ACCEPTED_GLOBAL_FLAGS,
+    ...cliSurface.commands.flatMap((command) => [...command.flags]),
+  ];
+}
 
 export type CliInvocation = {
-  /** Normalised command, for example `posts create`. */
+  /** Normalised command, for example `publish`. */
   command: string;
   /** Flags written on the same line, in the order they appear. */
   flags: string[];
@@ -48,9 +76,24 @@ export type CliInvocation = {
 
 export type CliSurface = {
   invocations: CliInvocation[];
-  /** Flags written as a standalone inline code span, such as `--yes`. */
+  /** Flags written as a standalone inline code span, such as `--json`. */
   inlineFlags: { flag: string; page: string }[];
+  /** Retired command words that still appear in the rendered page text. */
+  retired: { command: string; page: string }[];
 };
+
+const FLAG_PATTERN = /(?<![\w-])--[a-z][a-z0-9-]*/g;
+const UNIT_FLAG = /^--[a-z][a-z0-9-]*$/;
+/**
+ * An inline code span that documents a flag together with its argument, such as
+ * `--config <path>` or `--limit <count>`. Only the leading flag is read: the
+ * rest of the span is the argument shape, not another flag.
+ */
+const INLINE_FLAG_USAGE = /^(--[a-z][a-z0-9-]*)\s+\S+/;
+/** The forms the documentation is allowed to use to start the command. */
+const INVOCATION_LINE = /^(?:npx\s+|\.\/node_modules\/\.bin\/)?syndroo\s+(.+)$/;
+/** A retired command word after the product name, anywhere in the page text. */
+const RETIRED_IN_TEXT = new RegExp(`\\bsyndroo\\s+(${RETIRED_COMMANDS.join("|")})\\b`, "g");
 
 export function decodeEntities(value: string): string {
   return value
@@ -89,8 +132,9 @@ function inlineCodeBodies(html: string): string[] {
 }
 
 /**
- * Read one shell line. The command words are the leading run of plain lowercase
- * words; everything from the first flag, quote, variable or path is ignored.
+ * Read one shell line. The command word is the first plain lowercase word after
+ * the product name; everything from the first flag, quote, variable or path is
+ * not part of the command.
  */
 function parseInvocation(line: string): { command: string; flags: string[] } | null {
   const match = INVOCATION_LINE.exec(line);
@@ -98,30 +142,18 @@ function parseInvocation(line: string): { command: string; flags: string[] } | n
     return null;
   }
 
-  const tokens = (match[1] as string).split(/\s+/).filter((token) => token !== "");
-  const words: string[] = [];
-
-  for (const token of tokens) {
-    if (token.startsWith("-") || !COMMAND_WORD.test(token)) {
-      break;
-    }
-    words.push(token);
-  }
-
-  if (words.length === 0) {
+  const word = /^([a-z][a-z-]*)/.exec(match[1] as string)?.[1];
+  if (word === undefined) {
     return null;
   }
 
-  const command = GROUP_WORDS.has(words[0] as string)
-    ? words.slice(0, 2).join(" ")
-    : (words[0] as string);
-
-  return { command, flags: [...line.matchAll(FLAG_PATTERN)].map((flag) => flag[0]) };
+  return { command: word, flags: [...line.matchAll(FLAG_PATTERN)].map((flag) => flag[0]) };
 }
 
 export function extractCliSurface(pages: { path: string; html: string }[]): CliSurface {
   const invocations: CliInvocation[] = [];
   const inlineFlags: { flag: string; page: string }[] = [];
+  const retired: { command: string; page: string }[] = [];
 
   for (const page of pages) {
     for (const block of codeBlockBodies(page.html)) {
@@ -136,19 +168,19 @@ export function extractCliSurface(pages: { path: string; html: string }[]): CliS
     const pageText = decodeEntities(withoutScripts(page.html));
 
     for (const body of inlineCodeBodies(page.html)) {
-      const flag = body.trim();
+      const span = body.trim();
 
-      // Inline code may also carry a whole command, as it does inside the agent
-      // instruction block, so a command in prose is checked as well.
-      const inline = parseInvocation(flag);
+      // A whole command may also appear in prose, so a code span is read as an
+      // invocation when it starts with the product name.
+      const inline = parseInvocation(span);
       if (inline !== null) {
         invocations.push({ command: inline.command, flags: inline.flags, page: page.path });
         continue;
       }
 
-      // A span is a claim about a flag when it is the flag alone (`--yes`) or
-      // the flag followed by its argument shape (`--timeout <duration>`).
-      const named = UNIT_FLAG.test(flag) ? flag : INLINE_FLAG_USAGE.exec(flag)?.[1];
+      // A span is a claim about a flag when it is the flag alone (`--json`) or
+      // the flag followed by its argument shape (`--limit <count>`).
+      const named = UNIT_FLAG.test(span) ? span : INLINE_FLAG_USAGE.exec(span)?.[1];
       if (named === undefined) {
         continue;
       }
@@ -159,33 +191,34 @@ export function extractCliSurface(pages: { path: string; html: string }[]): CliS
       }
       inlineFlags.push({ flag: named, page: page.path });
     }
+
+    // Retired families are refused even when they appear as plain prose, so a
+    // removed command cannot survive in a sentence the code-span reader skips.
+    // A page may name a retired command only inside a clearly labelled
+    // historical note; none of the current pages does.
+    for (const match of pageText.matchAll(RETIRED_IN_TEXT)) {
+      retired.push({ command: match[1] as string, page: page.path });
+    }
   }
 
-  return { invocations, inlineFlags };
+  return { invocations, inlineFlags, retired };
 }
 
 /**
  * Run one `--help` invocation against the real CLI.
- *
- * `mode` carries the local selector when a page spells one, so `doctor --local`
- * is checked against the local help output rather than the remote one.
  */
-async function helpFor(
-  cliBin: string,
-  command: string,
-  mode: string[] = [],
-): Promise<{ ok: boolean; text: string }> {
+async function helpFor(cliBin: string, command: string): Promise<{ ok: boolean; text: string }> {
   const words = command.split(" ");
 
   for (const args of [
-    [...words, ...mode, "--help"],
-    [...words, "post_placeholder", ...mode, "--help"],
+    [...words, "--help"],
+    [...words, "post_placeholder", "--help"],
   ]) {
     try {
       const { stdout, stderr } = await run(process.execPath, [cliBin, ...args]);
       return { ok: true, text: `${stdout}\n${stderr}` };
     } catch (error) {
-      const failure = error as { stdout?: string; stderr?: string; code?: number };
+      const failure = error as { stdout?: string; stderr?: string };
       const text = `${failure.stdout ?? ""}\n${failure.stderr ?? ""}`;
       // A command with a required positional reports the missing argument
       // before it prints help, so retry once with the placeholder in place.
@@ -213,47 +246,95 @@ export type CliContractOptions = {
 export async function checkCliContract(options: CliContractOptions): Promise<string[]> {
   const issues: string[] = [];
   const surface = extractCliSurface(options.pages);
-  const commands = [...new Set(surface.invocations.map((entry) => entry.command))].sort();
+  const invocations = surface.invocations;
 
-  if (commands.length === 0) {
+  if (invocations.length === 0) {
     return ["no documented syndroo invocation was found in the built documentation"];
   }
 
-  // The local selector changes which mode the command answers help for, so a
-  // command documented with `--local` is checked against that mode. Every
-  // current `doctor` example is local, and the flag would otherwise be checked
-  // against the wrong help text.
-  const localModeByCommand = new Map<string, string[]>();
-  for (const invocation of surface.invocations) {
-    if (invocation.flags.includes("--local")) {
-      localModeByCommand.set(invocation.command, ["--local"]);
+  // 1. The documented surface, read as text.
+  for (const entry of surface.retired) {
+    issues.push(
+      `${entry.page} still prints the retired command "syndroo ${entry.command}", which architecture v1 does not ship`,
+    );
+  }
+
+  const accepted = new Set(ACCEPTED_COMMANDS);
+  const global = new Set(ACCEPTED_GLOBAL_FLAGS);
+
+  for (const invocation of invocations) {
+    if (!accepted.has(invocation.command)) {
+      issues.push(
+        `${invocation.page} documents "syndroo ${invocation.command}", which is not one of the three accepted commands`,
+      );
+      continue;
+    }
+
+    const allowed = new Set([...global, ...documentedFlagsFor(invocation.command)]);
+    for (const flag of invocation.flags) {
+      if (!allowed.has(flag)) {
+        issues.push(
+          `${invocation.page} documents "${flag}" on "syndroo ${invocation.command}", which the accepted surface does not list`,
+        );
+      }
     }
   }
 
-  const helpByCommand = new Map<string, string>();
-  const localHelpByCommand = new Map<string, string>();
+  const allFlags = new Set(allDocumentedFlags());
+  for (const { flag, page } of surface.inlineFlags) {
+    if (!allFlags.has(flag)) {
+      issues.push(`${page} documents "${flag}", which the accepted surface does not list`);
+    }
+  }
 
-  for (const command of commands) {
+  // 2. The real CLI, when the product checkout is reachable.
+  const helpByCommand = new Map<string, string>();
+
+  for (const command of ACCEPTED_COMMANDS) {
     const help = await helpFor(options.cliBin, command);
     helpByCommand.set(command, help.text);
-    if (!help.ok) {
-      issues.push(`the documentation uses "syndroo ${command}", which the CLI does not accept`);
-    }
 
-    const mode = localModeByCommand.get(command);
-    if (mode !== undefined) {
-      localHelpByCommand.set(command, (await helpFor(options.cliBin, command, mode)).text);
+    if (!help.ok) {
+      issues.push(`the CLI does not accept the accepted command "syndroo ${command}"`);
     }
   }
 
-  for (const invocation of surface.invocations) {
-    // A flag written next to `--local` is checked against the local help, so a
-    // local-only flag cannot be excused by the remote invocation's options.
-    const help = invocation.flags.includes("--local")
-      ? (localHelpByCommand.get(invocation.command) ?? helpByCommand.get(invocation.command) ?? "")
-      : (helpByCommand.get(invocation.command) ?? "");
-    for (const flag of invocation.flags) {
+  // The static mirror must match the shipped help output: a new flag that never
+  // reaches this list is drift, and so is a documented flag the CLI dropped.
+  for (const command of cliSurface.commands) {
+    const help = helpByCommand.get(command.name) ?? "";
+    for (const flag of command.flags) {
       if (!help.includes(flag)) {
+        issues.push(`the accepted surface lists "${flag}" for "syndroo ${command.name}", but the CLI help does not`);
+      }
+    }
+  }
+
+  const allHelp = [...helpByCommand.values()].join("\n");
+  const acceptedCommandsHelp = `${allHelp}\n${await rootHelp(options.cliBin)}`;
+  for (const command of ACCEPTED_COMMANDS) {
+    if (!acceptedCommandsHelp.includes(command)) {
+      issues.push(`the CLI help never mentions the accepted command "${command}"`);
+    }
+  }
+
+  // The global flags are read before Commander sees the line, so they never
+  // appear in any command's option list. Each one is probed instead: accepted
+  // with `--help`, and refused as an unknown option when it is not.
+  const globalFlagProblems = new Map<string, string>();
+  for (const flag of ACCEPTED_GLOBAL_FLAGS) {
+    const problem = await probeGlobalFlag(options.cliBin, flag);
+    if (problem !== undefined) {
+      globalFlagProblems.set(flag, problem);
+      issues.push(`the accepted global flag "${flag}" is not accepted by the CLI: ${problem}`);
+    }
+  }
+
+  for (const invocation of invocations) {
+    const help = helpByCommand.get(invocation.command) ?? "";
+    for (const flag of invocation.flags) {
+      const isGlobal = ACCEPTED_GLOBAL_FLAGS.includes(flag) && !globalFlagProblems.has(flag);
+      if (!help.includes(flag) && !isGlobal) {
         issues.push(
           `${invocation.page} documents "${flag}" on "syndroo ${invocation.command}", but that command's help does not accept it`,
         );
@@ -261,15 +342,16 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
     }
   }
 
-  const allHelp = [...helpByCommand.values(), ...localHelpByCommand.values()].join("\n");
   for (const { flag, page } of surface.inlineFlags) {
-    if (!allHelp.includes(flag)) {
-      issues.push(`${page} documents "${flag}", which no command in the CLI help accepts`);
+    const isGlobal = ACCEPTED_GLOBAL_FLAGS.includes(flag) && !globalFlagProblems.has(flag);
+
+    if (!allHelp.includes(flag) && !isGlobal) {
+      issues.push(`${page} documents "${flag}", which the CLI does not accept`);
     }
   }
 
   try {
-    const { stdout } = await run(process.execPath, [options.cliBin, "version"]);
+    const { stdout } = await run(process.execPath, [options.cliBin, "--version"]);
     if (!stdout.includes(options.expectedVersion)) {
       issues.push(
         `the CLI reports "${stdout.trim()}", which does not match the documented candidate ${options.expectedVersion}`,
@@ -277,10 +359,56 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
     }
   } catch (error) {
     const failure = error as { stdout?: string; stderr?: string };
-    issues.push(`the CLI did not answer "version": ${(failure.stderr ?? "").trim()}`);
+    issues.push(`the CLI did not answer "--version": ${(failure.stderr ?? "").trim()}`);
   }
 
   return issues;
+}
+
+/** The root help page, used only to prove the command list is advertised. */
+async function rootHelp(cliBin: string): Promise<string> {
+  try {
+    const { stdout, stderr } = await run(process.execPath, [cliBin, "--help"]);
+    return `${stdout}\n${stderr}`;
+  } catch (error) {
+    const failure = error as { stdout?: string; stderr?: string };
+    return `${failure.stdout ?? ""}\n${failure.stderr ?? ""}`;
+  }
+}
+
+/**
+ * Probe one global flag without side effects.
+ *
+ * `--help` is already handled before any command runs, and the configuration is
+ * loaded lazily, so `syndroo <global> --help` prints usage and exits 0 without
+ * reading configuration, state or a credential. An unknown option is refused by
+ * Commander and never reaches the help output.
+ */
+async function probeGlobalFlag(cliBin: string, flag: string): Promise<string | undefined> {
+  if (flag === "--version") {
+    try {
+      const { stdout } = await run(process.execPath, [cliBin, "--version"]);
+      return /^\d+\.\d+\.\d+/.test(stdout.trim()) ? undefined : `unexpected output ${JSON.stringify(stdout.trim())}`;
+    } catch (error) {
+      const failure = error as { stdout?: string; stderr?: string };
+      return `exit was not 0 (${(failure.stderr ?? "").trim()})`;
+    }
+  }
+
+  const args =
+    flag === "--config"
+      ? [cliBin, "--config", "/nonexistent/syndroo-docs-flag-probe.json", "--help"]
+      : [cliBin, flag, "--help"];
+
+  try {
+    const { stdout, stderr } = await run(process.execPath, args);
+    return `${stdout}${stderr}`.includes("Usage: syndroo")
+      ? undefined
+      : `the help text did not come back for ${flag}`;
+  } catch (error) {
+    const failure = error as { stdout?: string; stderr?: string };
+    return `exit was not 0 (${(failure.stderr ?? "").trim()})`;
+  }
 }
 
 /** Where a product checkout is expected to be, resolved from the environment. */

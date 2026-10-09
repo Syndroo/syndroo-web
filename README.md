@@ -8,17 +8,28 @@ and the platform adapters - lives in <https://github.com/Syndroo/syndroo>.
 
 ## Pages
 
-Seven public pages, plus the two technical 404 documents Next.js generates:
+Sixteen public pages in the accepted Getting Started / Platforms / Build /
+Reference information architecture, plus the two technical 404 documents
+Next.js generates:
 
 | Site | Paths |
 | --- | --- |
 | Website | `/` |
-| Docs | `/`, `/accounts/`, `/publishing/`, `/agent-setup/`, `/commands/`, `/faq/` |
+| Docs - Getting Started | `/`, `/getting-started/local-cli/`, `/getting-started/agent/` |
+| Docs - Platforms | `/platforms/`, `/platforms/bluesky/`, `/platforms/threads/`, `/platforms/linkedin/`, `/platforms/mastodon/`, `/platforms/devto/` |
+| Docs - Build | `/build/provider-plugins/`, `/build/trust-and-registry/` |
+| Docs - Reference | `/reference/cli/`, `/reference/configuration/`, `/reference/credentials/`, `/reference/requests/` |
 
 The page registries in `packages/content/site-data.ts` are the single source for
 the sitemaps, the docs search and the expected build output, and the fixtures
 reject an exported page that is not registered, so a retired route cannot
 survive a rebuild.
+
+The v1 IA replaced the earlier `/accounts/`, `/agent-setup/`, `/commands/`,
+`/faq/` and `/publishing/` routes. Those page files are deleted rather than
+redirected, so an old link reaches the docs 404 page, which points at the four
+current sections. The export ships no `_redirects` file and no custom `404.html`
+routing, so nothing in the build emits a retired route.
 
 ## Setup
 
@@ -64,8 +75,10 @@ undeployed, so the documentation installs a tarball built from the product
 repository rather than a package name. Five local providers are wired: Bluesky,
 Threads, LinkedIn, and Mastodon for plain text, and DEV.to for articles. They
 are fixture-tested rather than live-account accepted, so no page claims a
-verified publish. The existing remote API is outside this public documentation
-surface.
+verified publish. Each platform page states only what the provider source and
+the recorded provider evidence support and marks anything else **UNRESOLVED**.
+The self-hosted HTTP server, the SDK and the Cloudflare Worker are outside this
+public documentation surface.
 
 ## License
 
