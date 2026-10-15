@@ -65,7 +65,7 @@ export const metadata = {
     <p>A publication is two phases. Write a request document, prepare it, and read the approval token that comes back:</p>
     <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
     <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
-    <p>On a terminal the command prints the frozen preview and asks for a confirmation; in{" "} <code>{"--json"}</code> it returns <code>{"confirmation_required"}</code> with an{" "} <code>{"approvalToken"}</code> and exits 0 without sending anything. Execute by feeding that token back on standard input:</p>
+    <p>On a terminal the command prints the frozen preview and asks{" "} <code>{"Publish to N accounts? [y/N/v]"}</code>: only an unambiguous <code>{"y"}</code> sends, <code>{"v"}</code> expands the complete frozen preview and asks again, and <code>{"n"}</code>, an empty line or end-of-input cancels and sends nothing. <code>{"--yes"}</code> auto-confirms the frozen intent this run just prepared, without a prompt. With <code>{"--json"}</code> and without <code>{"--yes"}</code> the single envelope is the prepared result, <code>{"confirmation_required"}</code> with an{" "} <code>{"approvalToken"}</code>, and the command exits 0 without sending anything; with <code>{"--yes --json"}</code> the one call prepares, confirms and executes and prints exactly one final envelope, with no second prepared result and no approval token. Execute a prepared result by feeding that token back on standard input:</p>
     <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
     <pre data-label="terminal"><code>{"syndroo publish --input - < execute.json --json"}</code></pre>
     <p>An execute request is only ever read from standard input, never from a file path or{" "} <code>{"--data"}</code>, so a token cannot be left in a shell history or in process arguments.</p>
@@ -73,7 +73,7 @@ export const metadata = {
     <h2 id="status">4. Read the result</h2>
     <p><code>{"syndroo status"}</code> answers five queries. Pass the operation id from the publish result to see one operation, or page through the recent ones:</p>
     <pre data-label="terminal"><code>{"syndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
-    <p>A delivery is <code>{"succeeded"}</code>, <code>{"failed"}</code> with disposition{" "} <code>{"not_applied"}</code>, or <code>{"unknown"}</code>. An unknown write stays non-retryable: inspect the platform by hand instead of resending. The exit code carries the same distinction, and <a href="/reference/cli/#exit-codes">the exit code table</a> lists it.</p>
+    <p>A delivery is <code>{"succeeded"}</code>, <code>{"failed"}</code> with disposition{" "} <code>{"not_applied"}</code>, <code>{"unknown"}</code>, or <code>{"not_started"}</code> when it never reached a call. Unknown and not sent are different facts: an unknown write may have been accepted, so it stays non-retryable and the platform is inspected by hand instead of resending, while a target that never started was plainly not sent. The exit code carries the same distinction, and <a href="/reference/cli/#exit-codes">the exit code table</a> lists it.</p>
 
     <h2 id="sections">Where to go next</h2>
     <div className="tile-grid">

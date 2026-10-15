@@ -79,6 +79,7 @@ test("the documentation prints only the accepted v1 command surface", async () =
     "--json",
     "--config",
     "--dry-run",
+    "--yes",
     "--input",
     "--data",
     "--retry",

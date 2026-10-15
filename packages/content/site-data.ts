@@ -91,7 +91,7 @@ export const cliSurface = {
     },
     {
       name: "publish",
-      flags: ["--input", "--data", "--retry", "--to", "--request-id", "--dry-run"],
+      flags: ["--input", "--data", "--retry", "--to", "--request-id", "--dry-run", "--yes"],
     },
     {
       name: "status",

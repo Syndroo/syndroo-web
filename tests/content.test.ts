@@ -413,6 +413,20 @@ test("the documentation states the input, authorization and retry rules", async 
   const agent = await flatten("getting-started/agent/index.html");
 
   assert.ok(cli.includes("--data"), "the command reference should document --data");
+  assert.ok(cli.includes("--yes"), "the command reference should document --yes");
+  assert.ok(
+    /Publish to N accounts\? \[y\/N\/v\]/.test(cli) &&
+      /Publish to N accounts\? \[y\/N\/v\]/.test(local),
+    "the guides should show the confirmation prompt",
+  );
+  assert.ok(
+    /stderr/i.test(cli),
+    "the CLI reference should place verbose diagnostics on stderr",
+  );
+  assert.ok(
+    /not_started/.test(overview) && /not_started/.test(requests),
+    "the docs should keep unknown distinct from a target that never started",
+  );
   assert.ok(overview.includes("--input -"), "the overview should document the stdin input");
   assert.ok(
     /exactly one input source/i.test(cli),
@@ -448,6 +462,74 @@ test("the documentation states the input, authorization and retry rules", async 
   assert.ok(
     /process arguments/i.test(agent) && agent.includes("--input -"),
     "agents need an argv warning and stdin alternative",
+  );
+});
+
+test("the docs keep the frozen history, live progress and the yes/json boundary apart", async () => {
+  const flatten = async (file: string): Promise<string> =>
+    authoredText(await docsPage(file)).replace(/\s+/g, " ");
+
+  const overview = await flatten("index.html");
+  const local = await flatten("getting-started/local-cli/index.html");
+  const cli = await flatten("reference/cli/index.html");
+  const requests = await flatten("reference/requests/index.html");
+  const home = authoredText(await websitePage("index.html")).replace(/\s+/g, " ");
+
+  // A retry is prepared and then confirmed by --yes; an explicit execute
+  // request already carries its own authorization. The old "adds nothing on an
+  // explicit execute or retry" claim would be wrong for the retry.
+  assert.ok(
+    cli.includes("a retry prepares the selected eligible subset") &&
+      cli.includes("confirms and executes that same frozen retry"),
+    "the CLI reference should state that --yes confirms a prepared retry",
+  );
+  assert.ok(
+    !cli.includes("on an explicit execute or retry it adds nothing"),
+    "the CLI reference must not claim --yes does nothing on a retry",
+  );
+
+  // Live progress is a durable post-commit projection with a serial order and
+  // a redraw-or-append rendering rule; --json keeps a single clean envelope.
+  for (const phrase of [
+    "post-commit",
+    "Publishing",
+    "Waiting",
+    "redrawn in place",
+    "appended log",
+    "restore the cursor",
+    "controlling terminal",
+    "no progress, no prompt",
+  ]) {
+    assert.ok(cli.includes(phrase), `the CLI reference should describe live progress: ${phrase}`);
+  }
+
+  // The recorded status reads history back and never rewrites it.
+  for (const phrase of ["recorded result", "never rewrites history", "unavailable"]) {
+    assert.ok(requests.includes(phrase), `the request reference should describe ${phrase}`);
+  }
+  assert.ok(
+    !requests.includes('"account": {}'),
+    "the published result samples must carry a complete account identity",
+  );
+
+  // The yes/json boundary: a prepare-only run returns the prepared result, a
+  // --yes run prints one final envelope.
+  assert.ok(
+    overview.includes("one final envelope") && overview.includes("no approval token"),
+    "the overview should distinguish a prepare-only run from --yes --json",
+  );
+  assert.ok(
+    local.includes("An explicit execute request") &&
+      !local.includes("Executing is only possible from standard input"),
+    "the CLI guide should scope the stdin rule to an explicit execute request",
+  );
+  assert.ok(
+    home.includes("one final envelope") && home.includes("--yes"),
+    "the homepage should state the one-call yes/json behaviour",
+  );
+  assert.ok(
+    !home.includes("6f2a") && home.includes("<operationId>"),
+    "the homepage should never teach querying a truncated operation id",
   );
 });
 

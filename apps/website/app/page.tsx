@@ -60,6 +60,11 @@ const faq = [
       "The content is frozen when the request is prepared. Confirming sends exactly that frozen preview, so editing the file afterwards cannot change what goes out — and a later prepare is a new request with its own identity.",
   },
   {
+    question: "Can I prepare and publish in one command?",
+    answer:
+      "Yes. syndroo publish --input post.json --yes --json prepares, confirms and executes in one call and prints exactly one final envelope, with no second prepared result and no approval token. Without --yes the same --json call returns the prepared result and sends nothing.",
+  },
+  {
     question: "Is there a Syndroo server involved?",
     answer:
       "Not in this path. The command talks to the platform APIs directly, from your machine, using the credentials you provide, and outbound requests are limited to the origins each provider declares. The product also contains a self-hosted server and an SDK; this site does not document them yet.",
@@ -67,7 +72,7 @@ const faq = [
   {
     question: "How do I check what a run did?",
     answer:
-      "syndroo status --operation <operationId> --json reports the operation and one delivery per target. A delivery is succeeded, failed with a not-applied disposition, or unknown; an unknown write is never retried automatically.",
+      "syndroo status --operation <operationId> --json reports the operation and one delivery per target. A delivery is succeeded, failed with a not-applied disposition, unknown, or not sent when the target never started; an unknown write is never retried automatically.",
   },
 ];
 
@@ -293,13 +298,13 @@ export default function IndexPage() {
                   </div>
                   <p>
                     <span className="term__prompt">$</span> syndroo status --operation
-                    6f2a&hellip;c41 --json
+                    &lt;operationId&gt; --json
                   </p>
                 </div>
                 <div className="panel">
                   <pre className="receipt">
                     <span className="code__key">operationId</span>
-                    {"  6f2a\u2026c41\n"}
+                    {"  <operationId>\n"}
                     <span className="code__key">status</span>
                     {"       succeeded\n"}
                     <span className="code__key">per target</span>
@@ -388,7 +393,7 @@ export default function IndexPage() {
               <span className="terminal__gap"></span>
               <p>
                 <span className="term__prompt">$</span> syndroo status --operation
-                6f2a&hellip;c41 --json
+                &lt;operationId&gt; --json
               </p>
             </div>
           </div>

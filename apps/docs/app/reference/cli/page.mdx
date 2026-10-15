@@ -44,7 +44,7 @@ export const metadata = {
           </tr>
           <tr>
             <th scope="row"><code>{"--verbose"}</code></th>
-            <td>Add diagnostics, such as the request id a call recorded.</td>
+            <td>Add full identifiers and the reviewed safe diagnostics. Diagnostics are written to stderr, so a JSON stdout stays one document.</td>
           </tr>
           <tr>
             <th scope="row"><code>{"--no-color"}</code></th>
@@ -160,10 +160,20 @@ export const metadata = {
             <th scope="row"><code>{"--dry-run"}</code></th>
             <td>Preview only: no state, no credentials, no network request.</td>
           </tr>
+          <tr>
+            <th scope="row"><code>{"--yes"}</code></th>
+            <td>Auto-confirm the frozen intent this process just prepared, without a prompt.</td>
+          </tr>
         </tbody>
       </table>
     </div>
     <p><code>{"--to"}</code> requires <code>{"--retry"}</code>, and{" "} <code>{"--dry-run"}</code> refuses a retry. A retry target must be eligible: a delivery whose outcome is <code>{"unknown"}</code> is never retried.</p>
+    <pre data-label="retry and confirm"><code>{"syndroo publish --retry <operationId> --to <connectionId> --yes --json"}</code></pre>
+    <p>On a terminal a prepared document prints the frozen preview and asks{" "} <code>{"Publish to N accounts? [y/N/v]"}</code>. The accepted answers are <code>{"y"}</code> or <code>{"yes"}</code>, <code>{"n"}</code> or <code>{"no"}</code>, and <code>{"v"}</code> or <code>{"view"}</code>: only an unambiguous <code>{"y"}</code> executes the token this process just minted, while <code>{"n"}</code>, <code>{"no"}</code>, an empty line or end-of-input cancels and sends nothing, and any other answer is not an authorization and asks again. <code>{"v"}</code> or <code>{"view"}</code> expands the complete frozen preview and asks again; it never re-reads or re-prepares the input and never extends the confirmation window, whose deadline is fixed before the first prompt and measured again on every later answer. Editing the input file after the prepare changes nothing about what is sent. An approval that expired, a connection whose binding changed or a provider that changed refuses the old token instead of reusing it for content or accounts it was not frozen against. <code>{"--yes"}</code> skips the prompt but not the frozen-intent checks: it re-mints no credential, bypasses no identity binding, expiry, provider validation or idempotency rule, and creates no second prepare. With <code>{"--dry-run"}</code> it stays offline. An explicit <code>{"execute"}</code> request already carries its own authorization, so <code>{"--yes"}</code> adds nothing there; a retry prepares the selected eligible subset and <code>{"--yes"}</code> confirms and executes that same frozen retry.</p>
+    <p>Execution reports real progress and not a guess. Each observation is one post-commit projection of the stored operation, read back after the write it describes, so a progress line can never show a state that was not durably recorded. Targets run in serial order: while the first target is Publishing the ones queued behind it still read Waiting, and a target only changes when its own durable write lands.</p>
+    <p>Where the terminal can be redrawn safely the block is redrawn in place with the cursor hidden; anywhere else it becomes an appended log that appends only the status lines that actually changed and finishes with the complete result and the summary. A finish and an interrupt both restore the cursor and drop the resize and abort listeners, so the terminal is left usable either way.</p>
+    <p>With <code>{"--json"}</code> there is no live block at all: no progress, no prompt and no escape sequence reach stdout, which keeps exactly one envelope. The frozen preview and the confirmation prompt are written to the controlling terminal, not to stdout, so a redirected stdout is never the place an answer is typed; <code>{"--json"}</code> never prompts, <code>{"--yes"}</code> auto-confirms, and a human prepare without <code>{"--yes"}</code> needs a writable controlling terminal. Without one it reports the pending result and exits 0 rather than blocking on a read nobody can answer or sending on an answer nobody saw.</p>
+    <p>The default human view shows at most three content lines and two reason lines per target with one suggested next step, and it hides the internal ids and the confirmation window; <code>{"--verbose"}</code> adds them and prints the expiry line only when the expiry is recorded. A target that failed, was only partly sent, is <code>{"unknown"}</code> or is not yet finished gets one query command per operation, not one per target: <code>{"syndroo status --operation <operationId> --verbose"}</code>. <code>{"unknown"}</code> is distinct from <code>{"not_started"}</code>: an unknown write may have reached the platform and is never retried automatically, while a target that never started reads as not sent.</p>
 
     <h2 id="status">syndroo status</h2>
     <pre data-label="usage"><code>{"syndroo status [options]"}</code></pre>
