@@ -75,7 +75,7 @@ asserted.
 
 The marketing site is one page: an intro with the hero action, the platform
 strip whose five cards link to the matching documentation guide, the steps that
-lead to a publish, the dry-run preview beside the queuing mascot, a closing call
+lead to a publish, the dry-run preview, a closing call
 to action, and a footer carrying documentation, source and licence.
 
 The documentation site renders its topbar, sidebar, footer and search dialog

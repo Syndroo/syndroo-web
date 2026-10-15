@@ -566,11 +566,6 @@ pre {
   background: var(--surface-soft);
 }
 
-.visual--queue {
-  position: relative;
-  padding-bottom: 26px;
-}
-
 .visual__head {
   display: flex;
   align-items: center;
@@ -728,14 +723,6 @@ pre {
 .mascot {
   mix-blend-mode: multiply;
   pointer-events: none;
-}
-
-.mascot--queue {
-  position: absolute;
-  right: 14px;
-  bottom: -18px;
-  width: clamp(88px, 9vw, 128px);
-  height: auto;
 }
 
 [data-theme="dark"] .mascot {
@@ -1083,11 +1070,6 @@ pre {
   .site-footer__cols {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 28px 20px;
-  }
-
-  .mascot--queue {
-    position: static;
-    margin: 4px 0 0 auto;
   }
 }
 

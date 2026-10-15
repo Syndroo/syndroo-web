@@ -197,7 +197,7 @@ export default function IndexPage() {
                   read-only: no network request, no credentials resolved, no local state.
                 </p>
               </div>
-              <div className="visual visual--queue">
+              <div className="visual">
                 <div className="visual__head">
                   <span className="visual__title">Dry run</span>
                   <span className="tag">Illustrative</span>
@@ -221,14 +221,6 @@ export default function IndexPage() {
                     request freezes the input it read at that moment.
                   </span>
                 </div>
-                <img
-                  className="mascot mascot--queue"
-                  src="/assets/droo-queueing.png"
-                  alt=""
-                  width="190"
-                  height="190"
-                  decoding="async"
-                />
               </div>
             </article>
 

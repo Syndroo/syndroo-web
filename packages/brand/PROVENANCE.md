@@ -19,10 +19,11 @@ served.
 - `droo-publishing.png`, `droo-queueing.png` and `droo-success.png` are the three
   original mascot artworks, copied from the product repository's
   `scratch/outputs/mascot-kit-v2/` kit without regeneration, recolouring or
-  resizing. The marketing homepage places two of them: `droo-queueing.png`
-  beside the dry-run panel and `droo-success.png` in the closing call to action.
-  `droo-publishing.png` stays in the kit and in the exported assets but the
-  current homepage does not place it. All three are copied into each build by
+  resizing. The marketing homepage places one of them: `droo-success.png` in the
+  closing call to action. `droo-queueing.png` and `droo-publishing.png` stay in
+  the kit and in the exported assets; `droo-queueing.png` is still drawn on the
+  documentation overview page, and the marketing homepage does not place it or
+  `droo-publishing.png`. All three are copied into each build by
   `scripts/prepare-assets.ts`, which copies the directory wholesale.
 
 ## Platform icon sources
