@@ -125,8 +125,8 @@ export const platforms: Platform[] = [
   { id: "bluesky", name: "Bluesky", icon: "bluesky", url: "https://bsky.app" },
   { id: "threads", name: "Threads", icon: "threads", url: "https://www.threads.net" },
   { id: "linkedin", name: "LinkedIn", icon: "linkedin", url: "https://www.linkedin.com" },
-  { id: "mastodon", name: "Mastodon", icon: "mastodon", url: "https://joinmastodon.org", label: "M" },
-  { id: "devto", name: "DEV.to", icon: "devto", url: "https://dev.to", label: "DEV" },
+  { id: "mastodon", name: "Mastodon", icon: "mastodon", url: "https://joinmastodon.org" },
+  { id: "devto", name: "DEV.to", icon: "devto", url: "https://dev.to" },
 ];
 
 export type NavItem = {

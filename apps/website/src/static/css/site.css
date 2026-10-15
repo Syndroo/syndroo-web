@@ -391,6 +391,14 @@ pre {
   --mark-src: url("/assets/platform-linkedin.svg");
 }
 
+.mark--mastodon {
+  --mark-src: url("/assets/platform-mastodon.svg");
+}
+
+.mark--devto {
+  --mark-src: url("/assets/platform-devto.svg");
+}
+
 .mark--white {
   background-color: #fff;
 }

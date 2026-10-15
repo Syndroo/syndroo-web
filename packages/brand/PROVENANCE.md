@@ -27,7 +27,7 @@ served.
 
 ## Platform icon sources
 
-Five platform marks are stored locally as `platform-<name>.svg` so the site never requests a CDN, icon font or third
+Seven platform marks are stored locally as `platform-<name>.svg` so the site never requests a CDN, icon font or third
 party host at runtime.
 
 | File | Icon | Source URL |
@@ -37,8 +37,10 @@ party host at runtime.
 | `platform-x.svg` | X | https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/x.svg |
 | `platform-tumblr.svg` | Tumblr | https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/tumblr.svg |
 | `platform-linkedin.svg` | LinkedIn | https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/linkedin.svg |
+| `platform-mastodon.svg` | Mastodon | https://joinmastodon.org/logos/logo-white.svg |
+| `platform-devto.svg` | DEV.to | https://d2fltix0v2e0sb.cloudfront.net/dev-badge.svg |
 
-Provenance details:
+Provenance details, Simple Icons group (Threads, Bluesky, X, Tumblr, LinkedIn):
 
 - Project: Simple Icons, pinned release `simple-icons@13.21.0`.
 - Package source: jsDelivr mirror of the published npm package, path `icons/<slug>.svg`.
@@ -46,6 +48,29 @@ Provenance details:
 - License: https://github.com/simple-icons/simple-icons/blob/13.21.0/LICENSE.md - CC0 1.0 Universal, including no
   trademark waiver. Pinned license verified 2026-09-17; keep this provenance note with the files.
 - Retrieved: 2026-09-17, one request per icon, no transformations applied to the downloaded bytes.
+
+Provenance details, official brand asset group (Mastodon, DEV.to):
+
+- These two files are the platforms' own published brand assets, downloaded unchanged and stored as the marks that
+  label those platforms as publish destinations. They are trademarks of their respective owners, and no blanket
+  licence or permission is claimed for them here. The linked brand pages do not specify a separate attribution
+  credit line for this destination-identification use, so the source URL and the owning project are recorded
+  instead of an asserted credit requirement.
+- `platform-mastodon.svg`: the white Mastodon logo published for use on a contrasting background, linked from the
+  Mastodon branding page https://joinmastodon.org/branding. Retrieved 2026-10-15 with one request; no geometry,
+  colour or byte transformation was applied. The governing trademark reference for this mark is
+  https://joinmastodon.org/trademark, which covers Mastodon's wordmark and logo. That trademark reference and the
+  mark it governs are distinct from the copyright licence over the Mastodon software: the software licence does not
+  grant rights in the logo, and the mark is stored for nominative identification of Mastodon as a publish
+  destination only.
+- `platform-devto.svg`: the classic Black DEV badge, linked from the DEV brand page https://dev.to/brand. Retrieved
+  2026-10-15 with one request; no byte transformation was applied. It is not the DEV Ecosystem SVG that the same
+  brand page links separately, and the brand guidelines reserve that separate ecosystem logo for branding
+  unofficial DEV applications; that reservation does not apply to this downloaded classic badge. Syndroo keeps its
+  own branding and uses this mark solely to identify DEV as the destination a publish can target. It is not used as
+  a Syndroo logo, not used to present Syndroo as a DEV application, and does not imply DEV endorsement.
+- Both are used only to identify the destination platform a Syndroo publish can target, in the same nominative way
+  the platform names and links are used.
 
 Verification of the stored files:
 
@@ -55,18 +80,23 @@ Verification of the stored files:
   - `platform-x.svg` `be03adbfce4a46c4e42eae5ee7b5e676b59627fa25e15a317e453bb18153ff5f`
   - `platform-tumblr.svg` `25c6d78e5606fab85d0d3a8424108be7ddd70bee872cb9cff472568107a34bfc`
   - `platform-linkedin.svg` `2687ac468d96bd03e748dc8646ef6465cb4cc7f34b96e1d0bc86fcb3dd79121a`
-- Each file is a self-contained `<svg viewBox="0 0 24 24">` with a single `<path>` and a `<title>`. There is no
-  `<script>`, `<foreignObject>`, `<image>`, `xlink:href`, external `href` or `url(http...)` reference.
+  - `platform-mastodon.svg` `a6a90a50e88f9e72cbb32e14fdf37c3805e6f8e27f0b31dfdcec46e040ab0c8d`
+  - `platform-devto.svg` `787fc3c6537ce48dad1d20c60ed1bdcb68d05970d0115700e37db51f168630bd`
+- The five Simple Icons files are each a self-contained `<svg viewBox="0 0 24 24">` with a single `<path>` and a
+  `<title>`. `platform-mastodon.svg` is a `<svg viewBox="0 0 74 79">` with one `<path>` and
+  `platform-devto.svg` is a `<svg viewBox="0 0 448 512">` with one `<path>`. No file contains a `<script>`,
+  `<foreignObject>`, `<image>`, `xlink:href`, external `href` or `url(http...)` reference.
 
 How the site uses them:
 
-- The SVGs keep their original bytes and default black fill. The stylesheet renders each one through CSS `mask-image`,
+- The SVGs keep their original bytes and their authored fill. The stylesheet renders each one through CSS `mask-image`,
   so a page takes the mark in whatever colour it sets and no recoloured copy is stored. The homepage's five
-  destination tiles use three SVG marks, each set as a white mark on its platform's own colour (`#0285ff` for
-  Bluesky, `#000000` for Threads, `#0a66c2` for LinkedIn), and two text marks (`M` for Mastodon, `DEV` for
-  DEV.to) because those platforms have no stored mark asset. The footer icon row sets a 16px ink mark for the
-  three platforms that have an SVG. The SVG marks all use the same `mark` mask rule, and the unused marks stay
-  in the kit rather than being deleted.
+  destination tiles use an SVG mark, each set as a white mark on its platform's own colour (`#0285ff` for
+  Bluesky, `#000000` for Threads, `#0a66c2` for LinkedIn, `#6364ff` for Mastodon, `#0a0a0a` for DEV.to). The
+  Mastodon and DEV.to marks are drawn as a solid white shape with the glyph knocked out, so the knocked-out glyph
+  shows the tile colour and stays readable. The footer icon row sets a 16px ink mark for every platform that has
+  an SVG. The SVG marks all use the same `mark` mask rule, and the unused marks (`platform-x.svg`,
+  `platform-tumblr.svg`) stay in the kit rather than being deleted.
 - The marks identify the platforms the candidate can publish to. They do not imply endorsement by, or partnership with,
   any of those companies, and no platform logo is used as the Syndroo brand.
 
