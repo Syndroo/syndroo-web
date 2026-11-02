@@ -1,8 +1,8 @@
 // Content fixtures for the published surfaces.
 //
-// Everything here reads the built output of the two sites: the sixteen public
+// Everything here reads the built output of the two sites: the seventeen public
 // pages of the accepted Q39 information architecture (the marketing home, the
-// fifteen documentation pages, and the technical 404 documents Next.js
+// sixteen documentation pages, and the technical 404 documents Next.js
 // generates), the shared navigation, the metadata, the generated files, the
 // theme control and the way cross-site links resolve.
 //
@@ -50,7 +50,7 @@ const LOOPBACK_DEFAULTS = [DEFAULT_WEBSITE_ORIGIN, DEFAULT_DOCS_ORIGIN].filter(
 );
 
 /**
- * The sixteen public pages, in the order the sites publish them. A page that is
+ * The seventeen public pages, in the order the sites publish them. A page that is
  * not in this list does not exist, so a retired route cannot quietly survive in
  * the export.
  */
@@ -203,11 +203,12 @@ test("the shared page registry matches the built output and nothing else ships",
   }
 });
 
-test("the published surfaces are exactly the sixteen pages readers were promised", () => {
+test("the published surfaces are exactly the seventeen pages readers were promised", () => {
   assert.deepEqual(PUBLIC_PAGES, [
     "website /",
     "docs /",
     "docs /getting-started/local-cli/",
+    "docs /getting-started/server/",
     "docs /getting-started/agent/",
     "docs /platforms/",
     "docs /platforms/bluesky/",
@@ -222,9 +223,9 @@ test("the published surfaces are exactly the sixteen pages readers were promised
     "docs /reference/credentials/",
     "docs /reference/requests/",
   ]);
-  assert.equal(PUBLIC_PAGES.length, 16, "the public surface is sixteen pages");
+  assert.equal(PUBLIC_PAGES.length, 17, "the public surface is seventeen pages");
   assert.equal(websitePages.length, 1, "the marketing site is a single page");
-  assert.equal(docsPages.length, 15, "the documentation site is fifteen pages");
+  assert.equal(docsPages.length, 16, "the documentation site is sixteen pages");
 });
 
 test("every docs page carries one layout, main, sidebar, toc and search dialog", async () => {
@@ -339,6 +340,10 @@ test("cross-site links resolve inside the other built site", async () => {
   assert.ok(
     home.includes(`href="${BUILT.docs}/reference/cli/"`),
     "the site should offer the command reference",
+  );
+  assert.ok(
+    home.includes(`href="${BUILT.docs}/getting-started/server/"`),
+    "the site should offer the self-hosted server guide",
   );
   for (const platform of platforms) {
     assert.ok(

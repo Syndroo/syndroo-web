@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ORIGIN_PLACEHOLDERS, PRODUCT_REPOSITORY, platforms, versions } from "@syndroo/content/site-data";
 
 const DESCRIPTION =
-  "Syndroo is a local command-line tool that publishes one document from your own machine: plain text to Bluesky, Threads, LinkedIn, and Mastodon, and articles to DEV.to.";
+  "Syndroo is a command-line tool for publishing one document: plain text to Bluesky, Threads, LinkedIn, and Mastodon, and articles to DEV.to, from your machine or a self-hosted deployment.";
 
 export const metadata: Metadata = {
   title: "Syndroo - publish from your terminal to five platforms",
@@ -25,12 +25,12 @@ const facts = [
     detail: "Installed by building this repository, not from a registry.",
   },
   {
-    term: "No hosted API",
-    detail: "There is no Syndroo service sitting between you and the platforms.",
+    term: "Direct local path",
+    detail: "The local CLI talks to platform APIs without a Syndroo service in between.",
   },
   {
-    term: "No background worker",
-    detail: "Nothing runs on a server, and nothing runs on a schedule.",
+    term: "Optional self-hosting",
+    detail: "Threads workflows can run on a deployment in your own Cloudflare account.",
   },
 ];
 
@@ -67,7 +67,7 @@ const faq = [
   {
     question: "Is there a Syndroo server involved?",
     answer:
-      "Not in this path. The command talks to the platform APIs directly, from your machine, using the credentials you provide, and outbound requests are limited to the origins each provider declares. The product also contains a self-hosted server and an SDK; this site does not document them yet.",
+      "The local path talks to platform APIs directly from your machine. For Threads, you can deploy Syndroo's server to your own Cloudflare account, connect an account, and publish manually or from GitHub CI. The SDK remains outside this documentation.",
   },
   {
     question: "How do I check what a run did?",
@@ -93,6 +93,9 @@ export default function IndexPage() {
           <div className="hero__cta">
             <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
               Build from source
+            </a>
+            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
+              Server setup
             </a>
           </div>
           <p className="note-line">
@@ -433,6 +436,9 @@ export default function IndexPage() {
           <div className="get-started__actions">
             <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
               Start
+            </a>
+            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
+              Server setup
             </a>
           </div>
           <p className="note-line">

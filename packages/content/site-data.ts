@@ -52,12 +52,11 @@ export const PUBLIC_NODE_RUNTIME = "Node.js 24.19 or newer";
 /**
  * The accepted CLI surface the documentation is allowed to print.
  *
- * Mirrors the accepted decision Q13 and section 12.1 of
- * `docs/superpowers/specs/architecture-v1/01-architecture-design.md` in the
- * product repository: exactly three first-level commands (`connect`, `publish`,
- * `status`) plus the global flags `--config`, `--json`, `--verbose`,
- * `--no-color`, `--help` and `--version`. `--help` and `--version` are the
- * documented help/version surface, so there is no fourth command to print.
+ * Mirrors the accepted local decision Q13 and the approved self-hosted
+ * Server/Threads slice: the local commands (`connect`, `publish`, `status`)
+ * plus the exact nested `server` command paths below. The global flags are
+ * `--config`, `--json`, `--verbose`, `--no-color`, `--help` and `--version`.
+ * `--help` and `--version` are the documented help/version surface.
  *
  * The per-command flag lists are the CLI's own `--help` output. The build
  * checker runs the real CLI and fails when this list and the shipped flags
@@ -70,7 +69,7 @@ export type CliCommandSurface = {
 };
 
 export const cliSurface = {
-  spec: "architecture-v1 section 12.1 / decision Q13",
+  spec: "architecture-v1 section 12.1 / decision Q13 and approved Server CLI slice",
   globalFlags: ["--config", "--json", "--verbose", "--no-color", "--help", "--version"],
   commands: [
     {
@@ -96,6 +95,57 @@ export const cliSurface = {
     {
       name: "status",
       flags: ["--provider", "--connections", "--operation", "--operations", "--limit", "--cursor"],
+    },
+    {
+      name: "server",
+      flags: ["--project"],
+    },
+    {
+      name: "server init",
+      flags: ["--github", "--public", "--private"],
+    },
+    {
+      name: "server doctor",
+      flags: [],
+    },
+    {
+      name: "server deploy",
+      flags: ["--account", "--recover", "--credentials-stdin", "--yes"],
+    },
+    {
+      name: "server connect",
+      flags: [],
+    },
+    {
+      name: "server connect threads",
+      flags: [
+        "--app-id",
+        "--request-id",
+        "--app-secret-stdin",
+        "--restart",
+        "--timeout-ms",
+        "--interval-ms",
+      ],
+    },
+    {
+      name: "server publish",
+      flags: [],
+    },
+    {
+      name: "server publish threads",
+      flags: ["--input", "--request-id", "--wait-timeout-ms", "--interval-ms", "--yes"],
+    },
+    {
+      name: "server ci",
+      flags: [],
+    },
+    {
+      name: "server ci setup",
+      flags: [],
+    },
+    {
+      name: "server ci setup github",
+      flags: ["--repo", "--ci-token-stdin", "--yes"],
     },
   ] satisfies CliCommandSurface[],
 } as const;
@@ -206,6 +256,7 @@ export const docsNav: DocsNavGroup[] = [
     items: [
       { label: "Overview", href: "/" },
       { label: "Local CLI", href: "/getting-started/local-cli/", sub: true },
+      { label: "Self-hosted Server", href: "/getting-started/server/", sub: true },
       { label: "Use with an Agent", href: "/getting-started/agent/", sub: true },
     ],
   },
@@ -253,6 +304,7 @@ export const websitePages: PageEntry[] = [{ file: "index.html", path: "/", label
 export const docsPages: PageEntry[] = [
   { file: "index.html", path: "/", label: "Overview" },
   { file: "getting-started/local-cli/index.html", path: "/getting-started/local-cli/", label: "Local CLI" },
+  { file: "getting-started/server/index.html", path: "/getting-started/server/", label: "Self-hosted Server" },
   { file: "getting-started/agent/index.html", path: "/getting-started/agent/", label: "Use with an Agent" },
   { file: "platforms/index.html", path: "/platforms/", label: "All platforms" },
   { file: "platforms/bluesky/index.html", path: "/platforms/bluesky/", label: "Bluesky" },

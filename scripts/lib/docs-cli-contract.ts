@@ -1,10 +1,10 @@
 // Cross-check the CLI surface the documentation introduces against the CLI's
 // own help output.
 //
-// The accepted surface is the three first-level commands `connect`, `publish`
-// and `status` plus the global flags `--config`, `--json`, `--verbose`,
-// `--no-color`, `--help` and `--version` (decision Q13 / architecture-v1
-// section 12.1). It is declared once in `packages/content/site-data.ts` as
+// The accepted surface covers the local `connect`, `publish` and `status`
+// commands and the approved nested Server/Threads paths, plus the global
+// flags `--config`, `--json`, `--verbose`, `--no-color`, `--help` and
+// `--version`. It is declared once in `packages/content/site-data.ts` as
 // `cliSurface` and mirrored here as the audit's input.
 //
 // Two things are checked, and neither is a rubber stamp:
@@ -26,9 +26,14 @@ import { cliSurface } from "../../packages/content/site-data.ts";
 
 const run = promisify(execFile);
 
-/** The accepted first-level commands, in the documented order. */
+/** Every accepted command path, including the nested Server/Threads paths. */
 export const ACCEPTED_COMMANDS: readonly string[] = cliSurface.commands.map(
   (command) => command.name,
+);
+
+/** Accepted leaf commands. Parent command groups may not appear in the docs. */
+export const ACCEPTED_LEAF_COMMANDS: readonly string[] = ACCEPTED_COMMANDS.filter(
+  (command) => !ACCEPTED_COMMANDS.some((candidate) => candidate.startsWith(`${command} `)),
 );
 
 /** The accepted global flags. They are valid with every command. */
@@ -91,7 +96,8 @@ const UNIT_FLAG = /^--[a-z][a-z0-9-]*$/;
  */
 const INLINE_FLAG_USAGE = /^(--[a-z][a-z0-9-]*)\s+\S+/;
 /** The forms the documentation is allowed to use to start the command. */
-const INVOCATION_LINE = /^(?:npx\s+|\.\/node_modules\/\.bin\/)?syndroo\s+(.+)$/;
+const INVOCATION_LINE =
+  /^(?:\$\s*)?(?:npx(?:\s+--no-install)?\s+|\.\/node_modules\/\.bin\/)?syndroo\s+(.+)$/;
 /** A retired command word after the product name, anywhere in the page text. */
 const RETIRED_IN_TEXT = new RegExp(`\\bsyndroo\\s+(${RETIRED_COMMANDS.join("|")})\\b`, "g");
 
@@ -114,7 +120,7 @@ function withoutScripts(html: string): string {
 function codeBlockBodies(html: string): string[] {
   const bodies: string[] = [];
   for (const match of withoutScripts(html).matchAll(/<pre\b[^>]*>\s*<code>([\s\S]*?)<\/code>\s*<\/pre>/g)) {
-    bodies.push(decodeEntities(match[1] as string));
+    bodies.push(decodeEntities(match[1] as string).replace(/\\\s*\n\s*/g, " "));
   }
   return bodies;
 }
@@ -132,9 +138,8 @@ function inlineCodeBodies(html: string): string[] {
 }
 
 /**
- * Read one shell line. The command word is the first plain lowercase word after
- * the product name; everything from the first flag, quote, variable or path is
- * not part of the command.
+ * Read one shell command. Parent commands consume only registered child names;
+ * a leaf leaves positional arguments and flags to the command-specific audit.
  */
 function parseInvocation(line: string): { command: string; flags: string[] } | null {
   const match = INVOCATION_LINE.exec(line);
@@ -142,12 +147,35 @@ function parseInvocation(line: string): { command: string; flags: string[] } | n
     return null;
   }
 
-  const word = /^([a-z][a-z-]*)/.exec(match[1] as string)?.[1];
-  if (word === undefined) {
+  const tokens = (match[1] as string).trim().split(/\s+/);
+  if (!/^[a-z][a-z-]*$/.test(tokens[0] ?? "")) {
     return null;
   }
 
-  return { command: word, flags: [...line.matchAll(FLAG_PATTERN)].map((flag) => flag[0]) };
+  const words = [tokens[0] as string];
+  let index = 1;
+  while (index < tokens.length && /^[a-z][a-z-]*$/.test(tokens[index] as string)) {
+    const current = words.join(" ");
+    const children = ACCEPTED_COMMANDS.filter(
+      (command) =>
+        command.startsWith(`${current} `) &&
+        !command.slice(current.length + 1).includes(" "),
+    );
+    if (children.length === 0) {
+      break;
+    }
+
+    words.push(tokens[index] as string);
+    index += 1;
+    if (!ACCEPTED_COMMANDS.includes(words.join(" "))) {
+      break;
+    }
+  }
+
+  return {
+    command: words.join(" "),
+    flags: [...(match[1] as string).matchAll(FLAG_PATTERN)].map((flag) => flag[0]),
+  };
 }
 
 export function extractCliSurface(pages: { path: string; html: string }[]): CliSurface {
@@ -265,7 +293,7 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
   for (const invocation of invocations) {
     if (!accepted.has(invocation.command)) {
       issues.push(
-        `${invocation.page} documents "syndroo ${invocation.command}", which is not one of the three accepted commands`,
+        `${invocation.page} documents "syndroo ${invocation.command}", which is not on the accepted command surface`,
       );
       continue;
     }

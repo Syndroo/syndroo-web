@@ -1,14 +1,14 @@
 export const metadata = {
   title: "Configuration - Syndroo docs",
   description:
-    "The syndroo configuration file shape, the state root, the environment variables and the rules that make a configuration fail closed.",
+    "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional Server preview.",
   alternates: { canonical: "/reference/configuration/" },
   openGraph: {
     type: "website",
     url: "/reference/configuration/",
     title: "Configuration - Syndroo docs",
     description:
-      "The syndroo configuration file shape, the state root, the environment variables and the rules that make a configuration fail closed.",
+      "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional Server preview.",
   },
   twitter: { card: "summary" },
 };
@@ -23,7 +23,7 @@ export const metadata = {
       <span>Configuration</span>
     </nav>
     <h1 id="configuration">Configuration</h1>
-    <p className="lede">One configuration file and one state root. Configuration is never inferred from the working directory, so two terminals in different directories cannot silently use different plugins or different state.</p>
+    <p className="lede">This page describes the local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> workflow. It uses one configuration file and one state root, and never infers either from the current directory. The optional Server preview uses a project config instead.</p>
 
     <h2 id="file">The file</h2>
     <div className="table-wrap">
@@ -110,6 +110,10 @@ export const metadata = {
     </div>
     <p>Nothing else is read from the environment: no <code>{".env"}</code> file, no per-provider variable registry, and no credential is ever taken from the configuration file.</p>
 
+    <h2 id="server">Server configuration files</h2>
+    <p><strong>Preview and unpublished.</strong> Server commands require matching candidate <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. They use <code>{"syndroo.config.jsonc"}</code> for application settings and <code>{"wrangler.jsonc"}</code> for the Worker, D1, queues and cron. Do not commit generated <code>{"wrangler.effective.jsonc"}</code>, <code>{".syndroo/"}</code> or private server state.</p>
+    <p>The global <code>{"--config"}</code> flag is for the local workflow. For Server commands, run from the project or use <code>{"syndroo server --project <directory> <command>"}</code>. See <a href="/getting-started/server/">Deploy a server</a> and the <a href="/reference/cli/#server">Server command reference</a>.</p>
+
     <h2 id="fail-closed">Fail closed</h2>
     <p>Every one of these is refused rather than guessed at: an unsupported{" "} <code>{"version"}</code>, an unknown key, a secret-looking key, a relative{" "} <code>{"--config"}</code> path, a provider entry with more than one key, an oversized file, and a state root whose format marker does not match.</p>
   </article>
@@ -122,6 +126,7 @@ export const metadata = {
     <li><a href="#selection">How the file is selected</a></li>
     <li><a href="#state-root">The state root</a></li>
     <li><a href="#environment">Environment variables</a></li>
+    <li><a href="#server">Server configuration files</a></li>
     <li><a href="#fail-closed">Fail closed</a></li>
   </ul>
 </nav>

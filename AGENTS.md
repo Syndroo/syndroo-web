@@ -43,7 +43,7 @@
   with each app's stylesheet and browser TypeScript under its `app/`,
   `components/` and `src/`. Built output lands in `apps/*/out/` and is never
   edited by hand.
-- The published surface is the marketing homepage plus fifteen documentation
+- The published surface is the marketing homepage plus sixteen documentation
   pages in the accepted Getting Started / Platforms / Build / Reference
   information architecture, all held in the shared registry. Adding a page means
   adding one registry entry in `packages/content/site-data.ts` and one page;
@@ -70,10 +70,12 @@
   revoke flow that the evidence does not carry is written as **UNRESOLVED** on
   the page instead of asserted. No live social-network call has been made from
   this project, and no page may imply one.
-- Keep hosted HTTP API, SDK and Worker instructions, including the
-  `@syndroo/cloudflare-worker` service, and earlier-release walkthroughs outside
-  this surface. The docs overview marks them unresolved rather than describing
-  them.
+- The single self-hosted Server guide may document the approved user-owned
+  Cloudflare deployment slice, Threads connect/publish, and manual GitHub CI.
+  Keep generic hosted HTTP API, SDK instructions, internal
+  `@syndroo/cloudflare-worker` service details, and earlier-release walkthroughs
+  outside this surface. Do not claim live deployment, account acceptance, or a
+  public release.
 - Report only checks that actually ran, and state the limits of the evidence.
 
 ## Verification

@@ -1,14 +1,14 @@
 export const metadata = {
   title: "Use with an Agent - Syndroo docs",
   description:
-    "Drive the syndroo CLI from an agent or a script: the JSON envelope, the stdin-only execute token, the exit code families and the stable request identity.",
+    "Drive the local syndroo CLI or optional Server preview from an agent: JSON envelopes, safe credentials, stable request identities and separate deployment steps.",
   alternates: { canonical: "/getting-started/agent/" },
   openGraph: {
     type: "website",
     url: "/getting-started/agent/",
     title: "Use with an Agent - Syndroo docs",
     description:
-      "Drive the syndroo CLI from an agent or a script: the JSON envelope, the stdin-only execute token, the exit code families and the stable request identity.",
+      "Drive the local syndroo CLI or optional Server preview from an agent: JSON envelopes, safe credentials, stable request identities and separate deployment steps.",
   },
   twitter: { card: "summary" },
 };
@@ -21,7 +21,7 @@ export const metadata = {
       <span>Use with an Agent</span>
     </nav>
     <h1 id="agent">Use with an Agent</h1>
-    <p className="lede">Syndroo contains no language model and no natural-language step. An agent calls the same three commands a person does and reads a stable JSON envelope instead of English. The protocol is the contract; the prose in a terminal is a convenience.</p>
+    <p className="lede">Syndroo contains no language model and no natural-language step. For the local workflow, an agent calls <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> and reads a stable JSON envelope. The protocol is the contract; terminal prose is a convenience.</p>
 
     <h2 id="json">Always ask for JSON</h2>
     <p><code>{"--json"}</code> is a global flag, so it is accepted before or after the command. On success the envelope carries the operation name and the result; on failure it carries a stable code and a fixed message that was never built from a stack, a path or an argument.</p>
@@ -46,6 +46,10 @@ export const metadata = {
     <h2 id="skill">The packaged Skill</h2>
     <p>The packed CLI ships a <code>{"skills/"}</code> directory, so an agent harness can install the Skill together with the binary. The Skill text itself is maintained in the product repository rather than duplicated here, and this site does not restate its workflow as verified. <strong>UNRESOLVED.</strong></p>
 
+    <h2 id="server">Deploy a server</h2>
+    <p>When you want a user-owned Cloudflare Worker, deployed Threads OAuth or manual GitHub CI, follow <a href="/getting-started/server/">Deploy a server</a>. Reuse authorization you already have and stop only for actions that still need the user, such as Wrangler or Meta browser authorization.</p>
+    <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages from a maintainer or internal registry; public npm installation is pending. Release and acceptance limits are in the <a href="/reference/cli/#server">CLI reference</a>.</p>
+
     <h2 id="authorization">Confirmation is not user authorization</h2>
     <p>A confirmation prompt is a local guardrail, not a grant of authority. An agent that runs without a human present is responsible for deciding whether the publication is allowed in the first place; the CLI only guarantees that nothing is sent before the prepare phase has produced a token for exactly this content and these targets.</p>
   </article>
@@ -60,6 +64,7 @@ export const metadata = {
     <li><a href="#identity">Give each logical call a stable identity</a></li>
     <li><a href="#credentials">Never put a credential in the request document</a></li>
     <li><a href="#skill">The packaged Skill</a></li>
+    <li><a href="#server">Deploy a server</a></li>
     <li><a href="#authorization">Confirmation is not user authorization</a></li>
   </ul>
 </nav>

@@ -1,14 +1,14 @@
 export const metadata = {
   title: "Requests and envelopes - Syndroo docs",
   description:
-    "The syndroo request and result shapes: the JSON envelope, connect requests and results, the prepare, execute and retry publication flow, and the five status queries.",
+    "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
   alternates: { canonical: "/reference/requests/" },
   openGraph: {
     type: "website",
     url: "/reference/requests/",
     title: "Requests and envelopes - Syndroo docs",
     description:
-      "The syndroo request and result shapes: the JSON envelope, connect requests and results, the prepare, execute and retry publication flow, and the five status queries.",
+      "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
   },
   twitter: { card: "summary" },
 };
@@ -23,12 +23,16 @@ export const metadata = {
       <span>Requests and envelopes</span>
     </nav>
     <h1 id="requests">Requests and envelopes</h1>
-    <p className="lede">One request document in, one envelope out. <code>{"--json"}</code> is the machine surface; the same shapes are what an agent or a script branches on, and every request is validated against the protocol before anything runs.</p>
+    <p className="lede">This page describes local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> requests. One request document goes in and one JSON envelope comes out; the documented shapes are what an agent or script branches on. The optional Server preview has its own envelope.</p>
 
     <h2 id="envelope">The envelope</h2>
     <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
     <pre data-label="failure"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": false,\n  \"result\": null,\n  \"error\": { \"code\": \"INPUT_INVALID\", \"message\": \"The request document is not valid.\" }\n}"}</code></pre>
-    <p><code>{"operation"}</code> is one of <code>{"connect"}</code>, <code>{"publish"}</code> and{" "} <code>{"status"}</code>. A message is static text chosen by the code, never built from a stack, a path, a response body or an argument, so a diagnostic cannot carry a secret.</p>
+    <p>For local requests, <code>{"operation"}</code> is one of <code>{"connect"}</code>, <code>{"publish"}</code> and{" "} <code>{"status"}</code>. A message is static text chosen by the code, never built from a stack, a path, a response body or an argument, so a diagnostic cannot carry a secret.</p>
+
+    <h2 id="server">Server envelopes</h2>
+    <p><strong>Preview and unpublished.</strong> Server commands are a separate candidate path that requires matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. Their JSON uses <code>{"operation: \"server\""}</code>, with a <code>{"result.subcommand"}</code> discriminator for <code>{"init"}</code>, <code>{"doctor"}</code>, <code>{"deploy"}</code>, <code>{"connect"}</code>, <code>{"ci"}</code> and <code>{"publish"}</code>.</p>
+    <p>Server request and result shapes are not the local request families below. Follow <a href="/getting-started/server/">Deploy a server</a>; its outcomes, recovery IDs and acceptance limits are summarized in the <a href="/reference/cli/#server">Server command reference</a>.</p>
 
     <h2 id="connect">connect</h2>
     <p>Four request shapes. <code>{"start"}</code> begins a connection, <code>{"resume"}</code>{" "} completes a pending step, and <code>{"update"}</code> and <code>{"disconnect"}</code> maintain a stored one.</p>
@@ -88,7 +92,7 @@ export const metadata = {
     </div>
     <p>Provider availability is <code>{"available"}</code>, <code>{"untrusted"}</code>,{" "} <code>{"unavailable"}</code> or <code>{"stale"}</code>, and provenance is{" "} <code>{"official"}</code> or <code>{"third_party"}</code>. Status reads stored observations; it does not refresh them by contacting a platform.</p>
 
-    <h2 id="exit-codes">Execution status and the exit code</h2>
+    <h2 id="exit-codes">Local execution status and the exit code</h2>
     <p>A publish result maps onto the process exit code: <code>{"unknown"}</code> exits 4,{" "} <code>{"failed"}</code> and <code>{"partial"}</code> exit 6, and every other execution status exits 0. A preflight or usage refusal exits 2, and an explicit decline at the confirmation prompt exits 5.</p>
   </article>
 </main>
@@ -97,9 +101,10 @@ export const metadata = {
   <p className="toc-title">On this page</p>
   <ul>
     <li><a href="#envelope">The envelope</a></li>
+    <li><a href="#server">Server envelopes</a></li>
     <li><a href="#connect">connect</a></li>
     <li><a href="#publish">publish</a></li>
     <li><a href="#status">status</a></li>
-    <li><a href="#exit-codes">Execution status and the exit code</a></li>
+    <li><a href="#exit-codes">Local execution status and the exit code</a></li>
   </ul>
 </nav>

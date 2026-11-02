@@ -8,14 +8,14 @@ and the platform adapters - lives in <https://github.com/Syndroo/syndroo>.
 
 ## Pages
 
-Sixteen public pages in the accepted Getting Started / Platforms / Build /
+Seventeen public pages in the accepted Getting Started / Platforms / Build /
 Reference information architecture, plus the two technical 404 documents
 Next.js generates:
 
 | Site | Paths |
 | --- | --- |
 | Website | `/` |
-| Docs - Getting Started | `/`, `/getting-started/local-cli/`, `/getting-started/agent/` |
+| Docs - Getting Started | `/`, `/getting-started/local-cli/`, `/getting-started/server/`, `/getting-started/agent/` |
 | Docs - Platforms | `/platforms/`, `/platforms/bluesky/`, `/platforms/threads/`, `/platforms/linkedin/`, `/platforms/mastodon/`, `/platforms/devto/` |
 | Docs - Build | `/build/provider-plugins/`, `/build/trust-and-registry/` |
 | Docs - Reference | `/reference/cli/`, `/reference/configuration/`, `/reference/credentials/`, `/reference/requests/` |
@@ -77,8 +77,10 @@ Threads, LinkedIn, and Mastodon for plain text, and DEV.to for articles. They
 are fixture-tested rather than live-account accepted, so no page claims a
 verified publish. Each platform page states only what the provider source and
 the recorded provider evidence support and marks anything else **UNRESOLVED**.
-The self-hosted HTTP server, the SDK and the Cloudflare Worker are outside this
-public documentation surface.
+The approved self-hosted slice deploys to the reader's Cloudflare account and
+uses Threads connect/publish plus manual GitHub CI. It has not been accepted
+with live Meta, Cloudflare or GitHub accounts. The generic hosted HTTP API, SDK
+and earlier-release walkthroughs remain outside this public surface.
 
 ## License
 

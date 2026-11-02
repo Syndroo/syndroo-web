@@ -13,6 +13,7 @@ import test from "node:test";
 
 import { SITE_TARGETS } from "../scripts/lib/app-targets.ts";
 import {
+  ACCEPTED_LEAF_COMMANDS,
   ACCEPTED_COMMANDS,
   ACCEPTED_GLOBAL_FLAGS,
   RETIRED_COMMANDS,
@@ -51,13 +52,13 @@ test("the documentation prints only the accepted v1 command surface", async () =
   );
 
   const commands = new Set(surface.invocations.map((entry) => entry.command));
-  for (const command of ACCEPTED_COMMANDS) {
+  for (const command of ACCEPTED_LEAF_COMMANDS) {
     assert.ok(commands.has(command), `the documentation should show "syndroo ${command}"`);
   }
   for (const command of commands) {
     assert.ok(
       ACCEPTED_COMMANDS.includes(command),
-      `"syndroo ${command}" is not one of the three accepted commands`,
+      `"syndroo ${command}" is not on the accepted command surface`,
     );
   }
 
@@ -109,6 +110,31 @@ test("the documentation prints only the accepted v1 command surface", async () =
       );
     }
   }
+});
+
+test("nested Server commands and npx --no-install invocations are parsed exactly", () => {
+  const surface = extractCliSurface([
+    {
+      path: "/fixture/",
+      html:
+        "<pre><code>npx --no-install syndroo server connect threads \\\n" +
+        "  --app-id &lt;app-id&gt;\n" +
+        "npx --no-install syndroo server ci setup github --repo owner/repo</code></pre>",
+    },
+  ]);
+
+  assert.deepEqual(surface.invocations, [
+    {
+      command: "server connect threads",
+      flags: ["--app-id"],
+      page: "/fixture/",
+    },
+    {
+      command: "server ci setup github",
+      flags: ["--repo"],
+      page: "/fixture/",
+    },
+  ]);
 });
 
 test("an inline flag is read with or without its argument shape, and never after a negation", () => {
@@ -163,5 +189,31 @@ test("every documented command and flag exists in the real CLI", async (context)
     issues,
     [],
     "the documentation must not describe a command, flag or version the CLI does not have",
+  );
+});
+
+test("the real CLI checks exact nested paths and per-subcommand flags", async (context) => {
+  const cliBin = resolveCliBin(CORE_REPO);
+
+  if (!existsSync(cliBin)) {
+    context.skip(`no CLI at ${cliBin}; set SYNDROO_CORE_REPO or SYNDROO_CLI_BIN`);
+    return;
+  }
+
+  const check = (source: string) =>
+    checkCliContract({
+      cliBin,
+      pages: [{ path: "/fixture/", html: `<pre><code>${source}</code></pre>` }],
+      expectedVersion: versions.cli,
+    });
+
+  assert.deepEqual(await check("syndroo server doctor"), []);
+  assert.match(
+    (await check("syndroo server recreate")).join("\n"),
+    /not on the accepted command surface/,
+  );
+  assert.match(
+    (await check("syndroo server doctor --yes")).join("\n"),
+    /"--yes" on "syndroo server doctor"/,
   );
 });

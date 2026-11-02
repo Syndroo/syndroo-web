@@ -1,14 +1,14 @@
 export const metadata = {
   title: "CLI reference - Syndroo docs",
   description:
-    "The three syndroo commands with every flag, the global flags and the exit codes, checked against the built CLI.",
+    "The local syndroo commands, optional Server command family, global flags and exit codes, checked against the built CLI.",
   alternates: { canonical: "/reference/cli/" },
   openGraph: {
     type: "website",
     url: "/reference/cli/",
     title: "CLI reference - Syndroo docs",
     description:
-      "The three syndroo commands with every flag, the global flags and the exit codes, checked against the built CLI.",
+      "The local syndroo commands, optional Server command family, global flags and exit codes, checked against the built CLI.",
   },
   twitter: { card: "summary" },
 };
@@ -21,7 +21,7 @@ export const metadata = {
       <span>CLI</span>
     </nav>
     <h1 id="cli">CLI reference</h1>
-    <p className="lede">Three first-level commands and no others: <code>{"syndroo connect"}</code>,{" "} <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. Retrying is a mode of{" "} <code>{"syndroo publish"}</code>, and querying is read-only in{" "} <code>{"syndroo status"}</code>. Every command and flag on this page is checked against the built CLI when the site is published.</p>
+    <p className="lede">The local workflow has three first-level commands: <code>{"syndroo connect"}</code>,{" "} <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional preview <code>{"syndroo server"}</code> family deploys and operates a user-owned Cloudflare Worker. Retrying is a mode of <code>{"syndroo publish"}</code>, and querying is read-only in <code>{"syndroo status"}</code>. Every command and flag on this page is checked against the built CLI when the site is published.</p>
 
     <h2 id="global-flags">Global flags</h2>
     <p>These are read before the command, so they work in any position on the line and are never passed to a command.</p>
@@ -36,7 +36,7 @@ export const metadata = {
         <tbody>
           <tr>
             <th scope="row"><code>{"--config"}</code></th>
-            <td>Select the configuration file. The path must be absolute.</td>
+            <td>Select the local configuration file. The path must be absolute. Server commands use <code>{"server --project <directory>"}</code> instead.</td>
           </tr>
           <tr>
             <th scope="row"><code>{"--json"}</code></th>
@@ -216,6 +216,46 @@ export const metadata = {
     </div>
     <p><code>{"--connections"}</code>, <code>{"--operation"}</code> and{" "} <code>{"--operations"}</code> are mutually exclusive, <code>{"--provider"}</code> cannot be combined with either operation selector, and <code>{"--limit"}</code> or{" "} <code>{"--cursor"}</code> without <code>{"--operations"}</code> is a usage error.</p>
 
+    <h2 id="server">syndroo server</h2>
+    <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> pins both <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code>, plus project-local Wrangler. Current use needs matching candidate packages from a maintainer or internal registry; standard public npm installation is pending. This project has not proven public npm availability or that the new Server code is on remote <code>{"main"}</code>. The workflow is fixture-tested without live Cloudflare, GitHub, Meta or Threads acceptance, and a CLI-only tarball is insufficient.</p>
+    <p>Run from the project or select it explicitly with <code>{"syndroo server --project <directory> <command>"}</code>. Deployment reuses an existing Wrangler login and does not launch one. The <a href="/getting-started/server/">Deploy a server</a> guide covers prerequisites, authorization and the complete first-run sequence.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Command</th>
+            <th scope="col">What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"syndroo server init [directory]"}</code></th>
+            <td>Creates the tracked configs, pinned package manifest and lockfile, sample post and local Git commit. <code>{"--github OWNER/REPO"}</code> also creates and pushes a repository; private is the default and public requires an explicit choice.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server doctor"}</code></th>
+            <td>Runs read-only project, tool and deployment checks. It does not repair the project or prove OAuth or publication readiness.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server deploy --yes"}</code></th>
+            <td>Provisions missing owned resources and deploys the Worker after the user authorizes that target.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server connect threads --app-id APP_ID"}</code></th>
+            <td>Completes Threads OAuth and saves the verified connection reference. The App Secret uses hidden input, <code>{"THREADS_APP_SECRET"}</code> or <code>{"--app-secret-stdin"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server ci setup github --repo OWNER/REPO --yes"}</code></th>
+            <td>Installs the manual <code>{"Publish to Threads"}</code> workflow and configures the scoped GitHub environment without committing, pushing or publishing.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server publish threads --input FILE --request-id REQUEST_ID --yes --json"}</code></th>
+            <td>Publishes one strict <code>{"{ \"text\": string }"}</code> document with the scoped CI token. Reuse the request ID to recover the same logical publication.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <h2 id="exit-codes">Exit codes</h2>
     <p>An exit code describes the local call, not the platform. Exit 0 can still mean a pending authorization or a preview that has not been executed yet.</p>
     <div className="table-wrap">
@@ -261,6 +301,7 @@ export const metadata = {
 
     <h2 id="related">Related</h2>
     <ul>
+      <li><a href="/getting-started/server/">Deploy a server</a> for the complete optional Server setup and publication flow.</li>
       <li><a href="/reference/configuration/">Configuration</a> for the file shape and the state root.</li>
       <li><a href="/reference/credentials/">Credentials</a> for the field names per provider.</li>
       <li><a href="/reference/requests/">Requests and envelopes</a> for every request and result shape.</li>
@@ -275,6 +316,7 @@ export const metadata = {
     <li><a href="#connect">syndroo connect</a></li>
     <li><a href="#publish">syndroo publish</a></li>
     <li><a href="#status">syndroo status</a></li>
+    <li><a href="#server">syndroo server</a></li>
     <li><a href="#exit-codes">Exit codes</a></li>
     <li><a href="#related">Related</a></li>
   </ul>

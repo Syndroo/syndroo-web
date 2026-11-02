@@ -1,14 +1,14 @@
 export const metadata = {
   title: "Overview - Syndroo docs",
   description:
-    "Syndroo is a local-first publish client with three commands: connect an account, publish a prepared document, and read the status of a run.",
+    "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional preview Server deployment path.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     title: "Overview - Syndroo docs",
     description:
-      "Syndroo is a local-first publish client with three commands: connect an account, publish a prepared document, and read the status of a run.",
+      "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional preview Server deployment path.",
   },
   twitter: { card: "summary" },
 };
@@ -17,14 +17,14 @@ export const metadata = {
   <article>
     <p className="eyebrow">Syndroo docs</p>
     <h1 id="overview">Overview</h1>
-    <p className="lede">The <code>{"syndroo"}</code> command publishes from this machine, in the foreground, with no Syndroo server in the path. It has exactly three first-level commands, plus global flags:{" "} <code>{"syndroo connect"}</code>, <code>{"syndroo publish"}</code> and{" "} <code>{"syndroo status"}</code>.{" "} <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account acceptance still pending.</strong></p>
+    <p className="lede">The local <code>{"syndroo"}</code> workflow publishes from this machine, in the foreground, with no Syndroo server in the path. Its independent first-level commands are{" "} <code>{"syndroo connect"}</code>, <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional <code>{"syndroo server"}</code> command family may operate a user-owned Cloudflare deployment.{" "} <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account acceptance still pending.</strong></p>
 
     <div className="tip">
       <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
       <p>No live social-network call has been made from this project. Everything on this site describes the built candidate, its schemas and its fixture tests. Treat every platform guide as unverified against a real account until you run it yourself.</p>
     </div>
 
-    <h2 id="commands">The three commands</h2>
+    <h2 id="commands">The independent local commands</h2>
     <div className="table-wrap">
       <table>
         <thead>
@@ -50,6 +50,7 @@ export const metadata = {
       </table>
     </div>
     <p>The full flag list, the exit codes and the global flags live in the{" "} <a href="/reference/cli/">CLI reference</a>. Every command and flag printed on this site is checked against the built CLI before the site is published.</p>
+    <p id="server"><strong>Optional Server preview.</strong> The <code>{"server"}</code> commands deploy to your own Cloudflare account. <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages plus project-local Wrangler; standard public npm installation is pending. See the <a href="/getting-started/server/">Deploy a server</a> guide for the setup path and the <a href="/reference/cli/#server">CLI reference</a> for release and acceptance limits.</p>
 
     <h2 id="install">1. Build the candidate</h2>
     <p>Node.js 24.19 or newer on macOS or Linux. The candidate is not on a registry, so it is built from the product repository and packed from its workspace:</p>
@@ -79,23 +80,24 @@ export const metadata = {
     <div className="tile-grid">
     <a className="tile" href="/platforms/"><span className="tile-title">Platforms</span> <span className="tile-text">One guide per official provider: requirements, credentials, connect, first publish, options and what is still unresolved.</span></a>
     <a className="tile" href="/build/provider-plugins/"><span className="tile-title">Build</span> <span className="tile-text">Write a provider plugin against the provider SDK: the manifest, the egress declaration, trust and registry rules.</span></a>
-    <a className="tile" href="/reference/cli/"><span className="tile-title">Reference</span> <span className="tile-text">The three commands with every flag, the configuration file, credential field names, and the request and envelope shapes.</span></a>
+    <a className="tile" href="/reference/cli/"><span className="tile-title">Reference</span> <span className="tile-text">The local commands with every flag, the optional Server command summary, configuration, credentials, and request and envelope shapes.</span></a>
     </div>
 
-    <h2 id="not-covered">Not covered yet</h2>
-    <p><strong>UNRESOLVED.</strong> The architecture also describes a self-hosted HTTP server, an SDK and a Cloudflare Worker. They exist in the product repository but are not documented on this site yet: no page here makes a claim about their behaviour or their endpoints, and this site does not describe a hosted Syndroo service as available.</p>
+    <h2 id="not-covered">Still unresolved</h2>
+    <p><strong>UNRESOLVED.</strong> Hosted Syndroo service instructions, the public HTTP API and SDK, and earlier-release walkthroughs remain outside this documentation surface. This is separate from the optional user-owned Server deployment guide, and no page here describes a hosted Syndroo service as available.</p>
   </article>
 </main>
 
 <nav className="toc" id="page-toc" aria-label="On this page">
   <p className="toc-title">On this page</p>
   <ul>
-    <li><a href="#commands">The three commands</a></li>
+    <li><a href="#commands">The independent local commands</a></li>
+    <li><a href="#server">Optional Server preview</a></li>
     <li><a href="#install">Build the candidate</a></li>
     <li><a href="#connect">Connect one account</a></li>
     <li><a href="#publish">Prepare, then execute</a></li>
     <li><a href="#status">Read the result</a></li>
     <li><a href="#sections">Where to go next</a></li>
-    <li><a href="#not-covered">Not covered yet</a></li>
+    <li><a href="#not-covered">Still unresolved</a></li>
   </ul>
 </nav>

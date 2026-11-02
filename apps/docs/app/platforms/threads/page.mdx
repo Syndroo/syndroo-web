@@ -1,14 +1,14 @@
 export const metadata = {
   title: "Threads - Syndroo docs",
   description:
-    "Connect Threads with a Meta app client and publish a text post in one call: credential fields, declared egress, options and the unresolved details.",
+    "Connect Threads locally or through an optional user-owned Syndroo Worker, publish text and review the unresolved provider details.",
   alternates: { canonical: "/platforms/threads/" },
   openGraph: {
     type: "website",
     url: "/platforms/threads/",
     title: "Threads - Syndroo docs",
     description:
-      "Connect Threads with a Meta app client and publish a text post in one call: credential fields, declared egress, options and the unresolved details.",
+      "Connect Threads locally or through an optional user-owned Syndroo Worker, publish text and review the unresolved provider details.",
   },
   twitter: { card: "summary" },
 };
@@ -67,6 +67,10 @@ export const metadata = {
     <p>With no options the two hosts are <code>{"https://www.threads.net"}</code> for authorization and <code>{"https://graph.threads.net"}</code> for the API, and the default scope list is{" "} <code>{"threads_basic"}</code> plus <code>{"threads_content_publish"}</code>. The client id and secret can be supplied as connect options by a machine caller, or read as the two credential fields.</p>
     <p>The start step answers an authorization action that a browser completes at the Threads authorization host, and the local CLI completes that OAuth callback itself, with <code>{"--redirect-uri"}</code> and a controlling terminal or with <code>{"--callback-url -"}</code>, as the <a href="/reference/credentials/#browser">credential reference</a> describes. That local callback path is fixture-tested against local servers only; no live Threads account was connected.</p>
 
+    <h2 id="server">Deploy a server</h2>
+    <p>This page's <code>{"syndroo connect"}</code> flow stays local. To run Threads OAuth through your own Cloudflare Worker and publish from GitHub Actions, follow <a href="/getting-started/server/">Deploy a server</a>. That flow registers <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code> with the confirmed host and runs <code>{"syndroo server connect threads --app-id APP_ID"}</code>.</p>
+    <p><strong>Preview and unpublished.</strong> The Server flow requires matching candidate <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. See the <a href="/reference/cli/#server">CLI reference</a> for release and acceptance limits.</p>
+
     <h2 id="first-publish">First publish</h2>
     <p>The text that is sent is the target's <code>{"text"}</code> publish option:</p>
     <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": {},\n  \"targets\": [\n    { \"provider\": \"threads\", \"options\": { \"text\": \"Hello from Syndroo.\" } }\n  ]\n}"}</code></pre>
@@ -119,6 +123,7 @@ export const metadata = {
     <li><a href="#requirements">Requirements</a></li>
     <li><a href="#credentials">Credentials</a></li>
     <li><a href="#connect">Connect</a></li>
+    <li><a href="#server">Deploy a server</a></li>
     <li><a href="#first-publish">First publish</a></li>
     <li><a href="#capabilities">Capabilities</a></li>
     <li><a href="#options">Options</a></li>

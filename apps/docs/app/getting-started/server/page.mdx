@@ -1,0 +1,122 @@
+export const metadata = {
+  title: "Deploy a server - Syndroo docs",
+  description:
+    "Deploy a user-owned Syndroo Cloudflare Worker, connect Threads and publish from GitHub Actions.",
+  alternates: { canonical: "/getting-started/server/" },
+  openGraph: {
+    type: "website",
+    url: "/getting-started/server/",
+    title: "Deploy a server - Syndroo docs",
+    description:
+      "Deploy a user-owned Syndroo Cloudflare Worker, connect Threads and publish from GitHub Actions.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <span>Deploy a server</span>
+    </nav>
+    <h1 id="server">Deploy a server</h1>
+    <p className="lede">Use the optional <code>{"server"}</code> commands to run Syndroo in your own Cloudflare account. This path connects one Threads account and can publish from GitHub Actions. The local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> workflow remains separate.</p>
+
+    <div className="tip" id="status">
+      <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages from a maintainer or internal registry; standard public npm installation is pending. See the <a href="/reference/cli/#server">CLI reference</a> for detailed release and acceptance limits.</p>
+    </div>
+
+    <h2 id="prerequisites">What you need</h2>
+    <ul>
+      <li>Node.js 24.19 or newer on macOS or Linux.</li>
+      <li>Git with your name and email configured, plus npm.</li>
+      <li>A Cloudflare account and a Threads app in Meta.</li>
+      <li>GitHub CLI <code>{"gh"}</code> if you want a repository and manual CI.</li>
+    </ul>
+
+    <h2 id="agent-prompt">Let an agent run the setup</h2>
+    <p>Paste this prompt into an agent:</p>
+    <pre data-label="agent prompt"><code>{`Help me deploy Syndroo's Server preview to my Cloudflare account and connect one Threads app.
+Use the packaged Syndroo skill and the Deploy a server guide at https://YOUR-DOCS-ORIGIN/getting-started/server/; replace YOUR-DOCS-ORIGIN with the configured docs origin.
+Ask once whether I want GitHub; if yes, get OWNER/REPO and private/public, defaulting to private.
+Reuse authorization I have already given and ask only when an action still lacks it.
+Use stable request IDs and stop for Wrangler login, Meta authorization or Git push when those actions still need me.
+Keep secrets out of chat, command arguments, logs and tracked files.`}</code></pre>
+
+    <h2 id="initialize">1. Create the project</h2>
+    <p>Check the local tools first:</p>
+    <pre data-label="terminal"><code>{"node --version\ngit config --get user.name\ngit config --get user.email\nnpm --version"}</code></pre>
+    <p>For a local-only project, run:</p>
+    <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site"}</code></pre>
+    <p>For GitHub, log in first and add the repository flags to the same command. Private is the default; use <code>{"--public"}</code> only when that is your choice.</p>
+    <pre data-label="terminal"><code>{"gh auth login\nsyndroo server init ./syndroo-site --github OWNER/REPO --private"}</code></pre>
+    <p><code>{"server init"}</code> creates the application and Wrangler configs, pinned dependency files, a sample post and the first Git commit.</p>
+
+    <h2 id="doctor">2. Run doctor</h2>
+    <pre data-label="terminal"><code>{"cd syndroo-site\nsyndroo server doctor --json"}</code></pre>
+    <p>Doctor is read-only and does not repair the project. Fix any local check reported as <code>{"missing"}</code> or <code>{"attention_required"}</code> before deploying. Deployment and credentials are expected to be <code>{"not_configured"}</code>, while OAuth and publication readiness remain <code>{"unverified"}</code>.</p>
+
+    <h2 id="deploy">3. Log in and deploy</h2>
+    <p>Wrangler must already be logged in. <code>{"server deploy"}</code> reuses that login and does not launch a login flow itself.</p>
+    <pre data-label="terminal"><code>{"npx wrangler login\nsyndroo server deploy --yes"}</code></pre>
+    <p>The result reports a deployed Worker and its confirmed HTTPS origin. Review the Cloudflare account and resources before running <code>{"--yes"}</code>.</p>
+
+    <h2 id="callback">4. Register the callback</h2>
+    <p>In your Meta app, register the Worker origin followed by the callback path. For example, replace the example host with your complete confirmed origin:</p>
+    <pre data-label="callback"><code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code></pre>
+
+    <h2 id="connect">5. Connect Threads</h2>
+    <pre data-label="terminal"><code>{"syndroo server connect threads --app-id APP_ID"}</code></pre>
+    <p>Replace <code>{"APP_ID"}</code> with the Threads app ID and complete the Meta browser prompt. A terminal reads the App Secret without echo; automation can use <code>{"THREADS_APP_SECRET"}</code> or <code>{"--app-secret-stdin"}</code>. The command prints the connection ID and saves the verified App ID and connection reference in <code>{"syndroo.config.jsonc"}</code>.</p>
+
+    <p><strong>Steps 6 and 7 are optional.</strong> If you do not want GitHub CI, setup is complete after step 5.</p>
+
+    <h2 id="ci">6. Optionally prepare GitHub Actions</h2>
+    <p>Run <code>{"gh auth login"}</code> if you have not already. Then configure the repository:</p>
+    <pre data-label="terminal"><code>{"syndroo server ci setup github --repo OWNER/REPO --yes"}</code></pre>
+    <p>This creates <code>{".github/workflows/threads-publish.yml"}</code> and configures the <code>{"threads-ci"}</code> GitHub environment. It does not commit, push or publish.</p>
+    <p>Your post is strict JSON with one <code>{"text"}</code> property:</p>
+    <pre data-label="posts/hello.json"><code>{"{\n  \"text\": \"Hello from Syndroo CI\"\n}"}</code></pre>
+    <p>Review the updated config, workflow and post, then commit and push them using the authorization you already have, or ask if this push is not covered:</p>
+    <pre data-label="terminal"><code>{"git add syndroo.config.jsonc .github/workflows/threads-publish.yml posts/hello.json\ngit commit -m \"Configure Threads publishing\"\ngit push"}</code></pre>
+
+    <h2 id="publish">7. Optionally run the workflow</h2>
+    <p>In GitHub, open <strong>Actions</strong>, choose <strong>Publish to Threads</strong> and select <strong>Run workflow</strong>. Use a checked-in post path and a stable request ID:</p>
+    <ul>
+      <li><strong>post_path:</strong> <code>{"posts/hello.json"}</code></li>
+      <li><strong>request_id:</strong> <code>{"threads-ci:hello-001"}</code></li>
+    </ul>
+    <p>The workflow invokes <code>{"syndroo server publish threads --input \"$INPUT_PATH\" --request-id \"$REQUEST_ID\" --yes --json"}</code> with a scoped token. Publication succeeds only with a settled <code>{"succeeded"}</code> result and at least one successful delivery.</p>
+    <p>If the response is lost or the result is <code>{"unknown"}</code>, inspect the operation. Rerun the same post with the same request ID; do not create a new ID for the same logical publication.</p>
+
+    <h2 id="files">Files and secrets</h2>
+    <p><code>{"syndroo.config.jsonc"}</code> is the tracked application config. <code>{"wrangler.jsonc"}</code> is the tracked Cloudflare config. Do not commit <code>{"wrangler.effective.jsonc"}</code>, <code>{".syndroo/"}</code>, <code>{"node_modules/"}</code>, environment files or private server state.</p>
+    <p>The App Secret, CI bearer, Cloudflare admin bearer, <code>{"SECRET_KEY"}</code> and <code>{"RUNTIME_KEY"}</code> must not appear in arguments, logs or repository files. Use hidden terminal input or the documented stdin or environment paths.</p>
+
+    <h2 id="recovery">If something goes wrong</h2>
+    <ul>
+      <li><strong>Interrupted deploy:</strong> preserve its operation ID, confirmed resources and machine receipt, then rerun the same project. Use <code>{"--recover"}</code> only with verified non-secret evidence.</li>
+      <li><strong>Unknown publication:</strong> treat it as possibly published. Inspect the operation and reuse the same request ID for the same content.</li>
+      <li><strong>Doctor is not ready:</strong> read the named checks in the <a href="/reference/cli/#server">CLI reference</a> and the <a href="/reference/configuration/#server">server configuration notes</a>.</li>
+      <li><strong>Meta callback fails:</strong> compare the registered callback with your confirmed origin and see the <a href="/platforms/threads/#server">Threads server notes</a> and <a href="/reference/credentials/#server">credential reference</a>.</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#prerequisites">What you need</a></li>
+    <li><a href="#agent-prompt">Let an agent run it</a></li>
+    <li><a href="#initialize">1. Create the project</a></li>
+    <li><a href="#doctor">2. Run doctor</a></li>
+    <li><a href="#deploy">3. Log in and deploy</a></li>
+    <li><a href="#callback">4. Register the callback</a></li>
+    <li><a href="#connect">5. Connect Threads</a></li>
+    <li><a href="#ci">6. Optional: prepare GitHub Actions</a></li>
+    <li><a href="#publish">7. Optional: run the workflow</a></li>
+    <li><a href="#files">Files and secrets</a></li>
+    <li><a href="#recovery">Recovery</a></li>
+  </ul>
+</nav>
