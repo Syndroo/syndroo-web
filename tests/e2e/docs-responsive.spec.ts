@@ -242,3 +242,53 @@ test("landscape phones keep the sticky chrome and drawer on screen", async ({ pa
     }
   }
 });
+
+test("the locked mobile drawer scrolls to its final link in both languages", async ({ page }) => {
+  for (const path of ["/getting-started/server/", "/zh/getting-started/server/"]) {
+    for (const [width, height] of [
+      [390, 600],
+      [320, 568],
+    ] as const) {
+      await visit(page, path, width, height);
+      await openDrawer(page);
+
+      const sidebar = page.locator("#docs-sidebar");
+      const links = sidebar.locator("a[href]");
+      const lastLink = links.last();
+      const linkCount = await links.count();
+
+      await sidebar.hover();
+      await page.mouse.wheel(0, 2000);
+      await expect.soft(lastLink, `${path} last link remains reachable by wheel at ${width}x${height}`).toBeInViewport();
+
+      const drawer = await sidebar.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return {
+          scrollTop: node.scrollTop,
+          overflowY: getComputedStyle(node).overflowY,
+          bottom: box.bottom,
+          viewportHeight: window.innerHeight,
+          bodyOverflow: document.body.style.overflow,
+        };
+      });
+
+      expect.soft(drawer.overflowY, `${path} drawer must own vertical scrolling at ${width}x${height}`).toBe("auto");
+      expect.soft(drawer.scrollTop, `${path} wheel must scroll the drawer at ${width}x${height}`).toBeGreaterThan(0);
+      expect.soft(drawer.bottom, `${path} drawer must end at the viewport at ${width}x${height}`).toBeCloseTo(
+        drawer.viewportHeight,
+        0,
+      );
+      expect.soft(drawer.bodyOverflow, `${path} background must stay locked at ${width}x${height}`).toBe("hidden");
+
+      await sidebar.evaluate((node) => {
+        node.scrollTop = 0;
+      });
+      for (let index = 1; index < linkCount; index += 1) {
+        await page.keyboard.press("Tab");
+      }
+
+      await expect.soft(lastLink, `${path} last link at ${width}x${height}`).toBeFocused();
+      await expect.soft(lastLink, `${path} last link stays in the drawer at ${width}x${height}`).toBeInViewport();
+    }
+  }
+});
