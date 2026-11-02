@@ -1,0 +1,72 @@
+export const metadata = {
+  title: "信任与注册表 - Syndroo 文档",
+  description:
+    "Syndroo 如何选择单一提供商实现、检查第三方包、记录审批，并在插件无效时安全失败。",
+  alternates: {
+    canonical: "/zh/build/trust-and-registry/",
+    languages: {
+      en: "/build/trust-and-registry/",
+      "zh-CN": "/zh/build/trust-and-registry/",
+      "x-default": "/build/trust-and-registry/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/build/trust-and-registry/",
+    title: "信任与注册表 - Syndroo 文档",
+    description:
+      "Syndroo 如何选择单一提供商实现、检查第三方包、记录审批，并在插件无效时安全失败。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/build/provider-plugins/">开发</a>
+      <span aria-hidden="true">/</span>
+      <span>信任与注册表</span>
+    </nav>
+    <h1 id="trust">信任与注册表</h1>
+    <p className="lede">提供商与 CLI 在同一进程中运行，并拥有相同的访问权限。因此 Syndroo 明确呈现这一选择，而不假装进程内插件已受沙箱隔离：每个提供商只有一个实现，并且在导入之前先检查并获得批准。</p>
+
+    <h2 id="registry">每个提供商只有一个实现</h2>
+    <p>注册表为每个提供商 ID 只保存一个活动实现。官方提供商来自构建目录；配置条目会替换官方实现：</p>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"providers\": {\n    \"bluesky\": { \"path\": \"./providers/my-bluesky\" }\n  }\n}"}</code></pre>
+    <p>每个提供商只接受 <code>{"path"}</code> 键，并相对于配置文件所在目录解析，而不是相对于工作目录或 CLI 安装位置解析。删除条目会恢复内置选择。没有自动发现、包管理器集成，也没有可回退的第二个实现。</p>
+
+    <h2 id="trusted">此处“受信任”的含义</h2>
+    <p>批准第三方提供商，意味着你信任这段代码可以访问你的凭证和状态。Core 与插件之间受限的参数传递是一种契约，不是安全边界。宿主会展示已检查的候选项，并且提供商第一次主动加载时，必须在导入模块前获得明确授权。</p>
+    <p>审批记录写入状态根目录之下，并绑定检查所得指纹、提供商 ID、解析后的包根目录、入口点、版本和依赖快照。指纹是对排序后的相对文件名、每个纳入文件的内容、包名、版本、入口点和依赖图计算出的 SHA-256 摘要。它会在导入模块前再次检查，因此发生变化的包不会被悄悄复用。</p>
+
+    <h2 id="inspection">检查会做什么</h2>
+    <ul>
+      <li>只进行静态文件系统读取：不导入、不运行生命周期脚本、不安装、不访问网络。</li>
+      <li>纳入文件必须是常规文件。符号链接文件和目录、套接字、设备与 FIFO 会被拒绝；包根目录会先规范化。</li>
+      <li>遍历时会排除 <code>node_modules</code>、<code>.git</code> 和测试目录等目录名，以及 <code>.md</code>、<code>LICENSE</code> 和 <code>NOTICE</code> 文件。</li>
+      <li>包根目录下嵌套的 <code>node_modules</code> 会被拒绝，因为它们可能改变该包自身代码的模块解析。</li>
+      <li>读取操作有上限，并使用不跟随链接的打开方式，同时限制依赖图、包、文件、目录、深度和字节数。</li>
+    </ul>
+
+    <h2 id="fail-closed">安全失败</h2>
+    <p>无效覆盖会被拒绝，绝不会回退到内置提供商，因为静默回退会把内容发送到调用方并未选择的实现。<code>{"apiVersion"}</code> 不匹配、缺少审批、指纹变化，或提供商默认导出与清单元数据不符，都会在发送任何内容前终止运行。</p>
+    <p>发布发送任何内容前，每个所选目标的提供商都会加载并预检。一个提供商不可用就会使整个准备步骤失败，因此文档不会因为第二个目标缺少插件而只发布一半。</p>
+
+    <h2 id="provenance">官方代表来源，而不是声明</h2>
+    <p>来源由实现的出处决定：内置目录条目为官方，配置覆盖为第三方。包名或插件内部的字段不能建立官方来源；即使覆盖实现包含相同代码，它仍保留第三方来源。</p>
+    <p>托管部署更严格：它只运行官方提供商，或已经审核并注册到该部署的提供商。第三方提供商属于本地或自托管运行时，由操作员负责批准。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#registry">每个提供商只有一个实现</a></li>
+    <li><a href="#trusted">此处“受信任”的含义</a></li>
+    <li><a href="#inspection">检查会做什么</a></li>
+    <li><a href="#fail-closed">安全失败</a></li>
+    <li><a href="#provenance">官方代表来源，而不是声明</a></li>
+  </ul>
+</nav>

@@ -155,6 +155,23 @@ test("an inline flag is read with or without its argument shape, and never after
       html: "<p>This command has no <code>--base-url &lt;origin&gt;</code> option.</p>",
       expected: [],
     },
+    {
+      name: "a Chinese negated flag with an argument",
+      html: "<p>这个命令没有 <code>--base-url &lt;origin&gt;</code> 选项。</p>",
+      expected: [],
+    },
+    {
+      name: "only the negated occurrence is skipped",
+      html:
+        "<p>Pass <code>--yes</code> to confirm.</p>" +
+        "<p>There is no <code>--api-key</code> flag.</p>",
+      expected: ["--yes"],
+    },
+    {
+      name: "Chinese positive documentation is still validated",
+      html: "<p>传入 <code>--yes</code> 确认。</p><p>未提供 <code>--config</code> 时使用默认配置。</p>",
+      expected: ["--yes", "--config"],
+    },
     // A whole command in prose is an invocation, not an inline flag claim.
     { name: "a prose command", html: "<p>Run <code>syndroo help</code> for usage.</p>", expected: [] },
   ];

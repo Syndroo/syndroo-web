@@ -208,7 +208,7 @@ test("primary call to action uses the approved colours and hover", async ({ page
   await expect(cta).toHaveCSS("color", WHITE);
 });
 
-test("the shared theme control switches both sites between Dark and Light", async ({ page }, testInfo) => {
+test("the English theme control switches both sites between Dark and Light", async ({ page }, testInfo) => {
   for (const [name, url] of [
     ["website", WEBSITE],
     ["docs", DOCS],

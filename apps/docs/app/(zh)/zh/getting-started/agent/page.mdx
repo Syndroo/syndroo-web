@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "与智能体配合使用 - Syndroo 文档",
+  description:
+    "通过智能体驱动本地 syndroo CLI 或可选的 Server 预览：JSON 信封、安全的凭证处理、稳定的请求标识和分离的部署步骤。",
+  alternates: {
+    canonical: "/zh/getting-started/agent/",
+    languages: {
+      en: "/getting-started/agent/",
+      "zh-CN": "/zh/getting-started/agent/",
+      "x-default": "/getting-started/agent/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/getting-started/agent/",
+    title: "与智能体配合使用 - Syndroo 文档",
+    description:
+      "通过智能体驱动本地 syndroo CLI 或可选的 Server 预览：JSON 信封、安全的凭证处理、稳定的请求标识和分离的部署步骤。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <span>与智能体配合使用</span>
+    </nav>
+    <h1 id="agent">与智能体配合使用</h1>
+    <p className="lede">Syndroo 不包含语言模型，也没有自然语言处理步骤。在本地工作流中，智能体调用 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code>，并读取稳定的 JSON 信封。协议才是契约，终端里的文字只提供便利。</p>
+
+    <h2 id="json">始终请求 JSON</h2>
+    <p><code>{"--json"}</code> 是全局参数，因此放在命令前后都可以。成功时，信封包含操作名称和结果；失败时，信封包含稳定的代码和一条固定消息，后者绝不根据堆栈、路径或参数生成。</p>
+    <pre data-label="envelope"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": { \"status\": \"confirmation_required\" },\n  \"error\": null\n}"}</code></pre>
+    <p>失败时使用相同信封：<code>{"ok"}</code> 为 <code>{"false"}</code>，<code>{"result"}</code> 为 <code>{"null"}</code>，<code>{"error"}</code> 对象包含 <code>{"code"}</code> 和 <code>{"message"}</code>。请根据 <code>{"code"}</code> 分支，不要解析消息文本。</p>
+
+    <h2 id="exit-codes">把退出码作为一类信号理解</h2>
+    <p><code>{"0"}</code> 表示调用已按文档处理完毕，这仍可能是等待授权或等待确认的预览。退出码{" "} <code>{"4"}</code> 表示写入可能已到达提供商，但无法确定结果。退出码{" "} <code>{"6"}</code> 表示执行已经结束，并且确认没有完全成功。其他值涵盖用法或预检拒绝、用户明确拒绝、内部故障和进程中断；<a href="/zh/reference/cli/#exit-codes">CLI 参考</a>列出了全部七个值。</p>
+
+    <h2 id="two-phase">两个阶段，令牌留在标准输入</h2>
+    <p>先准备，再执行。准备结果包含冻结的预览和一个一次性 <code>{"approvalToken"}</code>，执行请求只能从标准输入读取：</p>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json > prepared.json\nsyndroo publish --input - --json < execute.json"}</code></pre>
+    <p>从文件路径或 <code>{"--data"}</code> 传入的执行请求会被拒绝，因此有效令牌不会出现在后台调用的进程参数中。两个阶段之间不会发送任何内容：内容在准备时已经冻结，第二阶段无法重新读取原始输入。</p>
+    <p>已经获得某次发布授权的智能体可以在一次调用内完成两个阶段：<code>{"syndroo publish --input post.json --yes --json"}</code> 会准备、自动确认并执行；标准输出恰好是一个最终执行信封或错误信封，不会再输出准备结果或审批令牌。只使用 <code>{"--json"}</code> 而不使用 <code>{"--yes"}</code> 时，唯一信封就是准备结果。<code>{"--yes"}</code> 不会重新签发凭证，也不会绕过身份、过期、提供商验证或幂等规则，更不会进行第二次准备。</p>
+
+    <h2 id="identity">为每个逻辑调用提供稳定标识</h2>
+    <p><code>{"--request-id"}</code> 用于命名一个逻辑意图。用相同 ID 重复相同调用时，会返回已记录的结果，而不会再次发送；用相同 ID 传入不同内容时，会被拒绝，而不会静默覆盖先前记录。连接流程也内置同样的保证：重复的连接请求会重放已存储的步骤。</p>
+
+    <h2 id="credentials">绝不要把凭证放进请求文档</h2>
+    <p>凭证通过 <code>{"SYNDROO_CREDENTIALS"}</code> 或私有文件传递，绝不能放入发布文档或 <code>{"--data"}</code>。如果内容不能出现在进程参数中，请用 <code>{"--input -"}</code> 从标准输入读取请求，而不要内联传入。</p>
+
+    <h2 id="skill">CLI 包内的 Skill</h2>
+    <p>打包后的 CLI 带有 <code>{"skills/"}</code> 目录，因此智能体运行环境可以把 Skill 和二进制文件一起安装。Skill 正文由产品仓库维护，本站不重复其内容，也不把其工作流表述为已经验证。<strong>未解决。</strong></p>
+
+    <h2 id="server">部署服务器</h2>
+    <p>如果需要使用自己拥有的 Cloudflare Worker、部署 Threads OAuth 或配置手动 GitHub CI，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。复用已有授权，只在 Wrangler 登录或 Meta 浏览器授权等操作仍需要用户时停下。</p>
+    <p><strong>预览且未发布。</strong><code>{"server init"}</code> 需要来自维护者或内部注册表、版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 候选包；公共 npm 安装尚待提供。发布与验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+
+    <h2 id="authorization">确认不等于用户授权</h2>
+    <p>确认提示是本地保护措施，不是授权凭据。在没有人在场时运行的智能体，必须自行判断本次发布是否本来就获准。CLI 只保证：在准备阶段为这份确切内容和这些确切目标签发令牌之前，不会发送任何内容。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#json">始终请求 JSON</a></li>
+    <li><a href="#exit-codes">把退出码作为一类信号理解</a></li>
+    <li><a href="#two-phase">两个阶段，令牌留在标准输入</a></li>
+    <li><a href="#identity">为每个逻辑调用提供稳定标识</a></li>
+    <li><a href="#credentials">绝不要把凭证放进请求文档</a></li>
+    <li><a href="#skill">CLI 包内的 Skill</a></li>
+    <li><a href="#server">部署服务器</a></li>
+    <li><a href="#authorization">确认不等于用户授权</a></li>
+  </ul>
+</nav>

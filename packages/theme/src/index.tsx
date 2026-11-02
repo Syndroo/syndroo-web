@@ -6,6 +6,7 @@
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, Monitor, Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 import type { ThemeProviderProps } from "next-themes";
 import { clsx, type ClassValue } from "clsx";
@@ -83,11 +84,21 @@ function writeSharedCookie(theme: string): void {
   }
 }
 
-const OPTIONS = [
-  { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Monitor },
-] as const;
+export type ThemeLabels = {
+  title: string;
+  light: string;
+  dark: string;
+  system: string;
+  choose: string;
+};
+
+const DEFAULT_THEME_LABELS: ThemeLabels = {
+  title: "Theme",
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+  choose: "Choose Light, Dark or System.",
+};
 
 function useEffectMounted(): boolean {
   const [mounted, setMounted] = React.useState(false);
@@ -105,25 +116,34 @@ function useEffectMounted(): boolean {
  * icon). The stored value is adopted in an effect, so hydration never sees a
  * mismatch even though the pre-paint script already painted the right theme.
  */
-export function ThemeToggle(): React.JSX.Element {
+export function ThemeToggle({
+  labels = DEFAULT_THEME_LABELS,
+}: {
+  labels?: ThemeLabels;
+}): React.JSX.Element {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const mounted = useEffectMounted();
   const current = mounted && theme !== undefined ? theme : "system";
-  const active = OPTIONS.find((option) => option.value === current) ?? OPTIONS[2];
+  const options = [
+    { value: "light", label: labels.light, Icon: Sun },
+    { value: "dark", label: labels.dark, Icon: Moon },
+    { value: "system", label: labels.system, Icon: Monitor },
+  ] as const;
+  const active = options.find((option) => option.value === current) ?? options[2];
   const Icon = active.Icon;
 
   return (
     <DropdownMenuPrimitive.Root>
       <DropdownMenuPrimitive.Trigger
         className="theme-toggle"
-        aria-label={`Theme: ${active.label}. Choose Light, Dark or System.`}
-        title={mounted ? `Theme: ${active.label}` : "Theme"}
+        aria-label={`${labels.title}: ${active.label}. ${labels.choose}`}
+        title={mounted ? `${labels.title}: ${active.label}` : labels.title}
       >
         <Icon aria-hidden="true" />
       </DropdownMenuPrimitive.Trigger>
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content className="ui-menu z-50" align="end" sideOffset={6}>
-          {OPTIONS.map((option) => (
+          {options.map((option) => (
             <DropdownMenuPrimitive.CheckboxItem
               key={option.value}
               className="ui-menu__item"
@@ -146,5 +166,64 @@ export function ThemeToggle(): React.JSX.Element {
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
     </DropdownMenuPrimitive.Root>
+  );
+}
+
+function counterpartPathname(pathname: string, locale: "en" | "zh"): string {
+  const normalized = pathname || "/";
+  if (locale === "en") {
+    return normalized === "/" ? "/zh/" : `/zh${normalized.startsWith("/") ? "" : "/"}${normalized}`;
+  }
+  const withoutLocale = normalized === "/zh" || normalized === "/zh/"
+    ? "/"
+    : normalized.replace(/^\/zh(?=\/)/, "");
+  return withoutLocale.endsWith("/") || withoutLocale.indexOf(".") !== -1
+    ? withoutLocale
+    : `${withoutLocale}/`;
+}
+
+/**
+ * Plain counterpart link. The route is server-rendered; the hash is copied on
+ * hydration and before the full navigation so a matching section remains open.
+ */
+export function LanguageSwitch({
+  locale,
+  label,
+  ariaLabel,
+  className,
+  explicitHref,
+}: {
+  locale: "en" | "zh";
+  label: string;
+  ariaLabel: string;
+  className?: string;
+  explicitHref?: string;
+}): React.JSX.Element {
+  const pathname = usePathname();
+  const baseHref = counterpartPathname(pathname, locale);
+  const [hash, setHash] = React.useState("");
+  const targetLocale = locale === "en" ? "zh" : "en";
+  // Static 404s do not have a real counterpart route. Their layout supplies a
+  // public destination instead of deriving one from Next's internal pathname.
+  const targetHref = explicitHref ?? `${baseHref}${hash}`;
+
+  React.useEffect(() => {
+    const sync = () => setHash(window.location.hash);
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  return (
+    <a
+      className={className}
+      href={targetHref}
+      hrefLang={targetLocale === "zh" ? "zh-CN" : "en"}
+      lang={targetLocale === "zh" ? "zh-CN" : "en"}
+      aria-label={ariaLabel}
+      data-language-switch={targetLocale}
+    >
+      {label}
+    </a>
   );
 }

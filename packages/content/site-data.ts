@@ -25,6 +25,172 @@ export const ORIGIN_PLACEHOLDERS: OriginPlaceholders = {
 };
 
 export const PRODUCT_REPOSITORY = "https://github.com/Syndroo/syndroo";
+
+/** The two public languages. English is the default and keeps the root URLs. */
+export type Locale = "en" | "zh";
+
+export const DEFAULT_LOCALE: Locale = "en";
+export const htmlLangByLocale: Record<Locale, "en" | "zh-CN"> = {
+  en: "en",
+  zh: "zh-CN",
+};
+
+export function localizePath(locale: Locale, path: string): string {
+  const marker = path.search(/[?#]/);
+  const pathname = marker === -1 ? path : path.slice(0, marker);
+  const suffix = marker === -1 ? "" : path.slice(marker);
+  const unlocalized = pathname === "/zh" || pathname === "/zh/"
+    ? "/"
+    : pathname.replace(/^\/zh(?=\/)/, "");
+  const clean = unlocalized === "" || unlocalized === "/" ? "/" : `/${unlocalized.replace(/^\/+|\/+$/g, "")}/`;
+  if (locale === "en") {
+    return clean + suffix;
+  }
+  return (clean === "/" ? "/zh/" : `/zh${clean}`) + suffix;
+}
+
+export function counterpartPath(locale: Locale, path: string): string {
+  return localizePath(locale === "en" ? "zh" : "en", path);
+}
+
+export type UiMessages = {
+  website: {
+    skipToContent: string;
+    mainNav: string;
+    menu: string;
+    close: string;
+    buildFromSource: string;
+    build: string;
+    sourceRepository: string;
+    viewEnglish: string;
+    viewChinese: string;
+  };
+  docs: {
+    skipToContent: string;
+    suffix: string;
+    searchDocs: string;
+    searchDocumentation: string;
+    searchPrompt: string;
+    noResults: string;
+    noResultsHint: string;
+    website: string;
+    overview: string;
+    navigation: string;
+    openNavigation: string;
+    footer: string;
+    navigate: string;
+    open: string;
+    close: string;
+    copy: string;
+    copyCode: string;
+    copied: string;
+    copyManually: string;
+    publishingCode: string;
+    shell: string;
+    viewEnglish: string;
+    viewChinese: string;
+  };
+  theme: {
+    title: string;
+    light: string;
+    dark: string;
+    system: string;
+    choose: string;
+  };
+};
+
+export const ui: Record<Locale, UiMessages> = {
+  en: {
+    website: {
+      skipToContent: "Skip to content",
+      mainNav: "Main",
+      menu: "Menu",
+      close: "Close",
+      buildFromSource: "Build from source",
+      build: "Build",
+      sourceRepository: "Syndroo source repository",
+      viewEnglish: "View this page in English",
+      viewChinese: "View this page in Simplified Chinese",
+    },
+    docs: {
+      skipToContent: "Skip to content",
+      suffix: "docs",
+      searchDocs: "Search docs",
+      searchDocumentation: "Search documentation",
+      searchPrompt: 'Search every page of the local docs. Try "connect", "publish" or "egress".',
+      noResults: "No results",
+      noResultsHint: 'Try a shorter term, or search for a command such as <code>status</code>.',
+      website: "Website",
+      overview: "Overview",
+      navigation: "Documentation navigation",
+      openNavigation: "Open documentation navigation",
+      footer: "Footer",
+      navigate: "navigate",
+      open: "open",
+      close: "close",
+      copy: "Copy",
+      copyCode: "Copy code sample",
+      copied: "Copied",
+      copyManually: "Select and copy manually",
+      publishingCode: "Publishing is real when credentials are configured",
+      shell: "shell",
+      viewEnglish: "View this page in English",
+      viewChinese: "View this page in Simplified Chinese",
+    },
+    theme: {
+      title: "Theme",
+      light: "Light",
+      dark: "Dark",
+      system: "System",
+      choose: "Choose Light, Dark or System.",
+    },
+  },
+  zh: {
+    website: {
+      skipToContent: "跳到正文",
+      mainNav: "主导航",
+      menu: "菜单",
+      close: "关闭",
+      buildFromSource: "从源码构建",
+      build: "构建",
+      sourceRepository: "Syndroo 源码仓库",
+      viewEnglish: "用英文查看此页",
+      viewChinese: "用简体中文查看此页",
+    },
+    docs: {
+      skipToContent: "跳到正文",
+      suffix: "文档",
+      searchDocs: "搜索文档",
+      searchDocumentation: "搜索文档",
+      searchPrompt: "搜索本地文档的全部页面。试试“连接”“发布”或“出站”。",
+      noResults: "无结果",
+      noResultsHint: '尝试更短的词，或搜索 <code>status</code> 等命令。',
+      website: "网站",
+      overview: "概览",
+      navigation: "文档导航",
+      openNavigation: "打开文档导航",
+      footer: "页脚",
+      navigate: "导航",
+      open: "打开",
+      close: "关闭",
+      copy: "复制",
+      copyCode: "复制代码示例",
+      copied: "已复制",
+      copyManually: "请选择后手动复制",
+      publishingCode: "配置凭证后发布会真实发生",
+      shell: "终端",
+      viewEnglish: "用英文查看此页",
+      viewChinese: "用简体中文查看此页",
+    },
+    theme: {
+      title: "主题",
+      light: "浅色",
+      dark: "深色",
+      system: "跟随系统",
+      choose: "选择浅色、深色或跟随系统。",
+    },
+  },
+};
 export const PRODUCT_LICENSE_URL = `${PRODUCT_REPOSITORY}/blob/main/LICENSE`;
 
 /**
@@ -193,6 +359,19 @@ export const primaryNav: NavItem[] = [
   { label: "GitHub", href: PRODUCT_REPOSITORY },
 ];
 
+export const primaryNavZh: NavItem[] = [
+  { label: "工作流", href: "/zh/#workflow" },
+  { label: "平台", href: "/zh/#platforms" },
+  { label: "常见问题", href: "/zh/#faq" },
+  { label: "文档", href: `${ORIGIN_PLACEHOLDERS.docs}/zh/` },
+  { label: "GitHub", href: PRODUCT_REPOSITORY },
+];
+
+export const primaryNavByLocale: Record<Locale, NavItem[]> = {
+  en: primaryNav,
+  zh: primaryNavZh,
+};
+
 export type FooterGroup = {
   title: string;
   items: NavItem[];
@@ -229,7 +408,47 @@ export const footerGroups: FooterGroup[] = [
   },
 ];
 
+export const footerGroupsZh: FooterGroup[] = [
+  {
+    title: "文档",
+    items: [
+      { label: "文档", href: `${ORIGIN_PLACEHOLDERS.docs}/zh/` },
+      { label: "CLI 参考", href: `${ORIGIN_PLACEHOLDERS.docs}/zh/reference/cli/` },
+      { label: "平台指南", href: `${ORIGIN_PLACEHOLDERS.docs}/zh/platforms/` },
+    ],
+  },
+  {
+    title: "项目",
+    items: [
+      { label: "源代码", href: PRODUCT_REPOSITORY },
+      { label: "问题", href: `${PRODUCT_REPOSITORY}/issues` },
+      { label: "许可证", href: PRODUCT_LICENSE_URL },
+    ],
+  },
+  {
+    title: "平台",
+    items: platforms.map((platform) => ({ label: platform.name, href: platform.url })),
+  },
+  {
+    title: "产品",
+    items: [
+      { label: "工作流", href: "/zh/#workflow" },
+      { label: "平台", href: "/zh/#platforms" },
+      { label: "常见问题", href: "/zh/#faq" },
+    ],
+  },
+];
+
 export const footerNav: NavItem[] = footerGroups.flatMap((group) => group.items);
+export const footerNavZh: NavItem[] = footerGroupsZh.flatMap((group) => group.items);
+export const footerGroupsByLocale: Record<Locale, FooterGroup[]> = {
+  en: footerGroups,
+  zh: footerGroupsZh,
+};
+export const footerNavByLocale: Record<Locale, NavItem[]> = {
+  en: footerNav,
+  zh: footerNavZh,
+};
 
 export type DocsNavItem = {
   label: string;
@@ -289,6 +508,50 @@ export const docsNav: DocsNavGroup[] = [
   },
 ];
 
+export const docsNavZh: DocsNavGroup[] = [
+  {
+    title: "入门",
+    items: [
+      { label: "概览", href: "/zh/" },
+      { label: "本地 CLI", href: "/zh/getting-started/local-cli/", sub: true },
+      { label: "自托管服务器", href: "/zh/getting-started/server/", sub: true },
+      { label: "与智能体配合使用", href: "/zh/getting-started/agent/", sub: true },
+    ],
+  },
+  {
+    title: "平台",
+    items: [
+      { label: "全部平台", href: "/zh/platforms/" },
+      { label: "Bluesky", href: "/zh/platforms/bluesky/", sub: true },
+      { label: "Threads", href: "/zh/platforms/threads/", sub: true },
+      { label: "LinkedIn", href: "/zh/platforms/linkedin/", sub: true },
+      { label: "Mastodon", href: "/zh/platforms/mastodon/", sub: true },
+      { label: "DEV.to", href: "/zh/platforms/devto/", sub: true },
+    ],
+  },
+  {
+    title: "构建",
+    items: [
+      { label: "提供商插件", href: "/zh/build/provider-plugins/" },
+      { label: "信任与注册表", href: "/zh/build/trust-and-registry/", sub: true },
+    ],
+  },
+  {
+    title: "参考",
+    items: [
+      { label: "CLI", href: "/zh/reference/cli/" },
+      { label: "配置", href: "/zh/reference/configuration/", sub: true },
+      { label: "凭证", href: "/zh/reference/credentials/", sub: true },
+      { label: "请求与信封", href: "/zh/reference/requests/", sub: true },
+    ],
+  },
+];
+
+export const docsNavByLocale: Record<Locale, DocsNavGroup[]> = {
+  en: docsNav,
+  zh: docsNavZh,
+};
+
 /**
  * One authored page. `file` is the built path relative to the app's output
  * directory; `path` is the public URL path used by sitemaps and canonical links.
@@ -299,9 +562,10 @@ export type PageEntry = {
   label: string;
 };
 
-export const websitePages: PageEntry[] = [{ file: "index.html", path: "/", label: "Home" }];
+export const websitePagesEn: PageEntry[] = [{ file: "index.html", path: "/", label: "Home" }];
+export const websitePagesZh: PageEntry[] = [{ file: "zh/index.html", path: "/zh/", label: "首页" }];
 
-export const docsPages: PageEntry[] = [
+export const docsPagesEn: PageEntry[] = [
   { file: "index.html", path: "/", label: "Overview" },
   { file: "getting-started/local-cli/index.html", path: "/getting-started/local-cli/", label: "Local CLI" },
   { file: "getting-started/server/index.html", path: "/getting-started/server/", label: "Self-hosted Server" },
@@ -319,3 +583,34 @@ export const docsPages: PageEntry[] = [
   { file: "reference/credentials/index.html", path: "/reference/credentials/", label: "Credentials" },
   { file: "reference/requests/index.html", path: "/reference/requests/", label: "Requests and envelopes" },
 ];
+
+export const docsPagesZh: PageEntry[] = [
+  { file: "zh/index.html", path: "/zh/", label: "概览" },
+  { file: "zh/getting-started/local-cli/index.html", path: "/zh/getting-started/local-cli/", label: "本地 CLI" },
+  { file: "zh/getting-started/server/index.html", path: "/zh/getting-started/server/", label: "自托管服务器" },
+  { file: "zh/getting-started/agent/index.html", path: "/zh/getting-started/agent/", label: "与智能体配合使用" },
+  { file: "zh/platforms/index.html", path: "/zh/platforms/", label: "全部平台" },
+  { file: "zh/platforms/bluesky/index.html", path: "/zh/platforms/bluesky/", label: "Bluesky" },
+  { file: "zh/platforms/threads/index.html", path: "/zh/platforms/threads/", label: "Threads" },
+  { file: "zh/platforms/linkedin/index.html", path: "/zh/platforms/linkedin/", label: "LinkedIn" },
+  { file: "zh/platforms/mastodon/index.html", path: "/zh/platforms/mastodon/", label: "Mastodon" },
+  { file: "zh/platforms/devto/index.html", path: "/zh/platforms/devto/", label: "DEV.to" },
+  { file: "zh/build/provider-plugins/index.html", path: "/zh/build/provider-plugins/", label: "提供商插件" },
+  { file: "zh/build/trust-and-registry/index.html", path: "/zh/build/trust-and-registry/", label: "信任与注册表" },
+  { file: "zh/reference/cli/index.html", path: "/zh/reference/cli/", label: "CLI" },
+  { file: "zh/reference/configuration/index.html", path: "/zh/reference/configuration/", label: "配置" },
+  { file: "zh/reference/credentials/index.html", path: "/zh/reference/credentials/", label: "凭证" },
+  { file: "zh/reference/requests/index.html", path: "/zh/reference/requests/", label: "请求与信封" },
+];
+
+export const websitePages: PageEntry[] = [...websitePagesEn, ...websitePagesZh];
+export const docsPages: PageEntry[] = [...docsPagesEn, ...docsPagesZh];
+
+export const websitePagesByLocale: Record<Locale, PageEntry[]> = {
+  en: websitePagesEn,
+  zh: websitePagesZh,
+};
+export const docsPagesByLocale: Record<Locale, PageEntry[]> = {
+  en: docsPagesEn,
+  zh: docsPagesZh,
+};

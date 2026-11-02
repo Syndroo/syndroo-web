@@ -1,0 +1,132 @@
+export const metadata = {
+  title: "Bluesky - Syndroo 文档",
+  description:
+    "使用应用密码连接 Bluesky 并发布文本帖子：凭证字段、声明的出站 HTTPS 地址（域名）、选项、限制，以及仍未解决的部分。",
+  alternates: {
+    canonical: "/zh/platforms/bluesky/",
+    languages: {
+      en: "/platforms/bluesky/",
+      "zh-CN": "/zh/platforms/bluesky/",
+      "x-default": "/platforms/bluesky/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/platforms/bluesky/",
+    title: "Bluesky - Syndroo 文档",
+    description:
+      "使用应用密码连接 Bluesky 并发布文本帖子：凭证字段、声明的出站 HTTPS 地址（域名）、选项、限制，以及仍未解决的部分。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/platforms/">平台</a>
+      <span aria-hidden="true">/</span>
+      <span>Bluesky</span>
+    </nav>
+    <h1 id="bluesky">Bluesky</h1>
+
+    <h2 id="overview">概览</h2>
+    <p>提供商 ID 为 <code>{"bluesky"}</code>。它通过托管入口 <code>{"https://bsky.social"}</code> 认证，创建会话并发布一条文本记录。正文取自共享的 <code>{"content.text"}</code>，没有按目标设置的发布选项。</p>
+
+    <h2 id="requirements">要求</h2>
+    <ul>
+      <li>一个 Bluesky 账号及其应用密码。应用密码不能创建或删除其他应用密码。</li>
+      <li>已构建并安装候选 CLI，运行环境为 Node.js 24.19 或更新版本。</li>
+      <li>账号句柄，放在 <code>{"identifier"}</code> 字段。</li>
+    </ul>
+    <p><strong>未解决。</strong>Bluesky 的两个官方页面为创建应用密码给出了不同的设置路径，一个写作 Privacy and Security，另一个写作 Advanced。因此本指南不提供菜单路径。在向他人编写说明前，请先在自己的账号中确认。</p>
+
+    <h2 id="credentials">凭证</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">字段</th>
+            <th scope="col">含义</th>
+            <th scope="col">机密</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"identifier"}</code></th>
+            <td>你的句柄，例如 <code>{"you.bsky.social"}</code>。</td>
+            <td>否</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"password"}</code></th>
+            <td>应用密码，而不是账号密码。</td>
+            <td>是</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>会话响应同时包含 <code>{"did"}</code> 和 <code>{"handle"}</code>。Syndroo 使用 <code>{"did"}</code> 作为账号身份，因为句柄可能变化。</p>
+
+    <h2 id="connect">连接</h2>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
+    <p>在保存任何内容前，凭证会按提供商自己的模式验证。返回的会话令牌保存在本地凭证存储中；发布时不再需要环境变量。</p>
+
+    <h2 id="first-publish">首次发布</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --input - --json < execute.json"}</code></pre>
+    <p>一次调用即可创建记录。成功投递会把记录 URI 报告为远程 ID；如果记录已提交后客户端超时，结果会是 <code>{"unknown"}</code>，并且始终不可重试。</p>
+
+    <h2 id="capabilities">能力</h2>
+    <p>清单只声明一种能力：<code>{"text"}</code>。帖子词法将文本限制为 3000 字节和 300 个字素（grapheme），提供商会在发送前强制执行。</p>
+
+    <h2 id="options">选项</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">位置</th>
+            <th scope="col">可接受的键</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">连接选项</th>
+            <td>无。提供商只读取凭证字段。</td>
+          </tr>
+          <tr>
+            <th scope="row">发布选项</th>
+            <td>无。未知键会被拒绝，而不会被忽略。</td>
+          </tr>
+          <tr>
+            <th scope="row">内容</th>
+            <td><code>{"text"}</code>，必填。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="troubleshooting">故障排除</h2>
+    <p>Bluesky 会用包含错误名称的 JSON 错误响应 XRPC 调用；返回的名称如 <code>{"ExpiredToken"}</code>、<code>{"InvalidToken"}</code> 或 <code>{"AccountTakedown"}</code> 只能用于分类当前响应。它不是先前写入的证据，通用 400 或 5xx 也绝不能证明超时写入没有生效。</p>
+    <p><strong>未解决。</strong>这里使用的资料没有说明 PDS 是否会拒绝过大的摄入正文。</p>
+
+    <h2 id="revoke">撤销与安全</h2>
+    <p>在账号设置中删除应用密码以撤销 Syndroo 保存的凭证，然后删除本地连接。在 Syndroo 中断开只会删除本地记录，绝不会替你撤销平台凭证。</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#requirements">要求</a></li>
+    <li><a href="#credentials">凭证</a></li>
+    <li><a href="#connect">连接</a></li>
+    <li><a href="#first-publish">首次发布</a></li>
+    <li><a href="#capabilities">能力</a></li>
+    <li><a href="#options">选项</a></li>
+    <li><a href="#troubleshooting">故障排除</a></li>
+    <li><a href="#revoke">撤销与安全</a></li>
+  </ul>
+</nav>

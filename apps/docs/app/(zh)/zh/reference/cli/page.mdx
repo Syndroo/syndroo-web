@@ -1,0 +1,330 @@
+export const metadata = {
+  title: "CLI 参考 - Syndroo 文档",
+  description:
+    "本地 syndroo 命令、可选的 Server 命令族、全局参数和退出码，并对照已构建的 CLI 检查。",
+  alternates: {
+    canonical: "/zh/reference/cli/",
+    languages: {
+      en: "/reference/cli/",
+      "zh-CN": "/zh/reference/cli/",
+      "x-default": "/reference/cli/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/reference/cli/",
+    title: "CLI 参考 - Syndroo 文档",
+    description:
+      "本地 syndroo 命令、可选的 Server 命令族、全局参数和退出码，并对照已构建的 CLI 检查。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <span>CLI</span>
+    </nav>
+    <h1 id="cli">CLI 参考</h1>
+    <p className="lede">本地工作流有三个一级命令：<code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的预览命令族 <code>{"syndroo server"}</code> 用于部署和操作由用户自己拥有的 Cloudflare Worker。重试是 <code>{"syndroo publish"}</code> 的一种模式，而 <code>{"syndroo status"}</code> 中的查询是只读的。站点发布时，本页的每条命令和每个参数都会对照已构建的 CLI 检查。</p>
+
+    <h2 id="global-flags">全局参数</h2>
+    <p>这些参数会在命令之前解析，因此放在命令行任意位置都可以，并且绝不会传给命令。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">参数</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--config"}</code></th>
+            <td>选择本地配置文件。路径必须为绝对路径。Server 命令改用 <code>{"server --project <directory>"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--json"}</code></th>
+            <td>输出一个 JSON 信封，并且从不提示。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--verbose"}</code></th>
+            <td>加入完整标识符和经过审查的安全诊断信息。诊断写入 stderr，因此 stdout 仍只包含一个 JSON 文档。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--no-color"}</code></th>
+            <td>禁用人类可读输出中的颜色。<code>{"NO_COLOR"}</code> 具有相同效果。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--help"}</code></th>
+            <td>显示整个 CLI 或单个命令的用法。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--version"}</code></th>
+            <td>输出候选版本和运行它的 Node.js 版本。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>重复一个全局参数属于用法错误，而不会静默采用最后一个值。单独运行 <code>{"syndroo"}</code> 会输出相同用法，以退出码 0 结束，并且不读取配置、不创建任何状态。</p>
+
+    <h2 id="connect">syndroo connect</h2>
+    <pre data-label="usage"><code>{"syndroo connect [options] [provider]"}</code></pre>
+    <p>启动、继续或维护一个连接。每次运行只能使用一种模式：位置参数提供商会启动连接；<code>{"--update"}</code> 和 <code>{"--disconnect"}</code> 维护现有连接；<code>{"--input"}</code> 读取完整请求文档。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">参数</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--label"}</code></th>
+            <td>为连接命名。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--connection"}</code></th>
+            <td>重新连接或刷新现有连接 ID。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--from-env"}</code></th>
+            <td>从 <code>{"SYNDROO_CREDENTIALS"}</code> 读取凭证。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--credential-file"}</code></th>
+            <td>从一个私有 JSON 文件读取凭证。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--update"}</code></th>
+            <td>修改连接的标签或默认标记。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--disconnect"}</code></th>
+            <td>删除一个已保存的连接。绝不会撤销平台凭证。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--input"}</code></th>
+            <td>读取机器请求文档；<code>{"-"}</code> 从标准输入读取。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--redirect-uri <uri>"}</code></th>
+            <td>选择 CLI 自行绑定的 OAuth 重定向地址。默认值是预先可注册的回环 URI；CLI 在该主机、端口和路径上提供服务并接收一次重定向，这需要控制终端。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--callback-url <url>"}</code></th>
+            <td>使用浏览器最终到达的 URL 完成重定向。<code>{"-"}</code> 从标准输入读取；包含 <code>{"code"}</code> 或 <code>{"state"}</code> 的 URL 会在命令行上被拒绝。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--default"}</code></th>
+            <td>将连接标记为默认目标。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--no-default"}</code></th>
+            <td>清除默认标记。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--from-env"}</code> 与 <code>{"--credential-file"}</code> 互斥，继续请求只能从标准输入接受。仍需输入的连接步骤会报告待处理动作并以退出码 0 结束，不会阻塞；在终端中，同一次运行会提示输入提供商声明的字段。对于 OAuth 提供商（<code>{"linkedin"}</code>、<code>{"threads"}</code> 和 <code>{"mastodon"}</code>），<code>{"--redirect-uri"}</code> 指定 CLI 自行绑定的回环回调，<code>{"--callback-url -"}</code> 从标准输入接收重定向 URL；这条本地回调路径只针对本地服务器做了模拟测试。</p>
+
+    <h2 id="publish">syndroo publish</h2>
+    <pre data-label="usage"><code>{"syndroo publish [options]"}</code></pre>
+    <p>准备、执行或重试一次发布。必须且只能提供一个输入来源；<code>{"type"}</code> 为 <code>{"execute"}</code> 的请求只能从标准输入传入。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">参数</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--input"}</code></th>
+            <td>从文件读取请求文档；<code>{"-"}</code> 从标准输入读取。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--data"}</code></th>
+            <td>内联提供请求文档。绝不能在此放置凭证。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--retry"}</code></th>
+            <td>重试较早操作中符合条件的目标。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--to"}</code></th>
+            <td>指定要重试的连接。可重复，每个目标一次。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--request-id"}</code></th>
+            <td>为本次逻辑调用提供稳定身份。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--dry-run"}</code></th>
+            <td>仅预览：不写状态、不解析凭证、不发起网络请求。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--yes"}</code></th>
+            <td>自动确认当前进程刚刚准备的冻结意图，不再提示。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--to"}</code> 需要配合 <code>{"--retry"}</code>，而 <code>{"--dry-run"}</code> 会拒绝重试。重试目标必须符合条件：结果为 <code>{"unknown"}</code> 的投递绝不会重试。</p>
+    <pre data-label="retry and confirm"><code>{"syndroo publish --retry <operationId> --to <connectionId> --yes --json"}</code></pre>
+    <p>在终端中，已准备的文档会显示冻结预览并询问 <code>{"Publish to N accounts? [y/N/v]"}</code>。接受的回答是 <code>{"y"}</code> 或 <code>{"yes"}</code>、<code>{"n"}</code> 或 <code>{"no"}</code>，以及 <code>{"v"}</code> 或 <code>{"view"}</code>：只有明确的 <code>{"y"}</code> 会执行当前进程刚刚签发的令牌；<code>{"n"}</code>、<code>{"no"}</code>、空行或输入结束会取消且不发送；其他回答不构成授权，会再次询问。<code>{"v"}</code> 或 <code>{"view"}</code> 会展开完整冻结预览并再次询问；它从不重新读取或重新准备输入，也从不延长确认窗口，窗口期限在第一次提示前已固定，并在之后每次回答时重新计算。准备后编辑输入文件不会改变将发送的内容。审批过期、连接绑定变化或提供商变化时，旧令牌会被拒绝，绝不会复用于它未被冻结覆盖的内容或账号。<code>{"--yes"}</code> 跳过提示，但不跳过冻结意图检查：它不会重新签发凭证，不会绕过身份绑定、过期、提供商验证或幂等规则，也不会进行第二次准备。配合 <code>{"--dry-run"}</code> 时它保持离线。显式 <code>{"execute"}</code> 请求已经携带自己的授权，因此 <code>{"--yes"}</code> 不会增加任何作用；重试会准备所选符合条件的子集，<code>{"--yes"}</code> 会确认并执行同一份冻结重试。</p>
+    <p>执行会报告真实进度，而不是猜测。每次观察都是已保存操作在提交后的一次投影，并在其描述的写入之后回读，所以进度行绝不会显示尚未持久记录的状态。目标按顺序串行运行：第一个目标正在发布时，排在后面的目标仍显示等待；每个目标只会在自己的持久写入落地后改变状态。</p>
+    <p>终端能够安全重绘时，进度块会隐藏光标并原地重绘；其他情况下，它会变成追加日志，只追加实际发生变化的行，最后以完整结果和摘要结束。正常结束和中断都会恢复光标，并移除尺寸变化与中止监听器，因此无论哪种方式都不会破坏终端可用性。</p>
+    <p>使用 <code>{"--json"}</code> 时完全没有实时进度块：stdout 不会收到进度、提示或转义序列，从而只保留一个信封。冻结预览和确认提示写入控制终端，而不是 stdout，因此重定向后的 stdout 永远不会成为输入答案的位置；<code>{"--json"}</code> 从不提示，<code>{"--yes"}</code> 自动确认，而不带 <code>{"--yes"}</code> 的人工准备需要可写控制终端。没有控制终端时会报告待处理结果并以退出码 0 结束，而不是阻塞在无人可回答的读取上，或根据无人看到的答案发送。</p>
+    <p>默认的人类可读视图对每个目标最多显示三行内容和两行原因，并给出一条建议的下一步；它会隐藏内部 ID 和确认窗口。<code>{"--verbose"}</code> 会加入这些内容，并且仅在已记录过期时间时输出过期行。失败、只发送了一部分、结果为 <code>{"unknown"}</code> 或尚未完成的目标，每个操作只需一条查询命令，而不是每个目标一条：<code>{"syndroo status --operation <operationId> --verbose"}</code>。<code>{"unknown"}</code> 与 <code>{"not_started"}</code> 不同：未知写入可能已到达平台，绝不会自动重试；从未开始的目标则显示为未发送。</p>
+
+    <h2 id="status">syndroo status</h2>
+    <pre data-label="usage"><code>{"syndroo status [options]"}</code></pre>
+    <p>只读。它从不创建状态根目录、不获取写入锁、不读取机密，也不联系平台。未提供选择器时返回概览。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">参数</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"--provider"}</code></th>
+            <td>查询一个提供商；也可以筛选 <code>{"--connections"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--connections"}</code></th>
+            <td>列出已保存的连接。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--operation"}</code></th>
+            <td>按 ID 读取一个操作。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--operations"}</code></th>
+            <td>分页读取最近的操作摘要。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--limit"}</code></th>
+            <td><code>{"--operations"}</code> 的分页大小，范围为 1 到 100。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"--cursor"}</code></th>
+            <td>用于下一页 <code>{"--operations"}</code> 的不透明游标。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>{"--connections"}</code>、<code>{"--operation"}</code> 和 <code>{"--operations"}</code> 互斥，<code>{"--provider"}</code> 不能与任一操作选择器组合，而未使用 <code>{"--operations"}</code> 却传入 <code>{"--limit"}</code> 或 <code>{"--cursor"}</code> 属于用法错误。</p>
+
+    <h2 id="server">syndroo server</h2>
+    <p><strong>预览且未发布。</strong><code>{"server init"}</code> 会固定 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code>，以及项目本地的 Wrangler。目前需要使用维护者或内部注册表提供的匹配候选包；标准公共 npm 安装尚待提供。项目尚未证明公共 npm 可用，也未证明新的 Server 代码已在远程 <code>{"main"}</code> 上。该工作流在未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收的情况下完成了模拟测试，仅提供 CLI tarball 并不够。</p>
+    <p>从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code> 明确选择项目。部署会复用现有 Wrangler 登录，不会启动登录流程。<a href="/zh/getting-started/server/">部署服务器</a>指南涵盖前提条件、授权和完整的首次运行步骤。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">命令</th>
+            <th scope="col">作用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"syndroo server init [directory]"}</code></th>
+            <td>创建受版本跟踪的配置、固定包清单和锁文件、示例帖子及首次本地 Git 提交。<code>{"--github OWNER/REPO"}</code> 还会创建并推送仓库；默认私有，只有明确选择时才公开。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server doctor"}</code></th>
+            <td>运行只读的项目、工具和部署检查。它不修复项目，也不证明 OAuth 或发布已就绪。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server deploy --yes"}</code></th>
+            <td>在用户授权目标后，创建缺失的自有资源并部署 Worker。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server connect threads --app-id APP_ID"}</code></th>
+            <td>完成 Threads OAuth 并保存经过验证的连接引用。App Secret 使用隐藏输入、<code>{"THREADS_APP_SECRET"}</code> 或 <code>{"--app-secret-stdin"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server ci setup github --repo OWNER/REPO --yes"}</code></th>
+            <td>安装手动 <code>{"Publish to Threads"}</code> 工作流并配置限定范围的 GitHub 环境，但不提交、不推送、也不发布。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo server publish threads --input FILE --request-id REQUEST_ID --yes --json"}</code></th>
+            <td>使用限定范围的 CI 令牌发布一个严格 <code>{"{ \"text\": string }"}</code> 文档。复用请求 ID 可恢复同一逻辑发布。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="exit-codes">退出码</h2>
+    <p>退出码描述本地调用，而不是平台。退出码 0 仍可能表示等待授权或预览尚未执行。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">代码</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"0"}</code></th>
+            <td>已按文档处理。结果仍可能需要确认或授权。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"1"}</code></th>
+            <td>内部或持久化故障。副作用未知。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"2"}</code></th>
+            <td>用法、配置、认证或预检拒绝。未发送任何内容。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"4"}</code></th>
+            <td>写入可能已到达提供商，但结果未知。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"5"}</code></th>
+            <td>用户在确认步骤中明确拒绝。未发送任何内容。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"6"}</code></th>
+            <td>执行已经结束，并确认没有完全成功。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"130"}</code></th>
+            <td>本地进程因信号终止。服务器端工作未取消。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="related">相关内容</h2>
+    <ul>
+      <li><a href="/zh/getting-started/server/">部署服务器</a>：完整的可选 Server 设置和发布流程。</li>
+      <li><a href="/zh/reference/configuration/">配置</a>：文件结构和状态根目录。</li>
+      <li><a href="/zh/reference/credentials/">凭证</a>：各提供商的字段名。</li>
+      <li><a href="/zh/reference/requests/">请求与信封</a>：所有请求和结果结构。</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p class="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#global-flags">全局参数</a></li>
+    <li><a href="#connect">syndroo connect</a></li>
+    <li><a href="#publish">syndroo publish</a></li>
+    <li><a href="#status">syndroo status</a></li>
+    <li><a href="#server">syndroo server</a></li>
+    <li><a href="#exit-codes">退出码</a></li>
+    <li><a href="#related">相关内容</a></li>
+  </ul>
+</nav>

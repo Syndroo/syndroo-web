@@ -1178,3 +1178,39 @@ th code {
     font-size: 16px;
   }
 }
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.language-switch:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.language-switch--sidebar {
+  display: none;
+  width: 100%;
+  margin-bottom: 20px;
+  background: var(--surface-soft);
+}
+
+@media (max-width: 900px) {
+  .language-switch--topbar {
+    display: none;
+  }
+
+  .language-switch--sidebar {
+    display: inline-flex;
+  }
+}

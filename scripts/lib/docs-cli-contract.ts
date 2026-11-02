@@ -125,16 +125,21 @@ function codeBlockBodies(html: string): string[] {
   return bodies;
 }
 
-function inlineCodeBodies(html: string): string[] {
-  // Inline code spans only: any `<code>` that is not the child of a `<pre>`.
-  return withoutScripts(html)
-    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/g, "")
-    .split(/<\/code>/)
-    .map((chunk) => {
-      const start = chunk.lastIndexOf("<code>");
-      return start === -1 ? "" : decodeEntities(chunk.slice(start + "<code>".length));
-    })
-    .filter((body) => body !== "");
+function inlineCodeSpans(html: string): { body: string; before: string }[] {
+  // Remove preformatted blocks without changing the positions of later spans.
+  const inlineOnly = withoutScripts(html).replace(
+    /<pre\b[^>]*>[\s\S]*?<\/pre>/g,
+    (block) => " ".repeat(block.length),
+  );
+  const spans: { body: string; before: string }[] = [];
+  for (const match of inlineOnly.matchAll(/<code>([\s\S]*?)<\/code>/g)) {
+    const at = match.index ?? 0;
+    spans.push({
+      body: decodeEntities(match[1] as string),
+      before: decodeEntities(inlineOnly.slice(Math.max(0, at - 64), at)),
+    });
+  }
+  return spans;
 }
 
 /**
@@ -195,7 +200,7 @@ export function extractCliSurface(pages: { path: string; html: string }[]): CliS
 
     const pageText = decodeEntities(withoutScripts(page.html));
 
-    for (const body of inlineCodeBodies(page.html)) {
+    for (const { body, before } of inlineCodeSpans(page.html)) {
       const span = body.trim();
 
       // A whole command may also appear in prose, so a code span is read as an
@@ -214,7 +219,7 @@ export function extractCliSurface(pages: { path: string; html: string }[]): CliS
       }
       // "there is no `--api-key` flag" is a statement about an option the CLI
       // deliberately does not have, not a claim that it does.
-      if (isNegated(pageText, named)) {
+      if (isNegated(before, named)) {
         continue;
       }
       inlineFlags.push({ flag: named, page: page.path });
@@ -448,11 +453,10 @@ export function resolveCliBin(coreRepo: string): string {
  * A flag written after a negation is a statement about an option the CLI does
  * not have, so it is not a claim this checker should enforce.
  */
-function isNegated(pageText: string, flag: string): boolean {
-  const at = pageText.indexOf(flag);
-  if (at === -1) {
-    return false;
-  }
-  const before = pageText.slice(Math.max(0, at - 48), at);
-  return /\b(no|not|never|without)\b/i.test(before);
+function isNegated(before: string, flag: string): boolean {
+  void flag;
+  const tail = before.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trimEnd();
+  return /(?:\bno|\bnot|\bnever|\bwithout|没有|不支持)(?:\s+[^<]{0,24})?$/i.test(
+    tail,
+  );
 }

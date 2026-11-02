@@ -1,16 +1,25 @@
 "use client";
 
-// The sidebar needs the current path to mark `aria-current="page"`, and the
-// path is only known on the client, so this thin wrapper supplies it to the
-// shared sidebar markup.
+import type { Locale } from "@syndroo/content/site-data";
 import { usePathname } from "next/navigation";
 import { DocsSidebar } from "./docs-chrome";
 
-export function DocsSidebarClient(): React.JSX.Element {
-  return <DocsSidebar activePath={normalisePath(usePathname())} />;
+export function DocsSidebarClient({
+  locale,
+  languageHref,
+}: {
+  locale: Locale;
+  languageHref?: string;
+}): React.JSX.Element {
+  return (
+    <DocsSidebar
+      locale={locale}
+      activePath={normalisePath(usePathname())}
+      languageHref={languageHref}
+    />
+  );
 }
 
-/** Static export serves directory URLs; the registry uses the same shape. */
 function normalisePath(pathname: string | null): string {
   if (pathname === null || pathname === "") {
     return "/";

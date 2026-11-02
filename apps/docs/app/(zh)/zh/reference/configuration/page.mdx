@@ -1,0 +1,139 @@
+export const metadata = {
+  title: "配置 - Syndroo 文档",
+  description:
+    "本地 syndroo 配置文件的结构和状态根目录，以及可选 Server 预览使用的独立受版本跟踪文件。",
+  alternates: {
+    canonical: "/zh/reference/configuration/",
+    languages: {
+      en: "/reference/configuration/",
+      "zh-CN": "/zh/reference/configuration/",
+      "x-default": "/reference/configuration/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/reference/configuration/",
+    title: "配置 - Syndroo 文档",
+    description:
+      "本地 syndroo 配置文件的结构和状态根目录，以及可选 Server 预览使用的独立受版本跟踪文件。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/reference/cli/">参考</a>
+      <span aria-hidden="true">/</span>
+      <span>配置</span>
+    </nav>
+    <h1 id="configuration">配置</h1>
+    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 工作流。它使用一个配置文件和一个状态根目录，绝不根据当前目录推断它们。可选的 Server 预览改用项目配置。</p>
+
+    <h2 id="file">配置文件</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">键</th>
+            <th scope="col">类型</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"version"}</code></th>
+            <td>数字</td>
+            <td>必须为 <code>{"1"}</code>。其他值均会被拒绝，也绝不会迁移。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"stateRoot"}</code></th>
+            <td>字符串，可选</td>
+            <td>状态根目录。相对值会相对于配置文件所在目录解析。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"providers"}</code></th>
+            <td>对象，可选</td>
+            <td>提供商覆盖项。每个键都是提供商 ID，每个值恰好包含一个键 <code>{"path"}</code>，并相对于配置文件所在目录解析。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"stateRoot\": \"state\",\n  \"providers\": {\n    \"bluesky\": { \"path\": \"vendor/bluesky-provider\" }\n  }\n}"}</code></pre>
+    <p>未知顶层键会被拒绝。名称看起来像令牌、密钥、密码、API 密钥或凭证的键会按名称拒绝，因此即使意外操作也无法把机密混入配置文件。提供商条目只接受 <code>{"path"}</code>，带 URL 方案的路径会被拒绝。</p>
+
+    <h2 id="selection">如何选择文件</h2>
+    <ul>
+    <li>未提供参数时，CLI 读取 <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>；如果 <code>{"XDG_CONFIG_HOME"}</code> 未设置或不是绝对路径，则退回 <code>{"$HOME/.config/syndroo/config.json"}</code>。</li>
+    <li><code>{"--config"}</code> 指定明确文件。路径必须为绝对路径；相对路径会被拒绝而不是解析，因此意外执行 <code>{"--config config.json"}</code> 不会从工作目录拾取文件。</li>
+    <li>对于不解析任何提供商的命令，默认文件不存在不构成错误。由 <code>{"--config"}</code> 命名的文件不存在则是错误。</li>
+    </ul>
+    <p>文件按严格 JSON 读取：最大 64 KiB，不允许重复键或无效 UTF-8，也不允许 JSON 数据模型无法表示的值。</p>
+
+    <h2 id="state-root">状态根目录</h2>
+    <p>状态根目录默认为 <code>{"$XDG_STATE_HOME/syndroo/runtime-v1"}</code>，找不到时退回 <code>{"$HOME/.local/state/syndroo/runtime-v1"}</code>。按照 XDG 基础目录规范的要求，相对 <code>{"XDG_STATE_HOME"}</code> 会被忽略。</p>
+    <p>根目录包含一个格式标记。标记缺失或指向其他格式的根目录会被拒绝：运行时不猜测，也从不探测、迁移或删除早期 Syndroo 版本写入的状态。在从未连接过任何账号的机器上，只读命令会将状态报告为未初始化，而不会创建目录。</p>
+
+    <h2 id="environment">环境变量</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">变量</th>
+            <th scope="col">使用者</th>
+            <th scope="col">含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"XDG_CONFIG_HOME"}</code></th>
+            <td>配置</td>
+            <td>当其为绝对路径时，选择默认配置目录。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"XDG_STATE_HOME"}</code></th>
+            <td>状态根目录</td>
+            <td>当其为绝对路径时，选择默认状态目录。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"HOME"}</code></th>
+            <td>两者</td>
+            <td>两个默认目录的回退基路径。缺失或为相对值时构成错误。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"SYNDROO_CREDENTIALS"}</code></th>
+            <td><code>{"--from-env"}</code></td>
+            <td>一个 JSON 凭证对象，仅在传入 <code>{"--from-env"}</code> 时读取，最大 64 KiB。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"NO_COLOR"}</code></th>
+            <td>人类可读输出</td>
+            <td>禁用颜色，效果类似 <code>{"--no-color"}</code>。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>不会从环境读取其他内容：不读取 <code>{".env"}</code> 文件，没有逐提供商变量注册表，也绝不会从配置文件获取凭证。</p>
+
+    <h2 id="server">Server 配置文件</h2>
+    <p><strong>预览且未发布。</strong>Server 命令需要版本匹配的候选 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包；公共 npm 安装尚待提供。它们使用 <code>{"syndroo.config.jsonc"}</code> 保存应用设置，使用 <code>{"wrangler.jsonc"}</code> 保存 Worker、D1、队列和 cron 配置。不要提交生成的 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code> 或私有服务器状态。</p>
+    <p>全局 <code>{"--config"}</code> 参数用于本地工作流。对于 Server 命令，请从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code>。参见<a href="/zh/getting-started/server/">部署服务器</a>和<a href="/zh/reference/cli/#server">Server 命令参考</a>。</p>
+
+    <h2 id="fail-closed">安全失败</h2>
+    <p>以下情况全部会被拒绝，而不是猜测：不支持的 <code>{"version"}</code>、未知键、看似机密的键、相对的 <code>{"--config"}</code> 路径、包含多个键的提供商条目、过大的文件，以及格式标记不匹配的状态根目录。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#file">配置文件</a></li>
+    <li><a href="#selection">如何选择文件</a></li>
+    <li><a href="#state-root">状态根目录</a></li>
+    <li><a href="#environment">环境变量</a></li>
+    <li><a href="#server">Server 配置文件</a></li>
+    <li><a href="#fail-closed">安全失败</a></li>
+  </ul>
+</nav>

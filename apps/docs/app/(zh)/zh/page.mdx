@@ -1,0 +1,106 @@
+export const metadata = {
+  title: "概览 - Syndroo 文档",
+  description:
+    "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的预览版 Server 部署路径。",
+  alternates: {
+    canonical: "/zh/",
+    languages: { en: "/", "zh-CN": "/zh/", "x-default": "/" },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/",
+    title: "概览 - Syndroo 文档",
+    description:
+      "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的预览版 Server 部署路径。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <p className="eyebrow">Syndroo 文档</p>
+    <h1 id="overview">概览</h1>
+    <p className="lede">本地 <code>{"syndroo"}</code> 工作流从当前机器在前台发布，链路中不需要 Syndroo 服务器。三个彼此独立的一级命令是{" "} <code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的 <code>{"syndroo server"}</code> 命令族可以运行由用户自行拥有的 Cloudflare 部署。{" "} <strong>0.7.0-rc.1 为候选版本；已完成模拟测试，尚未发布，真实账号验收仍待完成。</strong></p>
+
+    <div className="tip">
+      <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
+      <p>本项目尚未发起过真实的社交网络调用。本站内容描述的是已构建的候选版本、其模式和模拟测试。在你亲自运行之前，每份平台指南都应视为尚未通过真实账号验证。</p>
+    </div>
+
+    <h2 id="commands">彼此独立的本地命令</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">命令</th>
+            <th scope="col">作用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"syndroo connect <provider>"}</code></th>
+            <td>启动、继续或维护一个提供商连接。凭证来自明确指定的来源；Core 负责存储凭证，插件看不到连接记录。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo publish --input <file>"}</code></th>
+            <td>准备、执行或重试一次发布。准备阶段会冻结内容并返回审批令牌；执行阶段需要从标准输入传入该令牌。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"syndroo status"}</code></th>
+            <td>读取提供商、连接和操作。此命令只读：不会联系平台，也不会修复本地状态。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>完整的参数列表、退出码和全局参数见{" "} <a href="/zh/reference/cli/">CLI 参考</a>。本站展示的每条命令和每个参数，都会在站点发布前对照已构建的 CLI 检查。</p>
+    <p id="server"><strong>可选的 Server 预览。</strong> <code>{"server"}</code> 命令会部署到你自己的 Cloudflare 账号。<code>{"server init"}</code> 需要版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 候选包，以及项目本地安装的 Wrangler；标准公共 npm 安装尚不可用。设置路径见 <a href="/zh/getting-started/server/">部署服务器</a>，发布和验收限制见 <a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+
+    <h2 id="install">1. 构建候选版本</h2>
+    <p>需要 macOS 或 Linux 上的 Node.js 24.19 或更新版本。候选版本不在软件包注册表中，因此要从产品仓库构建，再从工作区打包：</p>
+    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz"}</code></pre>
+    <p><a href="/zh/getting-started/local-cli/">本地 CLI</a> 会完整介绍配置文件、状态根目录和首次运行。</p>
+
+    <h2 id="connect">2. 连接一个账号</h2>
+    <p><code>{"syndroo connect"}</code> 每次只读取一个凭证来源：使用 <code>{"--from-env"}</code> 时读取环境变量 <code>{"SYNDROO_CREDENTIALS"}</code>，使用 <code>{"--credential-file"}</code> 时读取一个私有 JSON 文件。它从不读取 <code>{".env"}</code> 文件，也不会猜测凭证。</p>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
+    <p>五个提供商的准确字段名见{" "} <a href="/zh/reference/credentials/">凭证</a>；每份{" "} <a href="/zh/platforms/">平台指南</a>都会说明凭证的来源。</p>
+
+    <h2 id="publish">3. 先准备，再执行</h2>
+    <p>一次发布分为两个阶段。先编写请求文档并准备发布，再读取返回的审批令牌：</p>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>在终端中，命令会显示冻结后的预览，并询问{" "} <code>{"Publish to N accounts? [y/N/v]"}</code>：只有明确输入 <code>{"y"}</code> 才会发送；输入 <code>{"v"}</code> 会展开完整的冻结预览并再次询问；输入 <code>{"n"}</code>、空行或到达输入末尾都会取消，不发送任何内容。<code>{"--yes"}</code> 会自动确认本次刚刚准备的冻结意图，不再提示。使用 <code>{"--json"}</code> 且不使用 <code>{"--yes"}</code> 时，返回的唯一信封是准备结果，即带有 <code>{"approvalToken"}</code> 的 <code>{"confirmation_required"}</code>，命令以退出码 0 结束且不发送内容；使用 <code>{"--yes --json"}</code> 时，单次调用会准备、确认并执行，只输出一个最终信封，不会再输出准备结果或审批令牌。要执行一个已准备的结果，请从标准输入把令牌传回：</p>
+    <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input - < execute.json --json"}</code></pre>
+    <p>执行请求只会从标准输入读取，绝不会从文件路径或 <code>{"--data"}</code> 读取，因此有效令牌不会留在 shell 历史或进程参数中。</p>
+
+    <h2 id="status">4. 读取结果</h2>
+    <p><code>{"syndroo status"}</code> 可回答五种查询。传入发布结果中的操作 ID 可查看单个操作，也可分页查看最近的操作：</p>
+    <pre data-label="terminal"><code>{"syndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
+    <p>一次投递的结果可能是 <code>{"succeeded"}</code>；带处置状态 <code>{"not_applied"}</code> 的 <code>{"failed"}</code>；<code>{"unknown"}</code>；或在从未进入调用时出现的 <code>{"not_started"}</code>。未知和未发送是不同事实：未知写入可能已被接受，因此它始终不可重试，应人工检查平台，而不是重新发送；从未开始的目标则明确没有发送。退出码保留同一区分，完整的值见{" "}<a href="/zh/reference/cli/#exit-codes">退出码表</a>。</p>
+
+    <h2 id="sections">接下来去哪里</h2>
+    <div className="tile-grid">
+    <a className="tile" href="/zh/platforms/"><span className="tile-title">平台</span> <span className="tile-text">每个官方提供商一份指南：要求、凭证、连接、首次发布、选项，以及仍未解决的事项。</span></a>
+    <a className="tile" href="/zh/build/provider-plugins/"><span className="tile-title">开发</span> <span className="tile-text">使用提供商 SDK 编写插件：清单、出站声明以及信任与注册表规则。</span></a>
+    <a className="tile" href="/zh/reference/cli/"><span className="tile-title">参考</span> <span className="tile-text">本地命令及全部参数、可选的 Server 命令摘要、配置、凭证，以及请求和信封格式。</span></a>
+    </div>
+
+    <h2 id="not-covered">仍未解决</h2>
+    <p><strong>未解决。</strong>由 Syndroo 托管的服务说明、公共 HTTP API 和 SDK，以及早期版本的教程，都不在当前文档范围内。这与可选的用户自托管 Server 部署指南不同；本站没有任何页面将托管式 Syndroo 服务描述为可用。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#commands">彼此独立的本地命令</a></li>
+    <li><a href="#server">可选的 Server 预览</a></li>
+    <li><a href="#install">构建候选版本</a></li>
+    <li><a href="#connect">连接一个账号</a></li>
+    <li><a href="#publish">先准备，再执行</a></li>
+    <li><a href="#status">读取结果</a></li>
+    <li><a href="#sections">接下来去哪里</a></li>
+    <li><a href="#not-covered">仍未解决</a></li>
+  </ul>
+</nav>

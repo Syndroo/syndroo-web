@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Mastodon - Syndroo 文档",
+  description:
+    "连接 Mastodon 实例并发布公开动态：逐实例应用注册、PKCE 授权流程、声明的联邦出站 HTTPS 地址（域名），以及仍未解决的细节。",
+  alternates: {
+    canonical: "/zh/platforms/mastodon/",
+    languages: {
+      en: "/platforms/mastodon/",
+      "zh-CN": "/zh/platforms/mastodon/",
+      "x-default": "/platforms/mastodon/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/platforms/mastodon/",
+    title: "Mastodon - Syndroo 文档",
+    description:
+      "连接 Mastodon 实例并发布公开动态：逐实例应用注册、PKCE 授权流程、声明的联邦出站 HTTPS 地址（域名），以及仍未解决的细节。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/platforms/">平台</a>
+      <span aria-hidden="true">/</span>
+      <span>Mastodon</span>
+    </nav>
+    <h1 id="mastodon">Mastodon</h1>
+
+    <h2 id="overview">概览</h2>
+    <p>提供商 ID 为 <code>{"mastodon"}</code>。Mastodon 没有全局主机：你指定的实例处理所有请求，并确定已保存账号身份和连接使用的 HTTPS 地址（域名）。提供商会在这个实例上注册应用，使用 PKCE 运行授权码流程，并发布一条文本动态。</p>
+
+    <h2 id="requirements">要求</h2>
+    <ul>
+      <li>实例的基础 URL，例如 <code>{"https://mastodon.social"}</code>。</li>
+      <li>一个可供授权步骤回调的重定向 URI。</li>
+      <li>一个授权范围列表，其中包含流程之后需要使用的全部范围。</li>
+    </ul>
+    <p>实例的授权端点必须收到之后请求的所有范围；否则它会以 <code>{"invalid_scope"}</code> 拒绝，完全不会签发令牌。</p>
+
+    <h2 id="credentials">凭证</h2>
+    <p>该提供商没有凭证输入模式：接受的凭证对象为空，连接改为通过浏览器授权完成。client id、client secret 和 PKCE verifier 都保存在连接的私有状态中，绝不会复制到预览、写入结果或错误中。</p>
+
+    <h2 id="connect">连接</h2>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"mastodon\",\n  \"options\": {\n    \"instance\": \"https://mastodon.social\",\n    \"redirectUri\": \"https://example.com/oauth/callback/mastodon\",\n    \"scopes\": [\"read:accounts\", \"write:statuses\"]\n  }\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo connect --input connect.json --json"}</code></pre>
+    <p><code>{"instance"}</code>、<code>{"redirectUri"}</code> 和 <code>{"scopes"}</code> 必填；已经注册应用的调用方可以选择提供 <code>{"clientId"}</code> 和 <code>{"clientSecret"}</code>。启动步骤会返回一个由浏览器在实例上完成的授权动作。</p>
+    <p>本地 CLI 会使用 <code>{"--redirect-uri"}</code> 和控制终端，或使用 <code>{"--callback-url -"}</code> 自行完成该 OAuth 回调，如<a href="/zh/reference/credentials/#browser">凭证参考</a>所述。这条本地回调路径只针对本地服务器做了模拟测试；尚未连接真实的 Mastodon 账号。</p>
+
+    <h2 id="first-publish">首次发布</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Hello from Syndroo.\" },\n  \"targets\": [{ \"provider\": \"mastodon\", \"options\": { \"visibility\": \"public\" } }]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>发布操作是一次 <code>{"POST /api/v1/statuses"}</code>，并带有确定性的 <code>{"Idempotency-Key"}</code> 请求头。服务器文档说明该键最多保存一小时，复用时返回已保存的响应。这是提供商的能力，并不允许重试：Syndroo 仍会将未知写入报告为未知，绝不会重新分类。</p>
+
+    <h2 id="capabilities">能力</h2>
+    <p>清单声明 <code>{"text"}</code>。字符限制属于每个实例，而不是全局数字：提供商会在连接时从 <code>{"GET /api/v2/instance"}</code> 读取该值，并在冻结内容时强制执行。无法读取限制时会安全失败，而不会假设默认值，因此本指南不给出限制数字。</p>
+
+    <h2 id="options">选项</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">位置</th>
+            <th scope="col">可接受的键</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">连接选项</th>
+            <td><code>{"instance"}</code>、<code>{"redirectUri"}</code> 和 <code>{"scopes"}</code>（均必填）、<code>{"clientId"}</code>、<code>{"clientSecret"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row">发布选项</th>
+            <td><code>{"visibility"}</code>，必填。</td>
+          </tr>
+          <tr>
+            <th scope="row">内容</th>
+            <td><code>{"text"}</code>，必填。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>该提供商已经验证 PKCE，原生客户端必须使用：它采用 <code>{"S256"}</code> 挑战方法。刷新令牌仅在实例启用过期令牌时存在，因此提供商把它视为逐实例能力，而不是全局承诺。</p>
+
+    <h2 id="troubleshooting">故障排除</h2>
+    <p>错误使用通用的 <code>{"{ \"error\": \"...\" }"}</code> 结构，空文本等验证失败会报告为 422。<strong>未解决。</strong>完整错误实体的字段列表尚未确认，因此本指南不逐一列出。</p>
+
+    <h2 id="revoke">撤销与安全</h2>
+    <p>撤销流程已有文档并经过验证：使用 client id、client secret 和令牌调用 <code>{"POST /oauth/revoke"}</code>，会返回状态码 200 且没有正文。从实例设置中移除应用也能达到相同效果；断开连接会删除本地记录：</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#requirements">要求</a></li>
+    <li><a href="#credentials">凭证</a></li>
+    <li><a href="#connect">连接</a></li>
+    <li><a href="#first-publish">首次发布</a></li>
+    <li><a href="#capabilities">能力</a></li>
+    <li><a href="#options">选项</a></li>
+    <li><a href="#troubleshooting">故障排除</a></li>
+    <li><a href="#revoke">撤销与安全</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,117 @@
+export const metadata = {
+  title: "Requests and envelopes - Syndroo docs",
+  description:
+    "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
+  alternates: {
+    canonical: "/reference/requests/",
+    languages: {
+      en: "/reference/requests/",
+      "zh-CN": "/zh/reference/requests/",
+      "x-default": "/reference/requests/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/reference/requests/",
+    title: "Requests and envelopes - Syndroo docs",
+    description:
+      "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Docs</a>
+      <span aria-hidden="true">/</span>
+      <a href="/reference/cli/">Reference</a>
+      <span aria-hidden="true">/</span>
+      <span>Requests and envelopes</span>
+    </nav>
+    <h1 id="requests">Requests and envelopes</h1>
+    <p className="lede">This page describes local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> requests. One request document goes in and one JSON envelope comes out; the documented shapes are what an agent or script branches on. The optional Server preview has its own envelope.</p>
+
+    <h2 id="envelope">The envelope</h2>
+    <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
+    <pre data-label="failure"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": false,\n  \"result\": null,\n  \"error\": { \"code\": \"INPUT_INVALID\", \"message\": \"The request document is not valid.\" }\n}"}</code></pre>
+    <p>For local requests, <code>{"operation"}</code> is one of <code>{"connect"}</code>, <code>{"publish"}</code> and{" "} <code>{"status"}</code>. A message is static text chosen by the code, never built from a stack, a path, a response body or an argument, so a diagnostic cannot carry a secret.</p>
+
+    <h2 id="server">Server envelopes</h2>
+    <p><strong>Preview and unpublished.</strong> Server commands are a separate candidate path that requires matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. Their JSON uses <code>{"operation: \"server\""}</code>, with a <code>{"result.subcommand"}</code> discriminator for <code>{"init"}</code>, <code>{"doctor"}</code>, <code>{"deploy"}</code>, <code>{"connect"}</code>, <code>{"ci"}</code> and <code>{"publish"}</code>.</p>
+    <p>Server request and result shapes are not the local request families below. Follow <a href="/getting-started/server/">Deploy a server</a>; its outcomes, recovery IDs and acceptance limits are summarized in the <a href="/reference/cli/#server">Server command reference</a>.</p>
+
+    <h2 id="connect">connect</h2>
+    <p>Four request shapes. <code>{"start"}</code> begins a connection, <code>{"resume"}</code>{" "} completes a pending step, and <code>{"update"}</code> and <code>{"disconnect"}</code> maintain a stored one.</p>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"bluesky\",\n  \"label\": \"work\",\n  \"connectionId\": \"conn_existing\",\n  \"options\": {}\n}"}</code></pre>
+    <pre data-label="resume.json"><code>{"{\n  \"type\": \"resume\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 0,\n  \"input\": { \"type\": \"credentials\", \"credentials\": { \"identifier\": \"you.bsky.social\", \"password\": \"...\" } }\n}"}</code></pre>
+    <pre data-label="maintenance.json"><code>{"{\n  \"type\": \"update\",\n  \"connectionId\": \"conn_...\",\n  \"changes\": { \"label\": \"writing\", \"isDefault\": true }\n}"}</code></pre>
+    <p>A resume input is either <code>{"credentials"}</code> with the provider's credential object, or <code>{"callback_complete"}</code> for a session whose authorization callback was delivered out of band. <code>{"stepRevision"}</code> must match the session, so a stale step is refused rather than applied twice.</p>
+    <pre data-label="connect result"><code>{"{\n  \"status\": \"action_required\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 1,\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"action\": { \"type\": \"credential_input\", \"fields\": [{ \"name\": \"password\", \"label\": \"Bluesky app password\", \"secret\": true }] }\n}"}</code></pre>
+    <p>An action is <code>{"credential_input"}</code>, <code>{"open_url"}</code> or{" "} <code>{"wait_for_callback"}</code>. A finished step answers{" "} <code>{'"status": "done"'}</code> with the stored <code>{"connection"}</code>.</p>
+
+    <h2 id="publish">publish</h2>
+    <p>Three request shapes: <code>{"prepare"}</code> freezes the content, <code>{"execute"}</code>{" "} sends it, and <code>{"retry"}</code> re-sends only the eligible targets of an earlier operation. A document without a <code>{"type"}</code> is an ordinary prepare request.</p>
+    <pre data-label="prepare.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"One document, chosen targets.\" },\n  \"targets\": [\n    { \"provider\": \"bluesky\" },\n    { \"provider\": \"devto\", \"connection\": \"conn_...\", \"options\": { \"title\": \"Hello\", \"body_markdown\": \"Body\" } }\n  ]\n}"}</code></pre>
+    <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
+    <pre data-label="retry.json"><code>{"{\n  \"type\": \"retry\",\n  \"retryOf\": \"op_...\",\n  \"targets\": [{ \"provider\": \"bluesky\", \"connection\": \"conn_...\" }]\n}"}</code></pre>
+    <p>A target names its <code>{"provider"}</code>, optionally a <code>{"connection"}</code> and optional provider <code>{"options"}</code>. A document carries one to twenty targets. When a target names no connection, the provider's default connection is used, and an ambiguous choice is refused rather than guessed.</p>
+    <pre data-label="prepared result"><code>{"{\n  \"status\": \"confirmation_required\",\n  \"operationId\": \"op_example\",\n  \"approvalToken\": \"<approvalToken>\",\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"preview\": [\n    {\n      \"deliveryId\": \"dl_example\",\n      \"connectionId\": \"conn_example\",\n      \"account\": { \"provider\": \"bluesky\", \"accountId\": \"acct_example\", \"origin\": \"https://bsky.social\" },\n      \"provider\": \"bluesky\",\n      \"preview\": { \"content\": { \"text\": \"One document, chosen targets.\" }, \"fields\": [] },\n      \"presentation\": { \"accountName\": \"Example account\", \"profileUrl\": \"https://bsky.app/profile/example\", \"label\": \"work\" }\n    }\n  ]\n}"}</code></pre>
+    <pre data-label="execution result"><code>{"{\n  \"phase\": \"execution\",\n  \"operationId\": \"op_example\",\n  \"status\": \"succeeded\",\n  \"deliveries\": [\n    {\n      \"deliveryId\": \"dl_example\",\n      \"connectionId\": \"conn_example\",\n      \"account\": { \"provider\": \"bluesky\", \"accountId\": \"acct_example\", \"origin\": \"https://bsky.social\" },\n      \"attempts\": 1,\n      \"state\": \"settled\",\n      \"outcome\": { \"status\": \"succeeded\", \"remoteId\": \"at://example/post/1\", \"url\": \"https://bsky.app/profile/example/post/1\" },\n      \"presentation\": { \"accountName\": \"Example account\", \"profileUrl\": \"https://bsky.app/profile/example\", \"label\": \"work\" }\n    }\n  ]\n}"}</code></pre>
+    <p>The execution status is one of <code>{"pending"}</code>, <code>{"running"}</code>,{" "} <code>{"succeeded"}</code>, <code>{"partial"}</code>, <code>{"failed"}</code> or{" "} <code>{"unknown"}</code>. Each delivery outcome is <code>{"succeeded"}</code>,{" "} <code>{"failed"}</code> with disposition <code>{"not_applied"}</code>,{" "} <code>{"unknown"}</code>, or <code>{"not_started"}</code> when the target never reached a call; an eligible failed outcome may carry{" "} <code>{"retryable"}</code>, a reason and a <code>{"retryAfter"}</code> time. Failed and not started mean the write is known not to have been applied, and unknown is never retryable.</p>
+    <p>A target's stable identity is its <code>{"provider"}</code>,{" "} <code>{"origin"}</code> and <code>{"accountId"}</code>. An optional{" "} <code>{"presentation"}</code> carries a readable <code>{"accountName"}</code>, a public{" "} <code>{"profileUrl"}</code> and the connection <code>{"label"}</code> for display only: it never changes target selection, account de-duplication or the binding, and missing optional metadata is allowed. Unsafe optional values returned by a provider are discarded before they enter the frozen snapshot; this does not relax request-schema validation.</p>
+    <p>That <code>{"presentation"}</code> is frozen with the rest of the intent and covered by the intent digest, so a later rename never changes this operation's history, and a profile link is displayed only when it is a safe HTTPS URL; otherwise the stable origin is shown instead. The frozen snapshot of one delivery is associated by <code>{"deliveryId"}</code> and the execution round that produced its state, never inferred from array position, platform name or the most recent prepared intent.</p>
+    <p><code>{"syndroo status --operation <operationId>"}</code> reads the recorded result: it loads no provider, reads no input file and never rewrites history. A delivery shows the historical frozen name, label and preview of its own round rather than the current connection, and a record from an older release whose round cannot be proven from persisted evidence reports the preview as unavailable instead of guessing. Every request, well formed or not, is validated against the protocol before anything runs.</p>
+
+    <h2 id="status">status</h2>
+    <p>Five query shapes and no query language. With no selector the overview is returned.</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Request</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"overview\" }"}</code></th>
+            <td>Whether the state is initialized, the connection count, each provider's availability and provenance, the most recent operations and the state health.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"provider\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>The provider's manifest, implementation fingerprints and observations.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"connections\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>The stored connections, optionally filtered to one provider.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operation\", \"operationId\": \"op_...\" }"}</code></th>
+            <td>One operation: either a prepared operation with its confirmation state and preview, or the execution result. It renders the same human result view as <code>{"syndroo publish"}</code>.</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operations\", \"limit\": 20, \"cursor\": \"...\" }"}</code></th>
+            <td>Operation summaries, with an opaque cursor for the next page.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Provider availability is <code>{"available"}</code>, <code>{"untrusted"}</code>,{" "} <code>{"unavailable"}</code> or <code>{"stale"}</code>, and provenance is{" "} <code>{"official"}</code> or <code>{"third_party"}</code>. Status reads stored observations; it does not refresh them by contacting a platform.</p>
+
+    <h2 id="exit-codes">Local execution status and the exit code</h2>
+    <p>A publish result maps onto the process exit code: <code>{"unknown"}</code> exits 4,{" "} <code>{"failed"}</code> and <code>{"partial"}</code> exit 6, and every other execution status exits 0. A preflight or usage refusal exits 2, and an explicit decline at the confirmation prompt exits 5.</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="On this page">
+  <p className="toc-title">On this page</p>
+  <ul>
+    <li><a href="#envelope">The envelope</a></li>
+    <li><a href="#server">Server envelopes</a></li>
+    <li><a href="#connect">connect</a></li>
+    <li><a href="#publish">publish</a></li>
+    <li><a href="#status">status</a></li>
+    <li><a href="#exit-codes">Local execution status and the exit code</a></li>
+  </ul>
+</nav>

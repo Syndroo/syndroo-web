@@ -1,20 +1,19 @@
 "use client";
 
-// The authored documentation behaviour (search, drawer, TOC, copy buttons) runs
-// after hydration so the exported HTML stays script-free.
 import * as React from "react";
+import type { Locale } from "@syndroo/content/site-data";
 
-export function DocsBehaviors(): null {
+export function DocsBehaviors({ locale }: { locale: Locale }): null {
   React.useEffect(() => {
     let cancelled = false;
     void import("../src/js/doc").then((module) => {
       if (!cancelled) {
-        module.bootDocs();
+        module.bootDocs(locale);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale]);
   return null;
 }

@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { docsPages } from "../../packages/content/site-data.ts";
+import { docsPagesEn } from "../../packages/content/site-data.ts";
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
   test(`published docs pages and navigation at ${viewport.width}px`, async ({ page }, testInfo) => {
@@ -19,7 +19,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.locator(".site-footer").getByRole("link", { name: "Docs", exact: true }).click();
     await expect(page).toHaveURL(/:4174\/$/);
 
-    for (const entry of docsPages) {
+    for (const entry of docsPagesEn) {
       if (viewport.width < 800) {
         await page.getByRole("button", { name: "Open documentation navigation" }).click();
         await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-expanded", "true");

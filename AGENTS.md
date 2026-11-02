@@ -38,20 +38,20 @@
 - TypeScript for all repository-owned executable code and tests, executed or
   compiled by Node 24 built-in type stripping. Keep syntax erasable, and import
   sibling sources with their real `.ts` extension, as `scripts/` does.
-- Both sites are Next.js App Router projects with a static export. Pages are
-  `apps/website/app/page.tsx` and the MDX files in `apps/docs/app/**/page.mdx`,
-  with each app's stylesheet and browser TypeScript under its `app/`,
-  `components/` and `src/`. Built output lands in `apps/*/out/` and is never
-  edited by hand.
-- The published surface is the marketing homepage plus sixteen documentation
-  pages in the accepted Getting Started / Platforms / Build / Reference
-  information architecture, all held in the shared registry. Adding a page means
-  adding one registry entry in `packages/content/site-data.ts` and one page;
-  removing one must not leave the old route in the export, its navigation entry,
-  its sitemap entry or a redirect that would keep serving it.
+- Both sites are Next.js App Router projects with a static export. English
+  pages live below the `(en)` root route group and keep their existing URLs;
+  Chinese pages live below `(zh)` and the public `/zh/` segment. Each language
+  has its own root layout so the exported HTML carries `lang="en"` or
+  `lang="zh-CN"` before JavaScript runs. Built output lands in `apps/*/out/`
+  and is never edited by hand.
+- The published surface is one marketing homepage and sixteen documentation
+  pages in each language, all held in the locale-aware shared registry. English
+  is the default. Adding a page means adding both registry entries and both
+  pages; removing one must not leave either route, navigation entry, sitemap
+  entry or language counterpart behind.
 - Each app builds a self-contained output directory. Shared brand marks come
   from `packages/brand/assets/`; no third-party asset or analytics request is
-  added at runtime, and the docs search reads only its own local pages.
+  added at runtime. The docs search reads only pages in the current language.
 - Keep the build reproducible from `npm ci` with no new framework or runtime
   dependency that the task does not require.
 

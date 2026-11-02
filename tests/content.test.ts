@@ -1,10 +1,9 @@
 // Content fixtures for the published surfaces.
 //
-// Everything here reads the built output of the two sites: the seventeen public
-// pages of the accepted Q39 information architecture (the marketing home, the
-// sixteen documentation pages, and the technical 404 documents Next.js
-// generates), the shared navigation, the metadata, the generated files, the
-// theme control and the way cross-site links resolve.
+// Everything here reads both language variants of the built output: two
+// marketing homes, thirty-two documentation pages and the technical 404
+// documents. It covers navigation, metadata, generated files, theme controls
+// and same-language cross-site links.
 //
 // These fixtures read the built output as it was produced, so they cover the
 // configured origin pair as well as the content: the pair is resolved from the
@@ -29,12 +28,19 @@ import {
   ORIGIN_PLACEHOLDERS,
   PUBLIC_NODE_RUNTIME,
   docsNav,
+  docsNavZh,
   docsPages,
+  docsPagesEn,
+  docsPagesZh,
   footerNav,
+  footerNavZh,
   platforms,
   primaryNav,
+  primaryNavZh,
   versions,
   websitePages,
+  websitePagesEn,
+  websitePagesZh,
 } from "../packages/content/site-data.ts";
 
 /**
@@ -50,7 +56,7 @@ const LOOPBACK_DEFAULTS = [DEFAULT_WEBSITE_ORIGIN, DEFAULT_DOCS_ORIGIN].filter(
 );
 
 /**
- * The seventeen public pages, in the order the sites publish them. A page that is
+ * The thirty-four public pages, in the order the sites publish them. A page that is
  * not in this list does not exist, so a retired route cannot quietly survive in
  * the export.
  */
@@ -111,7 +117,7 @@ function authoredText(html: string): string {
 }
 
 function navLinks(html: string): { label: string; href: string }[] {
-  const block = /<nav class="site-nav" id="site-nav" aria-label="Main">([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
+  const block = /<nav class="site-nav" id="site-nav"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? "";
   return [...block.matchAll(/<a href="([^"]+)"[^>]*>([^<]*)<\/a>/g)].map((match) => ({
     href: match[1],
     label: match[2],
@@ -203,9 +209,31 @@ test("the shared page registry matches the built output and nothing else ships",
   }
 });
 
-test("the published surfaces are exactly the seventeen pages readers were promised", () => {
+test("technical 404 language switches return to public language homes", async () => {
+  for (const [label, dist] of [
+    ["website", websiteDist],
+    ["docs", docsDist],
+  ] as const) {
+    for (const file of TECHNICAL_FILES) {
+      const html = await readFile(join(dist, file), "utf8");
+      const languageTags = [...html.matchAll(/<a\b[^>]*\bdata-language-switch="zh"[^>]*>/g)];
+      const hrefs = languageTags.map(
+        (match) => /\bhref="([^"]+)"/.exec(match[0])?.[1] ?? "",
+      );
+
+      assert.deepEqual(hrefs, ["/zh/", "/zh/"], `${label} ${file} language switches`);
+      assert.ok(
+        !html.includes('href="/zh/_not-found/"'),
+        `${label} ${file} must not expose the internal not-found path`,
+      );
+    }
+  }
+});
+
+test("the published surfaces are exactly the two bilingual sites readers were promised", () => {
   assert.deepEqual(PUBLIC_PAGES, [
     "website /",
+    "website /zh/",
     "docs /",
     "docs /getting-started/local-cli/",
     "docs /getting-started/server/",
@@ -222,10 +250,28 @@ test("the published surfaces are exactly the seventeen pages readers were promis
     "docs /reference/configuration/",
     "docs /reference/credentials/",
     "docs /reference/requests/",
+    "docs /zh/",
+    "docs /zh/getting-started/local-cli/",
+    "docs /zh/getting-started/server/",
+    "docs /zh/getting-started/agent/",
+    "docs /zh/platforms/",
+    "docs /zh/platforms/bluesky/",
+    "docs /zh/platforms/threads/",
+    "docs /zh/platforms/linkedin/",
+    "docs /zh/platforms/mastodon/",
+    "docs /zh/platforms/devto/",
+    "docs /zh/build/provider-plugins/",
+    "docs /zh/build/trust-and-registry/",
+    "docs /zh/reference/cli/",
+    "docs /zh/reference/configuration/",
+    "docs /zh/reference/credentials/",
+    "docs /zh/reference/requests/",
   ]);
-  assert.equal(PUBLIC_PAGES.length, 17, "the public surface is seventeen pages");
-  assert.equal(websitePages.length, 1, "the marketing site is a single page");
-  assert.equal(docsPages.length, 16, "the documentation site is sixteen pages");
+  assert.equal(PUBLIC_PAGES.length, 34, "the public surface is thirty-four pages");
+  assert.equal(websitePages.length, 2, "the marketing site has one page in each language");
+  assert.equal(docsPages.length, 32, "the documentation site has sixteen pages in each language");
+  assert.deepEqual(websitePagesEn.map((page) => page.path), ["/"]);
+  assert.deepEqual(websitePagesZh.map((page) => page.path), ["/zh/"]);
 });
 
 test("every docs page carries one layout, main, sidebar, toc and search dialog", async () => {
@@ -245,42 +291,53 @@ test("every docs page carries one layout, main, sidebar, toc and search dialog",
   }
 });
 
-test("docs navigation lists every registered page and every fragment resolves", async () => {
-  const items = docsNav.flatMap((group) => group.items);
+test("docs navigation stays within the current language and every fragment resolves", async () => {
+  for (const [locale, navigation, registry] of [
+    ["en", docsNav, docsPagesEn],
+    ["zh", docsNavZh, docsPagesZh],
+  ] as const) {
+    const items = navigation.flatMap((group) => group.items);
 
-  for (const item of items) {
-    const hashIndex = item.href.indexOf("#");
-    const path = hashIndex === -1 ? item.href : item.href.slice(0, hashIndex);
-    const fragment = hashIndex === -1 ? "" : item.href.slice(hashIndex + 1);
-    const entry = docsPages.find((page) => page.path === path);
-    assert.ok(entry, `docs navigation ${item.href} should point at a registered page`);
-    const target = await docsPage(entry.file);
-    if (fragment !== "") {
-      assert.ok(idsOf(target).has(fragment), `docs navigation ${item.href} has no target id`);
-    }
-  }
-
-  for (const page of docsPages) {
-    const html = await docsPage(page.file);
-    const links = docsSidebarLinks(html);
-    assert.equal(links.length, items.length, `${page.path} sidebar item count`);
     for (const item of items) {
-      assert.ok(links.includes(item.href), `${page.path} sidebar is missing ${item.href}`);
+      const hashIndex = item.href.indexOf("#");
+      const path = hashIndex === -1 ? item.href : item.href.slice(0, hashIndex);
+      const fragment = hashIndex === -1 ? "" : item.href.slice(hashIndex + 1);
+      const entry = registry.find((page) => page.path === path);
+      assert.ok(entry, `${locale} docs navigation ${item.href} should point at a registered page`);
+      assert.equal(item.href.startsWith("/zh/"), locale === "zh", `${item.href} language`);
+      const target = await docsPage(entry.file);
+      if (fragment !== "") {
+        assert.ok(idsOf(target).has(fragment), `docs navigation ${item.href} has no target id`);
+      }
     }
-    for (const group of docsNav) {
-      assert.ok(html.includes(`>${group.title}<`), `${page.path} sidebar is missing group ${group.title}`);
+
+    for (const page of registry) {
+      const html = await docsPage(page.file);
+      const links = docsSidebarLinks(html);
+      assert.equal(links.length, items.length + 1, `${page.path} sidebar item count including language`);
+      for (const item of items) {
+        assert.ok(links.includes(item.href), `${page.path} sidebar is missing ${item.href}`);
+      }
+      for (const group of navigation) {
+        assert.ok(html.includes(`>${group.title}<`), `${page.path} sidebar is missing group ${group.title}`);
+      }
     }
   }
 });
 
-test("the website navigation and footer match the shared registry", async () => {
-  const expectedNav = primaryNav.map((item) => ({ label: item.label, href: expectedWithOrigins(item.href) }));
-  const expectedFooter = footerNav.map((item) => ({ label: item.label, href: expectedWithOrigins(item.href) }));
+test("the website navigation and footer match each language registry", async () => {
+  for (const [locale, navigation, footer, registry] of [
+    ["en", primaryNav, footerNav, websitePagesEn],
+    ["zh", primaryNavZh, footerNavZh, websitePagesZh],
+  ] as const) {
+    const expectedNav = navigation.map((item) => ({ label: item.label, href: expectedWithOrigins(item.href) }));
+    const expectedFooter = footer.map((item) => ({ label: item.label, href: expectedWithOrigins(item.href) }));
 
-  for (const page of websitePages) {
-    const html = await websitePage(page.file);
-    assert.deepEqual(navLinks(html), expectedNav, `${page.path} navigation`);
-    assert.deepEqual(footerLinks(html), expectedFooter, `${page.path} footer`);
+    for (const page of registry) {
+      const html = await websitePage(page.file);
+      assert.deepEqual(navLinks(html), expectedNav, `${locale} ${page.path} navigation`);
+      assert.deepEqual(footerLinks(html), expectedFooter, `${locale} ${page.path} footer`);
+    }
   }
 });
 
@@ -332,24 +389,24 @@ test("cross-site links resolve inside the other built site", async () => {
 
   assert.ok(checked > 8, `expected several cross-site links, checked ${checked}`);
 
-  // The navigation, the footer and the platform strip are the funnels into the
-  // docs site: the site links the docs home and the command reference, and
-  // every platform card links to that platform's own guide.
-  const home = await websitePage("index.html");
-  assert.ok(home.includes(`href="${BUILT.docs}/"`), "the site should link to the docs home");
-  assert.ok(
-    home.includes(`href="${BUILT.docs}/reference/cli/"`),
-    "the site should offer the command reference",
-  );
-  assert.ok(
-    home.includes(`href="${BUILT.docs}/getting-started/server/"`),
-    "the site should offer the self-hosted server guide",
-  );
-  for (const platform of platforms) {
+  // Each homepage funnels to the same-language docs home, platform guide and
+  // server guide, with no cross-language navigation.
+  for (const [file, prefix] of [
+    ["index.html", ""],
+    ["zh/index.html", "/zh"],
+  ] as const) {
+    const home = await websitePage(file);
+    assert.ok(home.includes(`href="${BUILT.docs}${prefix}/"`), `${file} should link to its docs home`);
     assert.ok(
-      home.includes(`href="${BUILT.docs}/platforms/${platform.id}/"`),
-      `${platform.name} should be reachable from the platform strip`,
+      home.includes(`href="${BUILT.docs}${prefix}/getting-started/server/"`),
+      `${file} should offer the self-hosted server guide`,
     );
+    for (const platform of platforms) {
+      assert.ok(
+        home.includes(`href="${BUILT.docs}${prefix}/platforms/${platform.id}/"`),
+        `${platform.name} should be reachable from ${file}`,
+      );
+    }
   }
 });
 
@@ -379,7 +436,7 @@ test("the overview teaches the three-command flow and no retired surface", async
   // the rendered text rather than a hand-kept list.
   const retiredRoutes = ["/accounts/", "/agent-setup/", "/commands/", "/faq/", "/publishing/"];
 
-  for (const page of docsPages) {
+  for (const page of docsPagesEn) {
     const html = await docsPage(page.file);
     const text = authoredText(html);
     for (const legacy of ["/v1/posts", "Mock SNS", "@syndroo/sdk", "@syndroo/cloudflare-worker"]) {
@@ -637,11 +694,18 @@ test("version claims stay consistent and no unpublished surface is offered", asy
   }
 
   for (const [label, html] of [
-    ["the marketing home", await websitePage("index.html")],
-    ["the docs home", await docsPage("index.html")],
+    ["the English marketing home", await websitePage("index.html")],
+    ["the English docs home", await docsPage("index.html")],
   ] as const) {
     assert.ok(html.includes(versions.cli), `${label} should state the candidate version`);
     assert.ok(html.includes(versions.releaseStage), `${label} should state the release stage`);
+  }
+  for (const [label, html] of [
+    ["the Chinese marketing home", await websitePage("zh/index.html")],
+    ["the Chinese docs home", await docsPage("zh/index.html")],
+  ] as const) {
+    assert.ok(html.includes(versions.cli), `${label} should state the candidate version`);
+    assert.match(html, /候选版本|未发布/, `${label} should state the release stage`);
   }
 });
 

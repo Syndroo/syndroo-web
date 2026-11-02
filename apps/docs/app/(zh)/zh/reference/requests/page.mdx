@@ -1,0 +1,117 @@
+export const metadata = {
+  title: "请求与信封 - Syndroo 文档",
+  description:
+    "本地 Syndroo 请求和结果结构，以及可选 Server 预览使用的独立 JSON 信封。",
+  alternates: {
+    canonical: "/zh/reference/requests/",
+    languages: {
+      en: "/reference/requests/",
+      "zh-CN": "/zh/reference/requests/",
+      "x-default": "/reference/requests/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/reference/requests/",
+    title: "请求与信封 - Syndroo 文档",
+    description:
+      "本地 Syndroo 请求和结果结构，以及可选 Server 预览使用的独立 JSON 信封。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/reference/cli/">参考</a>
+      <span aria-hidden="true">/</span>
+      <span>请求与信封</span>
+    </nav>
+    <h1 id="requests">请求与信封</h1>
+    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 请求。输入一个请求文档，返回一个 JSON 信封；智能体或脚本依据本文档记录的结构进行分支。可选的 Server 预览使用自己的信封。</p>
+
+    <h2 id="envelope">信封</h2>
+    <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
+    <pre data-label="failure"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": false,\n  \"result\": null,\n  \"error\": { \"code\": \"INPUT_INVALID\", \"message\": \"The request document is not valid.\" }\n}"}</code></pre>
+    <p>对于本地请求，<code>{"operation"}</code> 是 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 之一。消息是由代码选择的静态文本，绝不会根据堆栈、路径、响应正文或参数生成，因此诊断信息不会携带机密。</p>
+
+    <h2 id="server">Server 信封</h2>
+    <p><strong>预览且未发布。</strong>Server 命令是独立的候选路径，需要版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包；公共 npm 安装尚待提供。其 JSON 使用 <code>{"operation: \"server\""}</code>，并通过 <code>{"result.subcommand"}</code> 区分 <code>{"init"}</code>、<code>{"doctor"}</code>、<code>{"deploy"}</code>、<code>{"connect"}</code>、<code>{"ci"}</code> 和 <code>{"publish"}</code>。</p>
+    <p>Server 请求和结果结构与下文的本地请求族不同。请按照<a href="/zh/getting-started/server/">部署服务器</a>操作；其结果、恢复 ID 和验收限制汇总在<a href="/zh/reference/cli/#server">Server 命令参考</a>中。</p>
+
+    <h2 id="connect">connect</h2>
+    <p>共有四种请求结构。<code>{"start"}</code> 开始连接，<code>{"resume"}</code> 完成待处理步骤，<code>{"update"}</code> 和 <code>{"disconnect"}</code> 维护已保存的连接。</p>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"bluesky\",\n  \"label\": \"work\",\n  \"connectionId\": \"conn_existing\",\n  \"options\": {}\n}"}</code></pre>
+    <pre data-label="resume.json"><code>{"{\n  \"type\": \"resume\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 0,\n  \"input\": { \"type\": \"credentials\", \"credentials\": { \"identifier\": \"you.bsky.social\", \"password\": \"...\" } }\n}"}</code></pre>
+    <pre data-label="maintenance.json"><code>{"{\n  \"type\": \"update\",\n  \"connectionId\": \"conn_...\",\n  \"changes\": { \"label\": \"writing\", \"isDefault\": true }\n}"}</code></pre>
+    <p>继续输入要么是携带提供商凭证对象的 <code>{"credentials"}</code>，要么是用于已通过带外方式交付授权回调的会话的 <code>{"callback_complete"}</code>。<code>{"stepRevision"}</code> 必须与会话匹配，因此过期步骤会被拒绝，而不会应用两次。</p>
+    <pre data-label="connect result"><code>{"{\n  \"status\": \"action_required\",\n  \"connectSessionId\": \"cs_...\",\n  \"stepRevision\": 1,\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"action\": { \"type\": \"credential_input\", \"fields\": [{ \"name\": \"password\", \"label\": \"Bluesky app password\", \"secret\": true }] }\n}"}</code></pre>
+    <p>动作可以是 <code>{"credential_input"}</code>、<code>{"open_url"}</code> 或 <code>{"wait_for_callback"}</code>。完成的步骤返回 <code>{'"status": "done"'}</code> 和已保存的 <code>{"connection"}</code>。</p>
+
+    <h2 id="publish">publish</h2>
+    <p>共有三种请求结构：<code>{"prepare"}</code> 冻结内容，<code>{"execute"}</code> 发送内容，<code>{"retry"}</code> 只重新发送较早操作中符合条件的目标。不带 <code>{"type"}</code> 的文档是普通准备请求。</p>
+    <pre data-label="prepare.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"One document, chosen targets.\" },\n  \"targets\": [\n    { \"provider\": \"bluesky\" },\n    { \"provider\": \"devto\", \"connection\": \"conn_...\", \"options\": { \"title\": \"Hello\", \"body_markdown\": \"Body\" } }\n  ]\n}"}</code></pre>
+    <pre data-label="execute.json"><code>{"{ \"type\": \"execute\", \"approvalToken\": \"<token>\" }"}</code></pre>
+    <pre data-label="retry.json"><code>{"{\n  \"type\": \"retry\",\n  \"retryOf\": \"op_...\",\n  \"targets\": [{ \"provider\": \"bluesky\", \"connection\": \"conn_...\" }]\n}"}</code></pre>
+    <p>目标包含 <code>{"provider"}</code>，可选包含 <code>{"connection"}</code> 和提供商专用的 <code>{"options"}</code>。一个文档包含一到二十个目标。目标未指定连接时，使用提供商的默认连接；存在歧义时会被拒绝，而不是猜测。</p>
+    <pre data-label="prepared result"><code>{"{\n  \"status\": \"confirmation_required\",\n  \"operationId\": \"op_example\",\n  \"approvalToken\": \"<approvalToken>\",\n  \"expiresAt\": \"2026-10-08T00:15:00.000Z\",\n  \"preview\": [\n    {\n      \"deliveryId\": \"dl_example\",\n      \"connectionId\": \"conn_example\",\n      \"account\": { \"provider\": \"bluesky\", \"accountId\": \"acct_example\", \"origin\": \"https://bsky.social\" },\n      \"provider\": \"bluesky\",\n      \"preview\": { \"content\": { \"text\": \"One document, chosen targets.\" }, \"fields\": [] },\n      \"presentation\": { \"accountName\": \"Example account\", \"profileUrl\": \"https://bsky.app/profile/example\", \"label\": \"work\" }\n    }\n  ]\n}"}</code></pre>
+    <pre data-label="execution result"><code>{"{\n  \"phase\": \"execution\",\n  \"operationId\": \"op_example\",\n  \"status\": \"succeeded\",\n  \"deliveries\": [\n    {\n      \"deliveryId\": \"dl_example\",\n      \"connectionId\": \"conn_example\",\n      \"account\": { \"provider\": \"bluesky\", \"accountId\": \"acct_example\", \"origin\": \"https://bsky.social\" },\n      \"attempts\": 1,\n      \"state\": \"settled\",\n      \"outcome\": { \"status\": \"succeeded\", \"remoteId\": \"at://example/post/1\", \"url\": \"https://bsky.app/profile/example/post/1\" },\n      \"presentation\": { \"accountName\": \"Example account\", \"profileUrl\": \"https://bsky.app/profile/example\", \"label\": \"work\" }\n    }\n  ]\n}"}</code></pre>
+    <p>执行状态是 <code>{"pending"}</code>、<code>{"running"}</code>、<code>{"succeeded"}</code>、<code>{"partial"}</code>、<code>{"failed"}</code> 或 <code>{"unknown"}</code> 之一。每次投递结果为 <code>{"succeeded"}</code>；带处置状态 <code>{"not_applied"}</code> 的 <code>{"failed"}</code>；<code>{"unknown"}</code>；或目标从未进入调用时的 <code>{"not_started"}</code>。符合条件且失败的结果可能带有 <code>{"retryable"}</code>、原因和 <code>{"retryAfter"}</code> 时间。失败和未开始表示写入已确认未应用；未知结果始终不可重试。</p>
+    <p>目标的稳定身份由 <code>{"provider"}</code>、<code>{"origin"}</code> 和 <code>{"accountId"}</code> 构成。可选 <code>{"presentation"}</code> 仅用于显示，包含可读的 <code>{"accountName"}</code>、公开 <code>{"profileUrl"}</code> 和连接 <code>{"label"}</code>：它绝不会改变目标选择、账号去重或绑定，而且允许缺少可选元数据。提供商返回的不安全可选值会在进入冻结快照前被丢弃；这不会放宽请求模式验证。</p>
+    <p>该 <code>{"presentation"}</code> 会随其他意图一起冻结，并纳入意图摘要，因此之后重命名不会改变本次操作的历史；只有个人资料链接是安全 HTTPS URL 时才显示，否则显示稳定的 HTTPS 地址（域名）。单次投递的冻结快照由 <code>{"deliveryId"}</code> 和产生其状态的执行轮次关联，绝不根据数组位置、平台名称或最近一次准备的意图推断。</p>
+    <p><code>{"syndroo status --operation <operationId>"}</code> 读取已记录的结果：不加载提供商、不读取输入文件，也绝不重写历史。投递会显示其自身轮次的历史冻结名称、标签和预览，而不是当前连接；如果旧版本记录无法根据持久化证据证明其轮次，预览会报告为不可用，而不是猜测。每个请求无论格式是否有效，都会在运行任何内容前按协议验证。</p>
+
+    <h2 id="status">status</h2>
+    <p>共有五种查询结构，没有查询语言。未提供选择器时返回概览。</p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">请求</th>
+            <th scope="col">结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"overview\" }"}</code></th>
+            <td>状态是否已初始化、连接数量、每个提供商的可用性和来源、最近的操作，以及状态健康状况。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"provider\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>提供商的清单、实现指纹和观察结果。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"connections\", \"provider\": \"bluesky\" }"}</code></th>
+            <td>已保存的连接，可选按一个提供商筛选。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operation\", \"operationId\": \"op_...\" }"}</code></th>
+            <td>一个操作：带确认状态和预览的准备操作，或执行结果。它呈现与 <code>{"syndroo publish"}</code> 相同的人类可读结果视图。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"{ \"type\": \"operations\", \"limit\": 20, \"cursor\": \"...\" }"}</code></th>
+            <td>操作摘要，以及用于下一页的不透明游标。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>提供商可用性是 <code>{"available"}</code>、<code>{"untrusted"}</code>、<code>{"unavailable"}</code> 或 <code>{"stale"}</code>，来源是 <code>{"official"}</code> 或 <code>{"third_party"}</code>。状态命令读取已保存的观察结果；不会联系平台刷新它们。</p>
+
+    <h2 id="exit-codes">本地执行状态与退出码</h2>
+    <p>发布结果映射到进程退出码：<code>{"unknown"}</code> 退出 4，<code>{"failed"}</code> 和 <code>{"partial"}</code> 退出 6，其他所有执行状态退出 0。预检或用法拒绝退出 2，在确认提示中明确拒绝退出 5。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#envelope">信封</a></li>
+    <li><a href="#server">Server 信封</a></li>
+    <li><a href="#connect">connect</a></li>
+    <li><a href="#publish">publish</a></li>
+    <li><a href="#status">status</a></li>
+    <li><a href="#exit-codes">本地执行状态与退出码</a></li>
+  </ul>
+</nav>

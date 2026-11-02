@@ -1,6 +1,6 @@
 // Verify the exported output of both sites.
 //
-// Checks local links, fragments, ids, image alt text, English language, one
+// Checks local links, fragments, ids, image alt text, route language, one
 // `h1` per page, the configured origins, and that the exported HTML carries no
 // server-only Next.js dependency. Run `npm run build` first: this checks
 // artifacts, not sources.

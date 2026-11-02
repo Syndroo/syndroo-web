@@ -1,0 +1,107 @@
+export const metadata = {
+  title: "平台 - Syndroo 文档",
+  description:
+    "Syndroo 的五个官方提供商：内容类型、凭证字段、声明的出站 HTTPS 地址（域名），以及仍需使用真实账号验证的事项。",
+  alternates: {
+    canonical: "/zh/platforms/",
+    languages: {
+      en: "/platforms/",
+      "zh-CN": "/zh/platforms/",
+      "x-default": "/platforms/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/platforms/",
+    title: "平台 - Syndroo 文档",
+    description:
+      "Syndroo 的五个官方提供商：内容类型、凭证字段、声明的出站 HTTPS 地址（域名），以及仍需使用真实账号验证的事项。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <span>平台</span>
+    </nav>
+    <h1 id="platforms">平台</h1>
+    <p className="lede">候选版本附带五个官方提供商：Bluesky、Threads、LinkedIn 和 Mastodon 发布文本，DEV.to 发布文章。每个平台都有自己的指南，每份指南只陈述提供商源码和已记录的提供商证据能够支持的内容。</p>
+
+    <div className="tip">
+      <strong>尚未进行真实调用。</strong>
+      <p>这里的每个提供商都只在模拟环境中对照已记录的 API 证据做了测试。本项目尚未连接任何 Syndroo 账号，也没有向真实账号发布过帖子，因此“代码支持”并不等于“你的账号会接受”。</p>
+    </div>
+
+    <h2 id="providers">五个提供商</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">提供商</th>
+            <th scope="col">内容</th>
+            <th scope="col">凭证字段</th>
+            <th scope="col">声明的出站 HTTPS 地址（域名）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><a href="/zh/platforms/bluesky/">Bluesky</a></th>
+            <td>文本帖子</td>
+            <td><code>{"identifier"}</code>、<code>{"password"}</code></td>
+            <td><code>{"https://bsky.social"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/zh/platforms/threads/">Threads</a></th>
+            <td>文本帖子</td>
+            <td><code>{"client_id"}</code>、<code>{"client_secret"}</code></td>
+            <td><code>{"https://www.threads.net"}</code>、<code>{"https://graph.threads.net"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/zh/platforms/linkedin/">LinkedIn</a></th>
+            <td>成员文本帖子</td>
+            <td><code>{"client_id"}</code>、<code>{"client_secret"}</code></td>
+            <td><code>{"https://www.linkedin.com"}</code>、<code>{"https://api.linkedin.com"}</code></td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/zh/platforms/mastodon/">Mastodon</a></th>
+            <td>公开动态文本</td>
+            <td>无：流程使用浏览器授权</td>
+            <td>联邦式：由你指定的实例</td>
+          </tr>
+          <tr>
+            <th scope="row"><a href="/zh/platforms/devto/">DEV.to</a></th>
+            <td>文章</td>
+            <td><code>{"apiKey"}</code></td>
+            <td><code>{"https://dev.to"}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>“声明的出站 HTTPS 地址（域名）”是提供商写入清单的 HTTPS 地址（域名）列表。运行时会根据该声明生成出站允许列表，因此提供商无法悄悄调用未声明的宿主。<a href="/zh/build/provider-plugins/">开发</a>部分说明了这条规则。</p>
+
+    <h2 id="names">提供商 ID</h2>
+    <p>请求使用 ID 指定提供商；ID 同时也是包名后缀和注册表键：<code>{"bluesky"}</code>、<code>{"threads"}</code>、<code>{"linkedin"}</code>、<code>{"mastodon"}</code> 和 <code>{"devto"}</code>。显示名称仅用于呈现。</p>
+
+    <h2 id="unresolved">指南完成前尚未解决的事项</h2>
+    <p>本页不会掩盖已记录证据中的空白。各指南将以下事项标为 <strong>未解决</strong>；在被当作事实之前，必须重新对照提供商核验：</p>
+    <ul>
+      <li>Bluesky：创建应用密码的准确设置路径。</li>
+      <li>Threads：API 主机是 <code>{"graph.threads.net"}</code> 还是 <code>{"graph.threads.com"}</code>，文本长度限制、错误表和撤销流程。</li>
+      <li>LinkedIn：评论文本长度限制、错误格式和令牌撤销步骤。</li>
+      <li>Mastodon：完整错误实体，以及每个实例自己的字符数限制。</li>
+      <li>DEV.to：API 密钥的签发与重新生成路径，以及 v1 速率限制。</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#providers">五个提供商</a></li>
+    <li><a href="#names">提供商 ID</a></li>
+    <li><a href="#unresolved">指南完成前尚未解决的事项</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,118 @@
+export const metadata = {
+  title: "提供商插件 - Syndroo 文档",
+  description:
+    "使用 @syndroo/provider-sdk 编写 Syndroo 提供商插件：包结构、清单、声明的出站 HTTPS 地址（域名）和提供商操作。",
+  alternates: {
+    canonical: "/zh/build/provider-plugins/",
+    languages: {
+      en: "/build/provider-plugins/",
+      "zh-CN": "/zh/build/provider-plugins/",
+      "x-default": "/build/provider-plugins/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/build/provider-plugins/",
+    title: "提供商插件 - Syndroo 文档",
+    description:
+      "使用 @syndroo/provider-sdk 编写 Syndroo 提供商插件：包结构、清单、声明的出站 HTTPS 地址（域名）和提供商操作。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <span>开发</span>
+    </nav>
+    <h1 id="provider-plugins">编写提供商插件</h1>
+    <p className="lede">提供商插件实现一个社交网络。它不能添加命令、修改 CLI，也不能改变 Core 存储状态的方式：插件契约就是全部扩展面，五个官方提供商与第三方提供商使用完全相同的契约。</p>
+
+    <h2 id="package">包结构</h2>
+    <p>提供商是一个 ESM 包，其根默认导出为插件对象。使用 <code>{"@syndroo/provider-sdk"}</code> 提供的 <code>{"defineProvider"}</code> 声明插件，并导出结果：</p>
+    <pre data-label="index.ts"><code>{"import { defineProvider } from \"@syndroo/provider-sdk\";\n\nexport default defineProvider({\n  manifest: {\n    id: \"example\",\n    name: \"Example\",\n    version: \"0.7.0-rc.1\",\n    apiVersion: 1,\n    declaredCapabilities: [\"text\"],\n    egress: { fixedOrigins: [\"https://api.example.com\"] },\n    schemas: {\n      connectOptions: { type: \"object\", additionalProperties: false, properties: {} },\n      credentialInput: {\n        type: \"object\",\n        additionalProperties: false,\n        required: [\"token\"],\n        properties: { token: { type: \"string\", minLength: 1 } }\n      },\n      content: {\n        type: \"object\",\n        additionalProperties: false,\n        properties: { text: { type: \"string\" } }\n      },\n      publishOptions: { type: \"object\", additionalProperties: false, properties: {} }\n    }\n  },\n  connect: async (input, context) => {\n    return { status: \"done\", identity: { /* account */ }, credentials: { /* stored */ } };\n  },\n  freeze: (input) => {\n    return { payload: { text: input.content.text } };\n  },\n  publish: async (input, context) => {\n    return { status: \"succeeded\" };\n  }\n});"}</code></pre>
+    <p>默认导出就是插件对象本身，而不是工厂。一个包通过一次 <code>{"defineProvider"}</code> 调用声明一个提供商；该 ID 同时也是注册表键和包名后缀。</p>
+
+    <h2 id="manifest">清单</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">字段</th>
+            <th scope="col">规则</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"id"}</code></th>
+            <td>小写提供商 ID，最多 64 个字符，并与包名后缀一致。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"name"}</code></th>
+            <td>仅用于显示的名称，最多 128 个字符。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"version"}</code></th>
+            <td>必须等于包自身的版本。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"apiVersion"}</code></th>
+            <td>整数 <code>{"1"}</code>。不匹配时会拒绝，而不是猜测。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"declaredCapabilities"}</code></th>
+            <td>从 <code>{"text"}</code> 和 <code>{"article"}</code> 中选择的列表，不得重复，最多八个条目。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"schemas"}</code></th>
+            <td>四个模式：<code>{"connectOptions"}</code>、<code>{"credentialInput"}</code>、<code>{"content"}</code> 和 <code>{"publishOptions"}</code>。每个都是 JSON Schema，最大 64 KiB、最深 32 层，只能使用本地引用。</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"egress"}</code></th>
+            <td>插件可以使用的外部 HTTPS 地址（域名）；见下文。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>声明会在被读取前先受到限制：验证器只检查自有数据属性，从不执行 getter，从不编译或求值模式，而且在模块加载期间从不导入、访问文件系统、读取时钟或打开套接字。</p>
+
+    <h2 id="egress">出站声明</h2>
+    <p><code>{"egress.fixedOrigins"}</code> 必填，列出提供商打算访问的规范 HTTPS 地址（域名）。运行时会根据此列表生成出站策略，因此对插件未声明地址的请求会在离开进程之前被拒绝。</p>
+    <ul>
+      <li>每项由 <code>{"https://"}</code> 加主机组成：不得包含端口、路径、查询或用户信息。</li>
+      <li>IP 字面量或不含点的主机会被拒绝。</li>
+      <li>列表最多 20 个条目，重复项会被删除。</li>
+      <li>没有固定外部地址的提供商（例如由用户指定主机的联邦网络）会声明空列表，并设置 <code>{"federated: true"}</code>。</li>
+    </ul>
+    <p>官方声明就是示例：Bluesky 使用 <code>{"https://bsky.social"}</code>，DEV.to 使用 <code>{"https://dev.to"}</code>，LinkedIn 使用 <code>{"linkedin.com"}</code> 的两个地址，Threads 使用 <code>{"threads.net"}</code> 的两个地址，Mastodon 使用空的联邦列表。</p>
+
+    <h2 id="operations">三个操作</h2>
+    <p><code>{"connect"}</code> 运行连接中的一个步骤。它要么以身份和要保存的凭证结束，要么向调用方返回一个动作：请求凭证字段、用于浏览器授权的 <code>{"open_url"}</code>，或 <code>{"wait_for_callback"}</code>。插件从不驱动用户界面，也从不决定会话如何存储。</p>
+    <p><code>{"freeze"}</code> 是冻结内容、目标选项和同一次运行已知信息的纯函数。它编译提供商原生载荷，并且必须具有确定性：相同输入产生逐字节相同的输出。任何机密都不得出现在冻结载荷、预览、写入结果或抛出的错误中。</p>
+    <p><code>{"publish"}</code> 通过注入的传输层发送冻结载荷，并报告三种结果之一：<code>{"succeeded"}</code>；带处置状态 <code>{"not_applied"}</code> 的 <code>{"failed"}</code>；或 <code>{"unknown"}</code>。插件绝不自行重试，也绝不重新分类此前的未知写入。</p>
+
+    <h2 id="testing">测试插件</h2>
+    <p><code>{"@syndroo/provider-sdk/testing"}</code> 导出共享契约测试，而生产入口点刻意不导出它们，因此运行时依赖图绝不会接触测试脚手架。官方提供商也用它断言相同契约。</p>
+
+    <h2 id="not-included">不包含的内容</h2>
+    <ul>
+      <li>不能贡献 CLI 命令、中间件、状态适配器或执行规则。</li>
+      <li>没有自动发现：注册表是显式且由配置驱动的。</li>
+      <li>没有插件市场。本站记录契约和官方提供商；第三方提供商自行记录其平台。</li>
+    </ul>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#package">包结构</a></li>
+    <li><a href="#manifest">清单</a></li>
+    <li><a href="#egress">出站声明</a></li>
+    <li><a href="#operations">三个操作</a></li>
+    <li><a href="#testing">测试插件</a></li>
+    <li><a href="#not-included">不包含的内容</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,86 @@
+export const metadata = {
+  title: "本地 CLI - Syndroo 文档",
+  description:
+    "构建 syndroo 候选版本，编写配置文件，从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
+  alternates: {
+    canonical: "/zh/getting-started/local-cli/",
+    languages: {
+      en: "/getting-started/local-cli/",
+      "zh-CN": "/zh/getting-started/local-cli/",
+      "x-default": "/getting-started/local-cli/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/getting-started/local-cli/",
+    title: "本地 CLI - Syndroo 文档",
+    description:
+      "构建 syndroo 候选版本，编写配置文件，从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <span>本地 CLI</span>
+    </nav>
+    <h1 id="local-cli">在本机运行 CLI</h1>
+    <p className="lede">候选版本是一个 Node.js 程序。它读取一个配置文件，在同一状态根目录下保存状态，并通过根据各提供商清单生成的外发策略直接访问平台 API。没有守护进程、计划任务或后台运行。</p>
+
+    <h2 id="install">构建并安装</h2>
+    <p>需要 macOS 或 Linux 上的 Node.js 24.19 或更新版本。该包未发布到软件包注册表，所以受支持的路径是从源码构建并打包工作区：</p>
+    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo --version"}</code></pre>
+    <p><code>{"--version"}</code> 会输出候选版本和运行它的 Node.js 版本。<code>{"--help"}</code> 会输出命令列表，每个命令也会响应自己的 <code>{"--help"}</code>。两者在配置文件存在之前即可使用，而且不会创建任何内容。</p>
+
+    <h2 id="configuration">配置</h2>
+    <p>只有一个配置来源。未提供 <code>{"--config"}</code> 时，CLI 读取 <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>，找不到时退回 <code>{"$HOME/.config/syndroo/config.json"}</code>。不解析任何提供商的命令允许默认文件不存在；由 <code>{"--config"}</code> 指定的文件不存在则视为错误。<code>{"--config"}</code> 的路径必须是绝对路径。</p>
+    <pre data-label="config.json"><code>{"{\n  \"version\": 1,\n  \"stateRoot\": \"state\",\n  \"providers\": {\n    \"ghost\": { \"path\": \"vendor/ghost-provider\" }\n  }\n}"}</code></pre>
+    <p><code>{"version"}</code> 必须为 <code>{"1"}</code>。<code>{"stateRoot"}</code> 和每个 <code>{"providers.<id>.path"}</code> 都相对于配置文件所在目录解析，因此切换工作目录不会改变一次运行所使用的状态或插件。未知键会被拒绝；名称类似令牌、密钥、密码或 API 密钥的键会按名称拒绝，不会被忽略。完整契约见<a href="/zh/reference/configuration/">配置</a>。</p>
+
+    <h2 id="state">本地状态</h2>
+    <p>状态根目录默认为 <code>{"$XDG_STATE_HOME/syndroo/runtime-v1"}</code>，找不到时退回 <code>{"$HOME/.local/state/syndroo/runtime-v1"}</code>。它包含一个格式标记；如果根目录缺少标记或标记指向其他格式，运行时会拒绝使用。早期 Syndroo 版本使用不同的根目录；当前运行时不探测、不迁移，也不会删除旧目录。</p>
+    <p>读取操作从不创建根目录，也不修复它。在从未连接过任何账号的机器上运行只读命令时，状态会报告为未初始化，而不会写出一个目录。</p>
+
+    <h2 id="connect">连接一个提供商</h2>
+    <p>每次运行只能使用一个凭证来源：<code>{"--from-env"}</code> 读取环境变量 <code>{"SYNDROO_CREDENTIALS"}</code>，<code>{"--credential-file"}</code> 读取私有 JSON 文件。两者都按严格 JSON 解析，并在保存前按照提供商自己的凭证模式验证。</p>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work --default"}</code></pre>
+    <p><code>{"--label"}</code> 为连接命名；<code>{"--default"}</code> 使它成为目标未指定连接时使用的默认目标。一个提供商可以保存多个连接：再次使用 <code>{"--connection"}</code> 连接可刷新现有连接，使用 <code>{"--update"}</code> 可修改标签或默认标记，使用 <code>{"--disconnect"}</code> 可删除本地连接。断开连接绝不会撤销平台令牌。</p>
+    <p>机器调用方可以用完整请求文档代替参数来驱动同一命令：<code>{"--input"}</code> 读取文件，<code>{"-"}</code> 读取标准输入。每个连接步骤都会记录，因此重放相同请求会返回已存储的答案，而不会连接两次。</p>
+
+    <h2 id="publish">先准备，再执行</h2>
+    <p>发布内容在发送前会被冻结。准备阶段验证内容和目标，返回预览及一次性审批令牌；执行阶段消耗该令牌。</p>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"One document, chosen targets.\" },\n  \"targets\": [\n    { \"provider\": \"bluesky\" },\n    { \"provider\": \"devto\", \"options\": { \"title\": \"Hello\", \"body_markdown\": \"One document.\" } }\n  ]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json\nsyndroo publish --input - < execute.json --json"}</code></pre>
+    <p>在终端中，准备阶段会显示冻结的预览并询问{" "} <code>{"Publish to N accounts? [y/N/v]"}</code>。接受的回答是 <code>{"y"}</code> 或 <code>{"yes"}</code>、<code>{"n"}</code> 或 <code>{"no"}</code>，以及 <code>{"v"}</code> 或 <code>{"view"}</code>。只有明确的 <code>{"y"}</code> 会使用同一令牌执行；<code>{"v"}</code> 会展开完整的冻结预览后再次询问，不会重新准备，也不会延长时间窗口；<code>{"n"}</code>、空行或输入结束会取消并以退出码 5 结束，不发送内容。其他回答不构成授权，系统会再次询问。<code>{"--yes"}</code> 会自动确认当前进程刚刚准备的冻结意图，不再提示。使用 <code>{"--json"}</code> 时命令从不提示，只返回准备结果，由调用方决定；使用 <code>{"--yes --json"}</code> 时，一次调用完成准备、确认和执行，只输出一个最终信封，不再输出第二个准备结果。显式执行请求只能从标准输入读取；同一进程内的确认或 <code>{"--yes"}</code> 不需要在标准输入上另附执行请求；令牌由同一进程族签发和消耗，准备后修改文件不会改变将发送的内容，过期审批或连接绑定发生变化时，旧令牌会被拒绝。</p>
+    <p><code>{"--data"}</code> 可以内联传入相同请求文档，适合一次性调用，但内容会留在进程参数中。<code>{"--dry-run"}</code> 只解析并预览，不写入状态、不解析凭证，也不发起网络请求。<code>{"--request-id"}</code> 为调用提供稳定身份，使同一逻辑意图的重试能够被识别。</p>
+
+    <h2 id="status">读取状态</h2>
+    <p>读取操作从不修改或修复状态，也从不联系平台。未提供选择器时，概览会列出提供商可用性、连接数量和最近的操作。</p>
+    <pre data-label="terminal"><code>{"syndroo status --json\nsyndroo status --connections --json\nsyndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
+    <p><code>{"--provider"}</code> 查询一个提供商，也可以筛选连接列表。<code>{"--limit"}</code> 和 <code>{"--cursor"}</code> 仅用于 <code>{"--operations"}</code>；获取下一页时，应将不透明游标原样传回。</p>
+
+    <h2 id="retry">重试</h2>
+    <p>重试是同一 publish 命令的一种模式，而不是第四个命令：<code>{"--retry"}</code> 指定较早的操作，<code>{"--to"}</code> 指定要重试的连接，每个目标可重复一次。只有已被确认未应用的失败目标才符合条件。结果为 <code>{"unknown"}</code> 的投递绝不能重试：平台可能已经保存了帖子，而 CLI 不会通过再次发送来查明。</p>
+    <pre data-label="terminal"><code>{"syndroo publish --retry <operationId> --to <connectionId> --json"}</code></pre>
+
+    <h2 id="exit-codes">退出码</h2>
+    <p>退出码说明本地调用确认了什么，而不是平台是否接受了帖子。<a href="/zh/reference/cli/#exit-codes">退出码表</a>列出全部七个值，其中最重要的两个是：4 表示写入可能已到达提供商，但结果未知；6 表示执行已经结束，并确认没有完全成功。</p>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#install">构建并安装</a></li>
+    <li><a href="#configuration">配置</a></li>
+    <li><a href="#state">本地状态</a></li>
+    <li><a href="#connect">连接一个提供商</a></li>
+    <li><a href="#publish">先准备，再执行</a></li>
+    <li><a href="#status">读取状态</a></li>
+    <li><a href="#retry">重试</a></li>
+    <li><a href="#exit-codes">退出码</a></li>
+  </ul>
+</nav>

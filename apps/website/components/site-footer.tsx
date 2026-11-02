@@ -1,16 +1,20 @@
-// The shared marketing footer, including the cross-site documentation links.
-import { footerGroups, platforms, PRODUCT_REPOSITORY } from "@syndroo/content/site-data";
+import {
+  PRODUCT_REPOSITORY,
+  footerGroupsByLocale,
+  platforms,
+  ui,
+} from "@syndroo/content/site-data";
+import type { Locale } from "@syndroo/content/site-data";
 
-// Only platforms with a local mark asset get an icon button; the rest are
-// named with their real destination in the footer's platform column.
 const MARKED_PLATFORMS = platforms.filter((platform) => platform.label === undefined);
 
-export function SiteFooter(): React.JSX.Element {
+export function SiteFooter({ locale }: { locale: Locale }): React.JSX.Element {
+  const groups = footerGroupsByLocale[locale];
   return (
     <footer className="site-footer">
       <div className="shell site-footer__grid">
         <div className="site-footer__brand">
-          <a className="site-footer__logo" href="/">
+          <a className="site-footer__logo" href={locale === "en" ? "/" : "/zh/"}>
             <img src="/assets/logo.svg" alt="" width="46" height="44" />
             <span>Syndroo</span>
           </a>
@@ -19,7 +23,7 @@ export function SiteFooter(): React.JSX.Element {
               <a
                 className="icon-link"
                 href={PRODUCT_REPOSITORY}
-                aria-label="Syndroo source repository"
+                aria-label={ui[locale].website.sourceRepository}
               >
                 <img src="/assets/logo.svg" alt="" width="16" height="16" />
               </a>
@@ -37,16 +41,13 @@ export function SiteFooter(): React.JSX.Element {
           </p>
         </div>
         <div className="site-footer__cols">
-          {footerGroups.map((group) => (
+          {groups.map((group) => (
             <div className="site-footer__col" key={group.title}>
               <h3 className="col-title">{group.title}</h3>
               <ul>
                 {group.items.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
-                      rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-                    >
+                    <a href={link.href} rel={link.href.startsWith("http") ? "noreferrer" : undefined}>
                       {link.label}
                     </a>
                   </li>

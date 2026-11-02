@@ -1,0 +1,133 @@
+export const metadata = {
+  title: "LinkedIn - Syndroo 文档",
+  description:
+    "使用应用客户端连接 LinkedIn 并发布成员文本帖子：凭证字段、声明的出站 HTTPS 地址（域名）、选项、固定的 API 版本，以及仍未解决的部分。",
+  alternates: {
+    canonical: "/zh/platforms/linkedin/",
+    languages: {
+      en: "/platforms/linkedin/",
+      "zh-CN": "/zh/platforms/linkedin/",
+      "x-default": "/platforms/linkedin/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/platforms/linkedin/",
+    title: "LinkedIn - Syndroo 文档",
+    description:
+      "使用应用客户端连接 LinkedIn 并发布成员文本帖子：凭证字段、声明的出站 HTTPS 地址（域名）、选项、固定的 API 版本，以及仍未解决的部分。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/platforms/">平台</a>
+      <span aria-hidden="true">/</span>
+      <span>LinkedIn</span>
+    </nav>
+    <h1 id="linkedin">LinkedIn</h1>
+
+    <h2 id="overview">概览</h2>
+    <p>提供商 ID 为 <code>{"linkedin"}</code>。它会使用必需的 <code>{"LinkedIn-Version"}</code> 请求头，将一条成员帖子发布到 <code>{"POST https://api.linkedin.com/rest/posts"}</code>。组织帖子尚未实现：作者选择只接受 <code>{"member"}</code>。</p>
+
+    <h2 id="requirements">要求</h2>
+    <ul>
+      <li>一个带有 client id 和 client secret 的 LinkedIn 开发者应用。</li>
+      <li>一个为授权步骤注册的重定向 URI。</li>
+      <li>用于发布的成员授权。代表成员发布所记录的授权范围是 <code>{"w_member_social"}</code>。</li>
+    </ul>
+
+    <h2 id="credentials">凭证</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">字段</th>
+            <th scope="col">含义</th>
+            <th scope="col">机密</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"client_id"}</code></th>
+            <td>应用的 client id。</td>
+            <td>否</td>
+          </tr>
+          <tr>
+            <th scope="row"><code>{"client_secret"}</code></th>
+            <td>应用的 client secret。</td>
+            <td>是</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>发布作者为 <code>{"urn:li:person:{id}"}</code>，成员 ID 通过 <code>{"GET /v2/me"}</code> 解析；LinkedIn 已将该接口标记为弃用。这里刻意不使用 <code>{"GET /v2/userinfo"}</code> 来确定作者，因为它的 <code>{"sub"}</code> 对每个应用都不同，并不是稳定的全局成员 ID。无法读取成员 ID 时，连接会安全失败，而不会猜测。</p>
+
+    <h2 id="connect">连接</h2>
+    <p><code>{"redirectUri"}</code> 必填；机器调用方可以把 client id、client secret 和范围列表作为连接选项传入。</p>
+    <pre data-label="connect.json"><code>{"{\n  \"type\": \"start\",\n  \"provider\": \"linkedin\",\n  \"options\": {\n    \"redirectUri\": \"https://example.com/oauth/callback/linkedin\",\n    \"scopes\": [\"w_member_social\", \"openid\", \"profile\"]\n  }\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo connect --input connect.json --json"}</code></pre>
+    <p><strong>未解决。</strong>所读取的令牌端点没有记录 PKCE，因此提供商绝不添加 <code>{"code_challenge"}</code>。启动步骤会返回一个授权动作；本地 CLI 会使用 <code>{"--redirect-uri"}</code> 和控制终端，或使用 <code>{"--callback-url -"}</code> 自行完成该回调，如<a href="/zh/reference/credentials/#browser">凭证参考</a>所述。这条本地回调路径只针对本地服务器做了模拟测试；尚未连接真实的 LinkedIn 账号。</p>
+
+    <h2 id="first-publish">首次发布</h2>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": {},\n  \"targets\": [\n    {\n      \"provider\": \"linkedin\",\n      \"options\": { \"commentary\": \"Hello from Syndroo.\", \"visibility\": \"PUBLIC\" }\n    }\n  ]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>成功时返回 HTTP 201，响应头包含已创建帖子的 URN。该请求头只会随响应到达，因此帖子创建后发生超时会使结果保持 <code>{"unknown"}</code>，并且不可重试。</p>
+
+    <h2 id="capabilities">能力</h2>
+    <p>清单声明 <code>{"text"}</code>，并以带有 <code>{"lifecycleState: PUBLISHED"}</code> 的成员帖子发布。<strong>未解决。</strong>所获取的页面没有记录评论正文的最大长度，因此本指南既不给出字符上限，提供商也不强制执行。</p>
+
+    <h2 id="options">选项</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">位置</th>
+            <th scope="col">可接受的键</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">连接选项</th>
+            <td><code>{"redirectUri"}</code>（必填）、<code>{"clientId"}</code>、<code>{"clientSecret"}</code>、<code>{"scopes"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row">发布选项</th>
+            <td><code>{"commentary"}</code> 和 <code>{"visibility"}</code>（均必填）、<code>{"author"}</code>（仅限 <code>{"member"}</code>）、<code>{"distribution"}</code>、<code>{"linkedinVersion"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row">内容</th>
+            <td>无必填项；LinkedIn 使用目标选项。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>未解决。</strong><code>{"linkedinVersion"}</code> 在提供商清单中固定为 <code>{"202601"}</code>，也是唯一接受的值。LinkedIn 按月更新此请求头，因此应将该常量视为等待对照当前 API 版本重新核验，而不是推荐值。</p>
+
+    <h2 id="troubleshooting">故障排除</h2>
+    <p>提供商从不重试，只在已确认失败未被应用时报告失败。被拒绝或已经使用的授权码会作为回调拒绝报告，而不会重试。<strong>未解决。</strong>LinkedIn 的错误响应格式尚未在一手页面确认，因此本指南不描述其结构。</p>
+
+    <h2 id="revoke">撤销与安全</h2>
+    <p><strong>未解决。</strong>尚未获取官方的移除权限或撤销令牌步骤，因此本指南不提供撤销 URL。请从 LinkedIn 设置中移除应用访问权限，然后断开本地连接：</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#requirements">要求</a></li>
+    <li><a href="#credentials">凭证</a></li>
+    <li><a href="#connect">连接</a></li>
+    <li><a href="#first-publish">首次发布</a></li>
+    <li><a href="#capabilities">能力</a></li>
+    <li><a href="#options">选项</a></li>
+    <li><a href="#troubleshooting">故障排除</a></li>
+    <li><a href="#revoke">撤销与安全</a></li>
+  </ul>
+</nav>

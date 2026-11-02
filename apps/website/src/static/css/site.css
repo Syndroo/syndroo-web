@@ -1137,3 +1137,34 @@ pre {
     display: none;
   }
 }
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.language-switch:hover {
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+
+.language-switch--menu {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .language-switch--topbar {
+    display: none;
+  }
+
+  .site-menu .language-switch--menu {
+    display: block;
+  }
+}

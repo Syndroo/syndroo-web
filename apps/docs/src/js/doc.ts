@@ -6,7 +6,10 @@
  * same-directory doc.js; this file intentionally avoids TypeScript-only runtime
  * syntax (enums, namespaces, parameter properties) so stripping is exact.
  */
-import { docsPages } from "@syndroo/content/site-data";
+import { docsPagesByLocale, ui } from "@syndroo/content/site-data";
+import type { Locale } from "@syndroo/content/site-data";
+import { localizeCodeLabel } from "../../lib/code-labels";
+import { matchesSearch, normalizeSearchText, searchTokens } from "../../lib/search";
 
 type PageDef = {
   fetchPath: string;
@@ -29,14 +32,10 @@ type Match = {
   titleHit: boolean;
 };
 
-// The search corpus is the page registry itself, so a new page is indexed as
-// soon as it is registered and cannot fall out of search.
-const DOC_PAGES: PageDef[] = docsPages.map(function toPageDef(page): PageDef {
-  return { fetchPath: "/" + page.file, url: page.path, label: page.label };
-});
-
 const MAX_RESULTS = 12;
 
+let activeLocale: Locale = "en";
+let indexedLocale: Locale | null = null;
 let indexPromise: Promise<SearchEntry[]> | null = null;
 let searchEntries: SearchEntry[] = [];
 let activeResultIndex = -1;
@@ -50,8 +49,18 @@ function byId<T extends HTMLElement>(id: string): T | null {
 /* Search index over the actual local pages                            */
 /* ------------------------------------------------------------------ */
 
+function docPages(locale: Locale): PageDef[] {
+  return docsPagesByLocale[locale].map(function toPageDef(page): PageDef {
+    return { fetchPath: "/" + page.file, url: page.path, label: page.label };
+  });
+}
+
 function normalize(value: string): string {
-  return value.replace(/\s+/g, " ").trim().toLowerCase();
+  return normalizeSearchText(value);
+}
+
+function messages() {
+  return ui[activeLocale].docs;
 }
 
 function textOf(element: Element | null): string {
@@ -115,17 +124,23 @@ function extractEntries(article: Element, page: PageDef, orderStart: number): Se
   return entries;
 }
 
-function buildIndex(): Promise<SearchEntry[]> {
+function buildIndex(locale: Locale = activeLocale): Promise<SearchEntry[]> {
+  if (indexedLocale !== locale) {
+    indexedLocale = locale;
+    indexPromise = null;
+    searchEntries = [];
+  }
   if (indexPromise) {
     return indexPromise;
   }
 
+  const pages = docPages(locale);
   indexPromise = (async function load(): Promise<SearchEntry[]> {
     const collected: SearchEntry[] = [];
     let orderBase = 0;
 
-    for (let i = 0; i < DOC_PAGES.length; i += 1) {
-      const page = DOC_PAGES[i];
+    for (let i = 0; i < pages.length; i += 1) {
+      const page = pages[i];
       try {
         const response = await fetch(page.fetchPath, { headers: { Accept: "text/html" } });
         if (!response.ok) {
@@ -159,9 +174,7 @@ function buildIndex(): Promise<SearchEntry[]> {
 /* ------------------------------------------------------------------ */
 
 function tokenize(query: string): string[] {
-  return normalize(query).split(" ").filter(function keep(token: string): boolean {
-    return token.length > 0;
-  });
+  return searchTokens(query, activeLocale);
 }
 
 function countOccurrences(haystack: string, needle: string): number {
@@ -231,30 +244,23 @@ function findMatches(query: string): Match[] {
 
   for (let i = 0; i < searchEntries.length; i += 1) {
     const entry = searchEntries[i];
-    const title = entry.title.toLowerCase();
-    const body = entry.text.toLowerCase();
-    const combined = title + " " + body;
+    if (!matchesSearch(query, entry.title, entry.text, activeLocale)) {
+      continue;
+    }
+    const title = normalize(entry.title);
+    const body = normalize(entry.text);
 
-    let allPresent = true;
     let score = 0;
     let titleHit = false;
 
     for (let j = 0; j < tokens.length; j += 1) {
       const token = tokens[j];
-      if (combined.indexOf(token) === -1) {
-        allPresent = false;
-        break;
-      }
       const titleCount = countOccurrences(title, token);
       if (titleCount > 0) {
         titleHit = true;
       }
       score += titleCount * 8;
       score += countOccurrences(body, token);
-    }
-
-    if (!allPresent) {
-      continue;
     }
 
     if (entry.title.toLowerCase().indexOf(tokens[0]) !== -1) {
@@ -295,7 +301,7 @@ function renderResults(query: string): void {
   activeResultIndex = -1;
 
   if (!query.trim()) {
-    meta.textContent = "Search every page of the local docs. Try \"connect\", \"publish\" or \"egress\".";
+    meta.textContent = messages().searchPrompt;
     empty.hidden = true;
     return;
   }
@@ -304,14 +310,16 @@ function renderResults(query: string): void {
   const tokens = tokenize(query);
 
   if (matches.length === 0) {
-    meta.textContent = "0 results";
+    meta.textContent = activeLocale === "zh" ? "0 个结果" : "0 results";
     empty.hidden = false;
-    empty.querySelector("strong")!.textContent = "No results for \u201C" + query.trim() + "\u201D";
+    empty.querySelector("strong")!.textContent = messages().noResults + "\uFF1A\u201C" + query.trim() + "\u201D";
     return;
   }
 
   empty.hidden = true;
-  meta.textContent = matches.length + (matches.length === 1 ? " result" : " results") + " for \u201C" + query.trim() + "\u201D";
+  meta.textContent = activeLocale === "zh"
+      ? "找到 " + matches.length + " 个匹配\u201C" + query.trim() + "\u201D的结果"
+      : matches.length + (matches.length === 1 ? " result" : " results") + " for \u201C" + query.trim() + "\u201D";
 
   for (let i = 0; i < matches.length; i += 1) {
     const match = matches[i];
@@ -770,14 +778,20 @@ function wireCopyButtons(): void {
     const label = document.createElement("div");
     label.className = "code-label";
     const labelText = document.createElement("span");
-    labelText.textContent = pre.getAttribute("data-label") || (pre.closest("[data-code-scope]") ? "Publishing is real when credentials are configured" : "shell");
+    const authoredLabel =
+      pre.getAttribute("data-label") ||
+      (pre.closest("[data-code-scope]") ? messages().publishingCode : messages().shell);
+    labelText.textContent = localizeCodeLabel(activeLocale, authoredLabel);
     label.appendChild(labelText);
 
     const button = document.createElement("button");
     button.type = "button";
     button.className = "copy-btn";
-    button.innerHTML = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"></rect><path d=\"M5 15V5a2 2 0 0 1 2-2h10\"></path></svg><span>Copy</span>";
-    button.setAttribute("aria-label", "Copy code sample");
+    button.innerHTML =
+      "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"></rect><path d=\"M5 15V5a2 2 0 0 1 2-2h10\"></path></svg><span>" +
+      messages().copy +
+      "</span>";
+    button.setAttribute("aria-label", messages().copyCode);
 
     const status = document.createElement("span");
     status.className = "copy-status";
@@ -788,13 +802,13 @@ function wireCopyButtons(): void {
       const value = (code ? code.textContent : pre.textContent) || "";
       copyText(value).then(
         function copied(): void {
-          status.textContent = "Copied";
+          status.textContent = messages().copied;
           window.setTimeout(function clear(): void {
             status.textContent = "";
           }, 1600);
         },
         function failed(): void {
-          status.textContent = "Select and copy manually";
+          status.textContent = messages().copyManually;
         },
       );
     });
@@ -853,11 +867,13 @@ function wireTopbarOffset(): void {
   window.addEventListener("orientationchange", schedule);
 }
 
-export function bootDocs(): void {
+export function bootDocs(locale: Locale): void {
   if (booted) {
     return;
   }
   booted = true;
+  activeLocale = locale;
+  buildIndex(locale);
   wireTopbarOffset();
   wireSearch();
   wireSidebar();

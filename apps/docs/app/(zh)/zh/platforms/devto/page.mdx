@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "DEV.to - Syndroo 文档",
+  description:
+    "使用个人 API 密钥连接 DEV.to 并发布文章：凭证字段、声明的出站 HTTPS 地址（域名）、文章选项，以及仍未解决的限制。",
+  alternates: {
+    canonical: "/zh/platforms/devto/",
+    languages: {
+      en: "/platforms/devto/",
+      "zh-CN": "/zh/platforms/devto/",
+      "x-default": "/platforms/devto/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/zh/platforms/devto/",
+    title: "DEV.to - Syndroo 文档",
+    description:
+      "使用个人 API 密钥连接 DEV.to 并发布文章：凭证字段、声明的出站 HTTPS 地址（域名）、文章选项，以及仍未解决的限制。",
+  },
+  twitter: { card: "summary" },
+};
+
+<main className="content" id="main">
+  <article>
+    <nav className="breadcrumb" aria-label="面包屑">
+      <a href="/zh/">文档</a>
+      <span aria-hidden="true">/</span>
+      <a href="/zh/platforms/">平台</a>
+      <span aria-hidden="true">/</span>
+      <span>DEV.to</span>
+    </nav>
+    <h1 id="devto">DEV.to</h1>
+
+    <h2 id="overview">概览</h2>
+    <p>提供商 ID 为 <code>{"devto"}</code>。DEV.to 使用通过 <code>{"api-key"}</code> 请求头发送的个人 API 密钥，而不是 OAuth 流程。文章通过一次 <code>{"POST https://dev.to/api/articles"}</code> 调用创建，正文来自显式 <code>{"body_markdown"}</code> 选项，而不是共享文本。</p>
+
+    <h2 id="requirements">要求</h2>
+    <ul>
+      <li>一个 DEV.to 账号及其个人 API 密钥。</li>
+      <li>你希望发布的标题和 Markdown 正文。</li>
+    </ul>
+    <p><strong>未解决。</strong>面向用户的 API 密钥签发和重新生成步骤尚未在一手文档页面确认，因此本指南不提供设置路径。</p>
+
+    <h2 id="credentials">凭证</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">字段</th>
+            <th scope="col">含义</th>
+            <th scope="col">机密</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>{"apiKey"}</code></th>
+            <td>个人 API 密钥，通过 <code>{"api-key"}</code> 请求头发送。</td>
+            <td>是</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>通过读取 <code>{"GET /api/users/me"}</code> 验证密钥：密钥有效时返回 200 和用户信息，被拒绝时返回 401。</p>
+
+    <h2 id="connect">连接</h2>
+    <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"apiKey\":\"DEV_TO_API_KEY_PLACEHOLDER\"}'\nsyndroo connect devto --from-env --label writing"}</code></pre>
+    <p>该提供商没有连接选项：凭证字段就是全部连接输入。</p>
+
+    <h2 id="first-publish">首次发布</h2>
+    <p>文章目标不需要共享内容，因为文章自带标题和正文：</p>
+    <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": {},\n  \"targets\": [\n    {\n      \"provider\": \"devto\",\n      \"options\": {\n        \"title\": \"Publishing from the terminal\",\n        \"body_markdown\": \"# Hello\\n\\nSyndroo sends this article.\",\n        \"tags\": [\"devtools\"],\n        \"canonical_url\": \"https://example.com/posts/terminal\"\n      }\n    }\n  ]\n}"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
+    <p>提供商会发送 <code>{"published: true"}</code>；未发布的草稿不是该目标的默认行为。文章创建后发生超时，客户端无法获知文章 ID，因此结果保持 <code>{"unknown"}</code>，并且不可重试。</p>
+
+    <h2 id="capabilities">能力</h2>
+    <p>清单声明 <code>{"article"}</code>。<strong>未解决。</strong>已获取的 API 参考没有说明标题的准确上限和 v1 速率限制，因此本页不提供数字，提供商也不强制执行。</p>
+
+    <h2 id="options">选项</h2>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">位置</th>
+            <th scope="col">可接受的键</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">连接选项</th>
+            <td>无。</td>
+          </tr>
+          <tr>
+            <th scope="row">发布选项</th>
+            <td><code>{"title"}</code> 和 <code>{"body_markdown"}</code>（均必填）、<code>{"published"}</code>、<code>{"tags"}</code>、<code>{"canonical_url"}</code>、<code>{"description"}</code>。</td>
+          </tr>
+          <tr>
+            <th scope="row">内容</th>
+            <td><code>{"text"}</code>，可选；它不是文章正文。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="troubleshooting">故障排除</h2>
+    <p>密钥被拒绝时返回 401，验证失败时返回 422 并带有错误字符串，触发速率限制时返回 429。提供商不会重试其中任何一种情况，也不会虚构范围字符串：DEV.to 没有为该密钥记录任何 OAuth 范围。</p>
+
+    <h2 id="revoke">撤销与安全</h2>
+    <p><strong>未解决。</strong>API 参考尚未确认密钥重新生成和撤销步骤，因此本指南不作断言。安全的本地步骤是在 DEV.to 账号设置中重新生成或删除密钥，然后断开本地连接：</p>
+    <pre data-label="terminal"><code>{"syndroo connect --disconnect <connectionId>"}</code></pre>
+  </article>
+</main>
+
+<nav className="toc" id="page-toc" aria-label="本页内容">
+  <p className="toc-title">本页内容</p>
+  <ul>
+    <li><a href="#overview">概览</a></li>
+    <li><a href="#requirements">要求</a></li>
+    <li><a href="#credentials">凭证</a></li>
+    <li><a href="#connect">连接</a></li>
+    <li><a href="#first-publish">首次发布</a></li>
+    <li><a href="#capabilities">能力</a></li>
+    <li><a href="#options">选项</a></li>
+    <li><a href="#troubleshooting">故障排除</a></li>
+    <li><a href="#revoke">撤销与安全</a></li>
+  </ul>
+</nav>

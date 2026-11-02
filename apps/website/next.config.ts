@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   reactStrictMode: true,
+  experimental: { globalNotFound: true },
   transpilePackages: ["@syndroo/content", "@syndroo/theme"],
 };
 

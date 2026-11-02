@@ -263,8 +263,14 @@ export async function auditDist(options: AuditOptions): Promise<AuditSummary> {
     const htmlTag = /<html\b[^>]*>/i.exec(text);
     if (!htmlTag) {
       issues.push({ file: rel, message: "page has no <html> element" });
-    } else if (!/\blang\s*=\s*"en"/i.test(htmlTag[0])) {
-      issues.push({ file: rel, message: "page language is not English (lang=\"en\")" });
+    } else {
+      const expectedLang = rel.startsWith("zh/") ? "zh-CN" : "en";
+      if (!new RegExp(`\\blang\\s*=\\s*"${expectedLang}"`, "i").test(htmlTag[0])) {
+        issues.push({
+          file: rel,
+          message: `page language is not ${expectedLang} (expected lang="${expectedLang}")`,
+        });
+      }
     }
 
     const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(text);
