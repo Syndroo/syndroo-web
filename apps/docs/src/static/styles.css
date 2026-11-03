@@ -1203,19 +1203,40 @@ th code {
   border-color: var(--border-strong);
 }
 
-.language-switch--sidebar {
-  display: none;
-  width: 100%;
-  margin-bottom: 20px;
-  background: var(--surface-soft);
-}
-
-@media (max-width: 900px) {
-  .language-switch--topbar {
-    display: none;
+@media (max-width: 639px) {
+  .topbar-actions {
+    gap: 6px;
   }
 
-  .language-switch--sidebar {
-    display: inline-flex;
+  .language-switch--topbar {
+    min-width: 40px;
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 379px) {
+  .topbar-inner {
+    gap: 4px;
+  }
+
+  .language-switch--topbar {
+    width: 40px;
+    padding: 0;
+  }
+
+  .language-switch--topbar span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 359px) {
+  .topbar .brand-name {
+    display: none;
   }
 }

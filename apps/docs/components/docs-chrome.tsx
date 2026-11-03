@@ -32,8 +32,6 @@ export function DocsTopbar({
   languageHref?: string;
 }): React.JSX.Element {
   const messages = ui[locale];
-  const languageLabel = locale === "en" ? "中文" : "English";
-  const languageAria = locale === "en" ? messages.docs.viewChinese : messages.docs.viewEnglish;
   return (
     <>
       <a className="skip-link" href="#main">
@@ -61,9 +59,8 @@ export function DocsTopbar({
             </button>
             <LanguageSwitch
               locale={locale}
-              label={languageLabel}
-              ariaLabel={languageAria}
-              className="text-link language-switch language-switch--topbar"
+              label={messages.language}
+              className="language-switch language-switch--topbar"
               explicitHref={languageHref}
             />
             <a className="text-link" href={locale === "en" ? `${ORIGIN_PLACEHOLDERS.website}/` : `${ORIGIN_PLACEHOLDERS.website}/zh/`}>
@@ -100,24 +97,13 @@ function linkIsCurrent(item: DocsNavItem, activePath: string): boolean {
 export function DocsSidebar({
   locale,
   activePath,
-  languageHref,
 }: {
   locale: Locale;
   activePath: string;
-  languageHref?: string;
 }): React.JSX.Element {
   const messages = ui[locale];
-  const languageLabel = locale === "en" ? "中文" : "English";
-  const languageAria = locale === "en" ? messages.docs.viewChinese : messages.docs.viewEnglish;
   return (
     <aside className="sidebar" id="docs-sidebar" aria-label={messages.docs.navigation}>
-      <LanguageSwitch
-        locale={locale}
-        label={languageLabel}
-        ariaLabel={languageAria}
-        className="language-switch language-switch--sidebar"
-        explicitHref={languageHref}
-      />
       {docsNavByLocale[locale].map((group) => (
         <div className="sidebar-group" key={group.title}>
           <p className="sidebar-title">{group.title}</p>

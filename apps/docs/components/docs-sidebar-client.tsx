@@ -6,16 +6,13 @@ import { DocsSidebar } from "./docs-chrome";
 
 export function DocsSidebarClient({
   locale,
-  languageHref,
 }: {
   locale: Locale;
-  languageHref?: string;
 }): React.JSX.Element {
   return (
     <DocsSidebar
       locale={locale}
       activePath={normalisePath(usePathname())}
-      languageHref={languageHref}
     />
   );
 }

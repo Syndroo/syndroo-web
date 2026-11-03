@@ -54,6 +54,7 @@ export function counterpartPath(locale: Locale, path: string): string {
 }
 
 export type UiMessages = {
+  language: string;
   website: {
     skipToContent: string;
     mainNav: string;
@@ -96,11 +97,13 @@ export type UiMessages = {
     dark: string;
     system: string;
     choose: string;
+    close: string;
   };
 };
 
 export const ui: Record<Locale, UiMessages> = {
   en: {
+    language: "Language",
     website: {
       skipToContent: "Skip to content",
       mainNav: "Main",
@@ -143,9 +146,11 @@ export const ui: Record<Locale, UiMessages> = {
       dark: "Dark",
       system: "System",
       choose: "Choose Light, Dark or System.",
+      close: "Close",
     },
   },
   zh: {
+    language: "语言",
     website: {
       skipToContent: "跳到正文",
       mainNav: "主导航",
@@ -188,6 +193,7 @@ export const ui: Record<Locale, UiMessages> = {
       dark: "深色",
       system: "跟随系统",
       choose: "选择浅色、深色或跟随系统。",
+      close: "关闭",
     },
   },
 };

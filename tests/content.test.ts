@@ -221,12 +221,12 @@ test("technical 404 language switches return to public language homes", async ()
   ] as const) {
     for (const file of TECHNICAL_FILES) {
       const html = await readFile(join(dist, file), "utf8");
-      const languageTags = [...html.matchAll(/<a\b[^>]*\bdata-language-switch="zh"[^>]*>/g)];
+      const languageTags = [...html.matchAll(/<button\b[^>]*\bdata-language-switch="zh"[^>]*>/g)];
       const hrefs = languageTags.map(
-        (match) => /\bhref="([^"]+)"/.exec(match[0])?.[1] ?? "",
+        (match) => /\bdata-language-href="([^"]+)"/.exec(match[0])?.[1] ?? "",
       );
 
-      assert.deepEqual(hrefs, ["/zh/", "/zh/"], `${label} ${file} language switches`);
+      assert.deepEqual(hrefs, ["/zh/"], `${label} ${file} language switch`);
       assert.ok(
         !html.includes('href="/zh/_not-found/"'),
         `${label} ${file} must not expose the internal not-found path`,
@@ -319,7 +319,7 @@ test("docs navigation stays within the current language and every fragment resol
     for (const page of registry) {
       const html = await docsPage(page.file);
       const links = docsSidebarLinks(html);
-      assert.equal(links.length, items.length + 1, `${page.path} sidebar item count including language`);
+      assert.equal(links.length, items.length, `${page.path} sidebar item count`);
       for (const item of items) {
         assert.ok(links.includes(item.href), `${page.path} sidebar is missing ${item.href}`);
       }

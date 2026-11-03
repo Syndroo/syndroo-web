@@ -219,6 +219,17 @@ test("the exported stylesheets carry the shared shell", async () => {
     ["website", websiteCss],
     ["docs", docsCss],
   ] as const) {
+    want(/\.ui-menu\{z-index:100\}/.test(css), `${name} shared menus should stack above sticky headers`);
+    want(
+      /\[data-radix-popper-content-wrapper\]\{[^}]*position:fixed!important[^}]*inset:0!important[^}]*transform:none!important/.test(
+        css,
+      ),
+      `${name} mobile popper wrapper should be viewport-fixed and untransformed`,
+    );
+    want(
+      /\.ui-menu\.ui-drawer\{[^}]*position:absolute!important[^}]*inset:auto 0 0!important/.test(css),
+      `${name} mobile menu should sit at the viewport wrapper bottom`,
+    );
     want(/--shell-max:1440px/.test(css), `${name} should cap the shell at 1440px`);
     want(/--shell-gutter:[0-9]+px/.test(css), `${name} should define a shell gutter token`);
     for (const gutter of [80, 56, 40, 24, 20]) {

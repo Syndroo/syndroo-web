@@ -28,7 +28,7 @@ export function DocsLayout({
         <ThemeProvider>
           <DocsTopbar locale={locale} languageHref={languageHref} />
           <div className="layout">
-            <DocsSidebarClient locale={locale} languageHref={languageHref} />
+            <DocsSidebarClient locale={locale} />
             <div className="sidebar-scrim" id="sidebar-scrim" hidden></div>
             {children}
           </div>

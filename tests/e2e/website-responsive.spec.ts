@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "playwright/test";
 
 const WEBSITE = "http://127.0.0.1:4173/";
-const HEADER_CTA_MIN = 360;
 const MENU_MAX = 1023;
 
 const WIDTHS = [320, 360, 375, 390, 430, 639, 640, 719, 720, 767, 768, 1023, 1024, 1099, 1100, 1280, 1440, 1920];
@@ -11,7 +10,7 @@ type Audit = {
   clipped: string[];
   occluded: string[];
   headerSqueezed: boolean;
-  ctaVisible: boolean;
+  headerCtas: number;
   burgerVisible: boolean;
   fonts: string[];
   externalRequests: string[];
@@ -73,7 +72,6 @@ async function audit(page: Page): Promise<Audit> {
     }
 
     const actions = document.querySelector(".site-header__actions")!;
-    const cta = document.querySelector(".site-header__cta")!;
     const burger = document.querySelector(".nav-toggle")!;
 
     return {
@@ -81,7 +79,7 @@ async function audit(page: Page): Promise<Audit> {
       clipped,
       occluded,
       headerSqueezed: actions.scrollWidth > actions.clientWidth + 1,
-      ctaVisible: getComputedStyle(cta).display !== "none",
+      headerCtas: document.querySelectorAll(".site-header__cta").length,
       burgerVisible: getComputedStyle(burger).display !== "none",
       fonts: [...document.fonts].map((font) => font.family),
       externalRequests: performance
@@ -101,20 +99,16 @@ for (const width of WIDTHS) {
     expect.soft(result.clipped, "nothing is clipped by its own box").toEqual([]);
     expect.soft(result.occluded, "no readable text is covered").toEqual([]);
     expect.soft(result.headerSqueezed, "header controls keep their own width").toBe(false);
+    expect.soft(result.headerCtas, "the header has no install CTA").toBe(0);
     expect.soft(result.externalRequests, "no third-party request").toEqual([]);
     expect.soft(result.fonts, "the self-hosted families load").toContain("Prompt");
     expect.soft(result.fonts, "the self-hosted families load").toContain("Inter");
 
-    if (width < HEADER_CTA_MIN) {
-      expect.soft(result.ctaVisible, "the duplicate header CTA steps aside").toBe(false);
-      expect.soft(result.burgerVisible, "the menu control remains").toBe(true);
-    } else {
-      expect.soft(result.burgerVisible, `the menu control hides at ${width}`).toBe(width <= MENU_MAX);
-    }
+    expect.soft(result.burgerVisible, `the menu control visibility at ${width}`).toBe(width <= MENU_MAX);
   });
 }
 
-test("the header CTA remains reachable from the menu once it is hidden", async ({ page }) => {
+test("the header and mobile menu contain no duplicate install CTA", async ({ page }) => {
   await visit(page, 320);
 
   const toggle = page.locator(".nav-toggle");
@@ -124,38 +118,60 @@ test("the header CTA remains reachable from the menu once it is hidden", async (
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator("#site-menu")).toBeVisible();
-  await expect(page.locator("#site-menu a", { hasText: "Install Syndroo" })).toBeVisible();
+  await expect(page.locator("#site-menu a", { hasText: "Install Syndroo" })).toHaveCount(0);
+  await expect(page.locator(".site-header__cta")).toHaveCount(0);
+  await expect(page.locator("#site-menu-backdrop")).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator("#site-menu")).toBeHidden();
+  await expect(toggle).toBeFocused();
 });
 
-test("the open menu sits below the header and leaves the brand clear", async ({ page }) => {
-  for (const width of [320, 375, 768, MENU_MAX]) {
+test("website navigation is a bounded drawer at narrow widths and below-header menu otherwise", async ({ page }) => {
+  for (const width of [320, 390]) {
     await visit(page, width, 720);
     await page.locator(".nav-toggle").click();
 
+    const menu = await page.locator("#site-menu").boundingBox();
+    expect(menu, `${width} menu`).not.toBeNull();
+    expect(menu!.x, `${width} menu is inside the viewport`).toBeGreaterThanOrEqual(0);
+    expect(menu!.x + menu!.width, `${width} menu is inside viewport`).toBeLessThanOrEqual(width);
+    expect(menu!.y + menu!.height, `${width} drawer meets the viewport bottom`).toBeCloseTo(720, 0);
+    await expect(page.locator("#site-menu-backdrop")).toBeVisible();
+    await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+    expect((await audit(page)).overflow, `${width} open drawer overflow`).toBeLessThanOrEqual(0);
+  }
+
+  for (const width of [768, MENU_MAX]) {
+    await visit(page, width, 720);
+    await page.locator(".nav-toggle").click();
     const headerBar = await page.locator(".site-header__inner").boundingBox();
     const menu = await page.locator("#site-menu").boundingBox();
-    const brand = await page.locator(".site-header .brand").boundingBox();
     expect(headerBar, `${width} header bar`).not.toBeNull();
     expect(menu, `${width} menu`).not.toBeNull();
-    expect(brand, `${width} brand`).not.toBeNull();
-
     expect(menu!.y, `${width} menu starts below the header bar`).toBeGreaterThanOrEqual(
       headerBar!.y + headerBar!.height,
     );
-    expect(menu!.x, `${width} menu is inside the viewport`).toBeGreaterThanOrEqual(0);
-    expect(menu!.x + menu!.width, `${width} menu is inside the viewport`).toBeLessThanOrEqual(width);
-    expect(brand!.y + brand!.height, `${width} brand stays inside the header bar`).toBeLessThanOrEqual(
-      headerBar!.y + headerBar!.height,
-    );
-
-    const result = await audit(page);
-    expect.soft(result.overflow, `${width} open menu overflow`).toBeLessThanOrEqual(0);
-    expect.soft(result.occluded, `${width} open menu occlusion`).toEqual([]);
+    await expect(page.locator("#site-menu-backdrop")).toBeHidden();
   }
+});
+
+test("resizing the open mobile menu releases its scroll lock", async ({ page }) => {
+  await visit(page, 390, 600);
+  const overflowBeforeOpen = await page.locator("body").evaluate((body) => body.style.overflow);
+
+  await page.locator(".nav-toggle").click();
+  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+
+  await page.setViewportSize({ width: 800, height: 600 });
+  await expect(page.locator("#site-menu")).toBeHidden();
+  await expect(page.locator("#site-menu")).not.toHaveAttribute("aria-modal");
+  await expect
+    .poll(() => page.locator("body").evaluate((body) => body.style.overflow))
+    .toBe(overflowBeforeOpen);
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });
 
 test("the JSON sample on the page parses", async ({ page }) => {

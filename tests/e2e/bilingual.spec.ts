@@ -18,14 +18,21 @@ test("Chinese browser preference never redirects the English default", async ({ 
 test("language links select the counterpart page and keep valid anchors", async ({ page }) => {
   await page.goto(`${WEBSITE}/zh/#faq`);
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
-  await page.getByRole("link", { name: "用英文查看此页" }).first().click();
+  await page.getByRole("button", { name: /^语言:/ }).first().click();
+  await page.getByRole("menuitem", { name: "English", exact: true }).click();
   await expect(page).toHaveURL(/:4173\/#faq$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("#faq")).toBeVisible();
 
   await page.goto(`${DOCS}/zh/reference/cli/#global-flags`);
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
-  await page.getByRole("link", { name: "用英文查看此页" }).first().click();
+  await page.getByRole("button", { name: /^语言:/ }).first().click();
+  const languageMenu = page.getByRole("menu", { name: "语言" });
+  await expect(languageMenu.getByRole("menuitem", { name: "简体中文", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await languageMenu.getByRole("menuitem", { name: "English", exact: true }).click();
   await expect(page).toHaveURL(/:4174\/reference\/cli\/#global-flags$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("#global-flags")).toBeVisible();
@@ -65,16 +72,86 @@ test("Chinese copy and theme controls expose localized interaction feedback", as
   await expect(page.locator(".copy-status").first()).toHaveText("已复制");
 });
 
-test("both mobile menus expose the language counterpart", async ({ page }) => {
+test("both mobile headers expose the language dropdown outside duplicate menus", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 844 });
 
   await page.goto(`${WEBSITE}/zh/`);
+  const websiteLanguage = page.getByRole("button", { name: /^语言:/ });
+  await expect(websiteLanguage).toBeVisible();
+  await websiteLanguage.click();
+  await expect(page.getByRole("menu", { name: "语言" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(websiteLanguage).toBeFocused();
   await page.locator(".nav-toggle").click();
-  await expect(page.locator("#site-menu").getByRole("link", { name: "用英文查看此页" })).toBeVisible();
+  await expect(page.locator("#site-menu").getByRole("link", { name: "用英文查看此页" })).toHaveCount(0);
 
   await page.goto(`${DOCS}/zh/`);
+  const docsLanguage = page.getByRole("button", { name: /^语言:/ });
+  await expect(docsLanguage).toBeVisible();
+  await docsLanguage.click();
+  await expect(page.getByRole("menu", { name: "语言" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(docsLanguage).toBeFocused();
   await page.locator("#menu-toggle").click();
-  await expect(page.locator("#docs-sidebar").getByRole("link", { name: "用英文查看此页" })).toBeVisible();
+  await expect(page.locator("#docs-sidebar").getByRole("link", { name: "用英文查看此页" })).toHaveCount(0);
+});
+
+test("theme dropdown becomes an accessible bottom drawer on both sites", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const site of [WEBSITE, DOCS]) {
+    await page.goto(`${site}/`);
+    const trigger = page.getByRole("button", { name: /^Theme:/ });
+    await trigger.click();
+
+    const menu = page.getByRole("menu", { name: "Theme" });
+    await expect(menu).toBeVisible();
+    const box = await menu.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    expect(box!.y + box!.height, `${site} drawer meets the viewport bottom`).toBeCloseTo(844, 0);
+    await expect(page.locator(".ui-drawer-backdrop")).toBeVisible();
+    await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+
+    await menu.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(trigger).toBeFocused();
+    await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+
+    await trigger.click();
+    await expect(page.locator(".ui-drawer-backdrop")).toBeVisible();
+    await page.locator(".ui-drawer-backdrop").click({ position: { x: 10, y: 10 } });
+    await expect(trigger).toBeFocused();
+    await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+  }
+});
+
+test("mobile popper wrapper owns the viewport and anchors the drawer to its bottom", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 600 });
+  await page.goto(`${DOCS}/zh/reference/cli/`);
+
+  const trigger = page.getByRole("button", { name: /^语言:/ });
+  await trigger.click();
+
+  const wrapper = page.locator("[data-radix-popper-content-wrapper]");
+  await expect(wrapper).toHaveCount(1);
+  await expect(wrapper).toHaveCSS("position", "fixed");
+  await expect(wrapper).toHaveCSS("transform", "none");
+
+  const wrapperBox = (await wrapper.boundingBox())!;
+  expect(wrapperBox.x).toBeCloseTo(0, 0);
+  expect(wrapperBox.y).toBeCloseTo(0, 0);
+  expect(wrapperBox.width).toBeCloseTo(390, 0);
+  expect(wrapperBox.height).toBeCloseTo(600, 0);
+
+  const menuBox = (await page.getByRole("menu", { name: "语言" }).boundingBox())!;
+  expect(menuBox.x).toBeCloseTo(0, 0);
+  expect(menuBox.width).toBeCloseTo(390, 0);
+  expect(menuBox.y + menuBox.height).toBeCloseTo(600, 0);
+  await expect(page.locator(".ui-drawer-backdrop")).toBeVisible();
+
+  await page.getByRole("menu", { name: "语言" }).getByRole("button", { name: "关闭" }).click();
+  await expect(trigger).toBeFocused();
 });
 
 test("bilingual install and Agent CTAs lead to localized copyable setup", async ({ page, context }) => {

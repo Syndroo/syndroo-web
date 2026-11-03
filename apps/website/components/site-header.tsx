@@ -11,8 +11,6 @@ export function SiteHeader({
 }): React.JSX.Element {
   const messages = ui[locale];
   const navItems = primaryNavByLocale[locale];
-  const languageLabel = locale === "en" ? "中文" : "English";
-  const languageAria = locale === "en" ? messages.website.viewChinese : messages.website.viewEnglish;
 
   return (
     <header className="site-header" data-menu-open="false">
@@ -31,19 +29,11 @@ export function SiteHeader({
         <div className="site-header__actions">
           <LanguageSwitch
             locale={locale}
-            label={languageLabel}
-            ariaLabel={languageAria}
+            label={messages.language}
             className="language-switch language-switch--topbar"
             explicitHref={languageHref}
           />
           <ThemeToggle labels={messages.theme} />
-          <a
-            className="button button--primary site-header__cta"
-            href={locale === "en" ? "/#install" : "/zh/#install"}
-          >
-            <span className="site-header__cta-full">{messages.website.installSyndroo}</span>
-            <span className="site-header__cta-short">{messages.website.install}</span>
-          </a>
           <button
             className="nav-toggle"
             type="button"
@@ -57,22 +47,27 @@ export function SiteHeader({
           </button>
         </div>
       </div>
+      <button
+        className="site-menu-backdrop"
+        id="site-menu-backdrop"
+        type="button"
+        aria-label={messages.website.close}
+        hidden
+      />
       <nav className="site-menu" id="site-menu" aria-label={messages.website.menu} hidden>
+        <div className="site-menu__head">
+          <span>{messages.website.menu}</span>
+          <button className="site-menu__close" type="button" aria-label={messages.website.close}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6 18 18M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
         {navItems.map((item) => (
           <a key={item.label} href={item.href}>
             {item.label}
           </a>
         ))}
-        <LanguageSwitch
-          locale={locale}
-          label={languageLabel}
-          ariaLabel={languageAria}
-          className="language-switch language-switch--menu"
-          explicitHref={languageHref}
-        />
-        <a href={locale === "en" ? "/#install" : "/zh/#install"}>
-          {messages.website.installSyndroo}
-        </a>
       </nav>
     </header>
   );
