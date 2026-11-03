@@ -1,4 +1,4 @@
-import { PRODUCT_REPOSITORY, primaryNavByLocale, ui } from "@syndroo/content/site-data";
+import { primaryNavByLocale, ui } from "@syndroo/content/site-data";
 import type { Locale } from "@syndroo/content/site-data";
 import { LanguageSwitch, ThemeToggle } from "@syndroo/theme";
 
@@ -37,9 +37,12 @@ export function SiteHeader({
             explicitHref={languageHref}
           />
           <ThemeToggle labels={messages.theme} />
-          <a className="button button--primary site-header__cta" href={PRODUCT_REPOSITORY}>
-            <span className="site-header__cta-full">{messages.website.buildFromSource}</span>
-            <span className="site-header__cta-short">{messages.website.build}</span>
+          <a
+            className="button button--primary site-header__cta"
+            href={locale === "en" ? "/#install" : "/zh/#install"}
+          >
+            <span className="site-header__cta-full">{messages.website.installSyndroo}</span>
+            <span className="site-header__cta-short">{messages.website.install}</span>
           </a>
           <button
             className="nav-toggle"
@@ -67,7 +70,9 @@ export function SiteHeader({
           className="language-switch language-switch--menu"
           explicitHref={languageHref}
         />
-        <a href={`${PRODUCT_REPOSITORY}#readme`}>{messages.website.buildFromSource}</a>
+        <a href={locale === "en" ? "/#install" : "/zh/#install"}>
+          {messages.website.installSyndroo}
+        </a>
       </nav>
     </header>
   );

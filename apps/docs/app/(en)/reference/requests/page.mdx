@@ -1,7 +1,7 @@
 export const metadata = {
   title: "Requests and envelopes - Syndroo docs",
   description:
-    "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
+    "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional self-hosted Server.",
   alternates: {
     canonical: "/reference/requests/",
     languages: {
@@ -15,7 +15,7 @@ export const metadata = {
     url: "/reference/requests/",
     title: "Requests and envelopes - Syndroo docs",
     description:
-      "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional Server preview.",
+      "Local Syndroo request and result shapes, plus the separate JSON envelope used by the optional self-hosted Server.",
   },
   twitter: { card: "summary" },
 };
@@ -30,7 +30,7 @@ export const metadata = {
       <span>Requests and envelopes</span>
     </nav>
     <h1 id="requests">Requests and envelopes</h1>
-    <p className="lede">This page describes local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> requests. One request document goes in and one JSON envelope comes out; the documented shapes are what an agent or script branches on. The optional Server preview has its own envelope.</p>
+    <p className="lede">This page describes local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> requests. One request document goes in and one JSON envelope comes out; the documented shapes are what an agent or script branches on. The optional self-hosted Server has its own envelope.</p>
 
     <h2 id="envelope">The envelope</h2>
     <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
@@ -38,7 +38,7 @@ export const metadata = {
     <p>For local requests, <code>{"operation"}</code> is one of <code>{"connect"}</code>, <code>{"publish"}</code> and{" "} <code>{"status"}</code>. A message is static text chosen by the code, never built from a stack, a path, a response body or an argument, so a diagnostic cannot carry a secret.</p>
 
     <h2 id="server">Server envelopes</h2>
-    <p><strong>Preview and unpublished.</strong> Server commands are a separate candidate path that requires matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. Their JSON uses <code>{"operation: \"server\""}</code>, with a <code>{"result.subcommand"}</code> discriminator for <code>{"init"}</code>, <code>{"doctor"}</code>, <code>{"deploy"}</code>, <code>{"connect"}</code>, <code>{"ci"}</code> and <code>{"publish"}</code>.</p>
+    <p><strong>Self-hosted Server.</strong> Server commands are a separate path using <code>{"@syndroo/cli@0.7.0"}</code> and <code>{"@syndroo/cloudflare@0.7.0"}</code>. Their JSON uses <code>{"operation: \"server\""}</code>, with a <code>{"result.subcommand"}</code> discriminator for <code>{"init"}</code>, <code>{"doctor"}</code>, <code>{"deploy"}</code>, <code>{"connect"}</code>, <code>{"ci"}</code> and <code>{"publish"}</code>.</p>
     <p>Server request and result shapes are not the local request families below. Follow <a href="/getting-started/server/">Deploy a server</a>; its outcomes, recovery IDs and acceptance limits are summarized in the <a href="/reference/cli/#server">Server command reference</a>.</p>
 
     <h2 id="connect">connect</h2>

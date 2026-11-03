@@ -30,15 +30,14 @@ at the four current sections instead.
 
 | Fact | Value |
 | --- | --- |
-| CLI candidate the docs describe (`@syndroo/cli`) | `0.7.0-rc.1`, an unpublished release candidate |
-| Documentation version | `0.7.0-rc.1`, the same candidate |
+| CLI release target (`@syndroo/cli`) | `0.7.0` |
+| Documentation version | `0.7.0` |
 | Platform status | Five local providers: Bluesky, Threads, LinkedIn, and Mastodon (text), DEV.to (articles); fixture-tested, live-account acceptance pending |
 
-No page may present the candidate as released, tagged, deployed or installable
-from a registry: the documentation installs a tarball packed from the product
-workspace. The self-hosted HTTP server, the provider SDK's hosted path and the
-Cloudflare Worker are outside the documented surface, and the overview marks
-them **UNRESOLVED** instead of describing them.
+The default install is one `npm install --global` command containing the CLI,
+provider SDK and five official providers at `0.7.0`. Registry availability and
+live-account acceptance remain release evidence, not build-time assumptions. The
+generic hosted HTTP API and SDK remain outside the documented surface.
 
 ## Deliverable
 
@@ -48,15 +47,16 @@ opened and refreshed directly: every route is prerendered HTML.
 
 ## Content source
 
-`packages/content/site-data.ts` is the single metadata source: the candidate
-version, the five platforms, both navigation sets and the page registries. Both
+`packages/content/site-data.ts` is the single metadata source: the release
+version, package list, install command, Agent prompts, five platforms, both
+navigation sets and the page registries. Both
 builds compile it into their own output, so the two sites and the fixtures cannot
 disagree about the surface.
 
 The authored content stays use-focused and describes only the three accepted
 commands: `syndroo connect` binds one provider, `syndroo publish` prepares and
 then executes a frozen document, and `syndroo status` reads the result. The
-getting-started flow builds the candidate, writes the configuration file,
+getting-started flow installs the release target from npm, writes the configuration file,
 connects one account, publishes and reads the run back. Each platform page
 follows one template - overview, requirements, credentials, connect, first
 publish, capabilities, options, troubleshooting, revoke - and states only what
@@ -73,10 +73,10 @@ asserted.
 
 ## Composition
 
-The marketing site is one page: an intro with the hero action, the platform
-strip whose five cards link to the matching documentation guide, the steps that
-lead to a publish, the dry-run preview, a closing call
-to action, and a footer carrying documentation, source and licence.
+The marketing site is one page: an intro with install and Agent actions, copyable
+onboarding sections, the platform strip whose five cards link to the matching
+documentation guide, the steps that lead to a publish, the dry-run preview, a
+closing call to action, and a footer carrying documentation, source and licence.
 
 The documentation site renders its topbar, sidebar, footer and search dialog
 once in the layout, so a page cannot drift out of the chrome. Each page supplies
@@ -124,8 +124,8 @@ data storage is added, and the docs search reads only its own pages.
   cross-site link resolves inside the other built output.
 - Canonical and Open Graph URLs use each page's configured origin; `robots.txt`
   and `sitemap.xml` match the registry and that origin.
-- Version claims use only the configured candidate and no page offers an install
-  command for an unpublished package.
+- Version claims use only the configured release version, and every install
+  surface uses the same seven-package command.
 - Every `syndroo` command and `--flag` the documentation introduces exists in the
   real CLI, checked with a per-command `--help` lookup, a probe of every global
   flag and the CLI's own `--version` output.

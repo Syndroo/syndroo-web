@@ -1,7 +1,13 @@
+import {
+  PUBLIC_NODE_RUNTIME,
+  SYNDROO_INSTALL_COMMAND,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "本地 CLI - Syndroo 文档",
   description:
-    "构建 syndroo 候选版本，编写配置文件，从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
+    "安装 syndroo、编写配置文件、从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
   alternates: {
     canonical: "/zh/getting-started/local-cli/",
     languages: {
@@ -15,7 +21,7 @@ export const metadata = {
     url: "/zh/getting-started/local-cli/",
     title: "本地 CLI - Syndroo 文档",
     description:
-      "构建 syndroo 候选版本，编写配置文件，从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
+      "安装 syndroo、编写配置文件、从明确指定的凭证来源连接提供商，并运行准备、执行和状态查询流程。",
   },
   twitter: { card: "summary" },
 };
@@ -28,12 +34,13 @@ export const metadata = {
       <span>本地 CLI</span>
     </nav>
     <h1 id="local-cli">在本机运行 CLI</h1>
-    <p className="lede">候选版本是一个 Node.js 程序。它读取一个配置文件，在同一状态根目录下保存状态，并通过根据各提供商清单生成的外发策略直接访问平台 API。没有守护进程、计划任务或后台运行。</p>
+    <p className="lede">Syndroo 是一个 Node.js 程序。它读取一个配置文件，在同一状态根目录下保存状态，并通过根据各提供商清单生成的外发策略直接访问平台 API。没有守护进程、计划任务或后台运行。</p>
 
-    <h2 id="install">构建并安装</h2>
-    <p>需要 macOS 或 Linux 上的 Node.js 24.19 或更新版本。该包未发布到软件包注册表，所以受支持的路径是从源码构建并打包工作区：</p>
-    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo --version"}</code></pre>
-    <p><code>{"--version"}</code> 会输出候选版本和运行它的 Node.js 版本。<code>{"--help"}</code> 会输出命令列表，每个命令也会响应自己的 <code>{"--help"}</code>。两者在配置文件存在之前即可使用，而且不会创建任何内容。</p>
+    <h2 id="install">安装</h2>
+    <p>使用 {PUBLIC_NODE_RUNTIME} 和 npm。受支持的本地写入需要 macOS 或 Linux。用一条命令安装 {versions.cli} 版本的 CLI、提供商 SDK 和全部五个官方提供商：</p>
+    <pre data-label="terminal"><code>{SYNDROO_INSTALL_COMMAND}</code></pre>
+    <p>运行 <code>{"syndroo --version"}</code>。<code>{"--version"}</code> 会输出已安装版本和运行它的 Node.js 版本。<code>{"--help"}</code> 会输出命令列表，每个命令也会响应自己的 <code>{"--help"}</code>。两者在配置文件存在之前即可使用，而且不会创建任何内容。</p>
+    <p>需要源码构建的贡献者可以按照产品仓库 README 操作；普通读者不需要 checkout 或构建步骤。</p>
 
     <h2 id="configuration">配置</h2>
     <p>只有一个配置来源。未提供 <code>{"--config"}</code> 时，CLI 读取 <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>，找不到时退回 <code>{"$HOME/.config/syndroo/config.json"}</code>。不解析任何提供商的命令允许默认文件不存在；由 <code>{"--config"}</code> 指定的文件不存在则视为错误。<code>{"--config"}</code> 的路径必须是绝对路径。</p>
@@ -74,7 +81,7 @@ export const metadata = {
 <nav className="toc" id="page-toc" aria-label="本页内容">
   <p className="toc-title">本页内容</p>
   <ul>
-    <li><a href="#install">构建并安装</a></li>
+    <li><a href="#install">安装</a></li>
     <li><a href="#configuration">配置</a></li>
     <li><a href="#state">本地状态</a></li>
     <li><a href="#connect">连接一个提供商</a></li>

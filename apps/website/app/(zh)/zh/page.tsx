@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import {
   ORIGIN_PLACEHOLDERS,
-  PRODUCT_REPOSITORY,
+  PUBLIC_NODE_RUNTIME,
+  SYNDROO_AGENT_PROMPT_ZH,
+  SYNDROO_INSTALL_COMMAND,
   platforms,
   versions,
 } from "@syndroo/content/site-data";
+import { CopyBlock } from "../../../components/copy-block";
 
 const DESCRIPTION =
   "Syndroo 是一个命令行工具，可从你的机器或自托管部署发布同一份文档：纯文本发送到 Bluesky、Threads、LinkedIn 和 Mastodon，文章发送到 DEV.to。";
@@ -34,7 +37,7 @@ const docs = `${ORIGIN_PLACEHOLDERS.docs}/zh`;
 const facts = [
   {
     term: "以命令方式运行",
-    detail: "通过构建此仓库安装，而不是从包注册表安装。",
+    detail: "从 npm 安装 Syndroo 及其官方平台插件。",
   },
   {
     term: "直接走本地链路",
@@ -48,8 +51,8 @@ const facts = [
 
 const faq = [
   {
-    question: "Syndroo 已经发布了吗？",
-    answer: `${versions.cli} 仍未发布，是候选版本，真实账号验收也尚未完成。目前不能从包注册表安装，因此运行它的方式是从源码构建。`,
+    question: "如何安装 Syndroo？",
+    answer: `使用“安装”一节中的 npm 命令，安装 ${versions.cli} 版本的 Syndroo 和全部五个官方提供商。请在 Node.js 24.19.0 或更新版本上运行；受支持的本地写入需要 macOS 或 Linux。`,
   },
   {
     question: "它可以发布到哪些平台？",
@@ -103,16 +106,64 @@ export default function ChineseIndexPage() {
             LinkedIn 和 Mastodon，将文章发送到 DEV.to，全程从终端完成。
           </p>
           <div className="hero__cta">
-            <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
-              从源码构建
+            <a className="button button--primary button--lg" href="#install">
+              安装 Syndroo
             </a>
-            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
-              服务器设置
+            <a className="button button--ghost button--lg" href="#agent">
+              交给 Agent 设置
             </a>
           </div>
           <p className="note-line">
-            v{versions.cli} &middot; 未发布候选版本 &middot; 真实账号验收仍待完成
+            v{versions.cli} &middot; {versions.releaseStageZh} &middot; 真实账号验收仍待完成
           </p>
+        </div>
+      </section>
+
+      <section className="onboarding" id="install" aria-labelledby="install-title">
+        <div className="shell">
+          <h2 className="title title--left" id="install-title">
+            <span className="title__ink">先安装。</span>{" "}
+            <span className="title__dim">再交给 Agent 设置。</span>
+          </h2>
+          <div className="onboarding__grid">
+            <article className="onboarding__card">
+              <p className="eyebrow">安装</p>
+              <h3>安装 Syndroo</h3>
+              <p>
+                使用 {PUBLIC_NODE_RUNTIME.replace("or newer", "或更新版本")} 和 npm。受支持的本地写入需要 macOS 或 Linux。
+              </p>
+              <p>
+                一条命令会安装 {versions.cli} 版本的 Syndroo 及其官方插件。
+              </p>
+              <CopyBlock
+                locale="zh"
+                id="install-command"
+                label="终端"
+                code={SYNDROO_INSTALL_COMMAND}
+              />
+              <p>
+                运行 <code>syndroo --version</code> 验证安装，输出应为 {versions.cli}。
+              </p>
+            </article>
+
+            <article className="onboarding__card" id="agent">
+              <p className="eyebrow">Agent 设置</p>
+              <h3>交给 Agent 设置</h3>
+              <p>
+                将以下提示词粘贴给可在终端执行命令的 Agent。它会安装 Syndroo，并引导你完成本地或
+                <a href={`${docs}/getting-started/server/`}>Server 设置</a>。
+              </p>
+              <CopyBlock
+                locale="zh"
+                id="agent-prompt"
+                label="Agent 提示词"
+                code={SYNDROO_AGENT_PROMPT_ZH}
+              />
+              <a className="button button--ghost" href={`${docs}/getting-started/agent/`}>
+                阅读 Agent 指南
+              </a>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -311,7 +362,7 @@ export default function ChineseIndexPage() {
                     {"   deliveryId \u00b7 attempts \u00b7 outcome"}
                   </pre>
                   <span className="panel__note">
-                    未知结果会报告为 unknown，绝不会自动重试。此候选版本的真实账号验收仍待完成。
+                    未知结果会报告为 unknown，绝不会自动重试。此版本的真实账号验收仍待完成。
                   </span>
                 </div>
               </div>
@@ -404,7 +455,7 @@ export default function ChineseIndexPage() {
             常见问题
           </h2>
           <p className="lead lead--center">
-            这个候选版本目前的状态，以及读者最常询问的问题。
+            如何安装 Syndroo、交给 Agent 设置，并安全使用。
           </p>
           <div className="faq__list">
             {faq.map((item) => (
@@ -434,19 +485,18 @@ export default function ChineseIndexPage() {
             准备好开始了吗
           </h2>
           <p className="lead lead--center">
-            从源码构建候选版本，然后从终端发布第一条内容。
+            安装 Syndroo、验证 CLI，然后从终端发布第一条内容。
           </p>
           <div className="get-started__actions">
-            <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
-              开始
+            <a className="button button--primary button--lg" href="#install">
+              安装 Syndroo
             </a>
-            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
-              服务器设置
+            <a className="button button--ghost button--lg" href="#agent">
+              交给 Agent 设置
             </a>
           </div>
           <p className="note-line">
-            v{versions.cli} &middot; 从源码构建 &middot; 未发布候选版本 &middot;
-            真实账号验收仍待完成
+            v{versions.cli} &middot; {versions.releaseStageZh} &middot; 真实账号验收仍待完成
           </p>
         </div>
       </section>

@@ -152,7 +152,7 @@ export function DocsFooter({ locale }: { locale: Locale }): React.JSX.Element {
         <span>
           {locale === "en"
             ? `Syndroo ${versions.docs} docs (${versions.releaseStage}). Apache-2.0. Copyright 2026 Syndroo.`
-            : `Syndroo ${versions.docs} 文档（未发布候选版本）。Apache-2.0。2026 Syndroo 版权所有。`}
+            : `Syndroo ${versions.docs} 文档（${versions.releaseStageZh}）。Apache-2.0。2026 Syndroo 版权所有。`}
         </span>
         <nav aria-label={messages.docs.footer}>
           <a href={`${prefix}/`}>{messages.docs.overview}</a>

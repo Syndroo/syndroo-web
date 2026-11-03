@@ -1,7 +1,7 @@
 export const metadata = {
   title: "配置 - Syndroo 文档",
   description:
-    "本地 syndroo 配置文件的结构和状态根目录，以及可选 Server 预览使用的独立受版本跟踪文件。",
+    "本地 syndroo 配置文件的结构和状态根目录，以及可选自托管 Server 使用的独立受版本跟踪文件。",
   alternates: {
     canonical: "/zh/reference/configuration/",
     languages: {
@@ -15,7 +15,7 @@ export const metadata = {
     url: "/zh/reference/configuration/",
     title: "配置 - Syndroo 文档",
     description:
-      "本地 syndroo 配置文件的结构和状态根目录，以及可选 Server 预览使用的独立受版本跟踪文件。",
+      "本地 syndroo 配置文件的结构和状态根目录，以及可选自托管 Server 使用的独立受版本跟踪文件。",
   },
   twitter: { card: "summary" },
 };
@@ -30,7 +30,7 @@ export const metadata = {
       <span>配置</span>
     </nav>
     <h1 id="configuration">配置</h1>
-    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 工作流。它使用一个配置文件和一个状态根目录，绝不根据当前目录推断它们。可选的 Server 预览改用项目配置。</p>
+    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 工作流。它使用一个配置文件和一个状态根目录，绝不根据当前目录推断它们。可选的自托管 Server 改用项目配置。</p>
 
     <h2 id="file">配置文件</h2>
     <div className="table-wrap">
@@ -118,7 +118,7 @@ export const metadata = {
     <p>不会从环境读取其他内容：不读取 <code>{".env"}</code> 文件，没有逐提供商变量注册表，也绝不会从配置文件获取凭证。</p>
 
     <h2 id="server">Server 配置文件</h2>
-    <p><strong>预览且未发布。</strong>Server 命令需要版本匹配的候选 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包；公共 npm 安装尚待提供。它们使用 <code>{"syndroo.config.jsonc"}</code> 保存应用设置，使用 <code>{"wrangler.jsonc"}</code> 保存 Worker、D1、队列和 cron 配置。不要提交生成的 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code> 或私有服务器状态。</p>
+    <p><strong>自托管 Server。</strong>Server 命令使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。它们使用 <code>{"syndroo.config.jsonc"}</code> 保存应用设置，使用 <code>{"wrangler.jsonc"}</code> 保存 Worker、D1、队列和 cron 配置。不要提交生成的 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code> 或私有服务器状态。</p>
     <p>全局 <code>{"--config"}</code> 参数用于本地工作流。对于 Server 命令，请从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code>。参见<a href="/zh/getting-started/server/">部署服务器</a>和<a href="/zh/reference/cli/#server">Server 命令参考</a>。</p>
 
     <h2 id="fail-closed">安全失败</h2>

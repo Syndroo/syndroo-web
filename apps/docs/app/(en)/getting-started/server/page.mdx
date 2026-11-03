@@ -1,3 +1,5 @@
+import { SYNDROO_AGENT_PROMPT, versions } from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "Deploy a server - Syndroo docs",
   description:
@@ -31,12 +33,12 @@ export const metadata = {
     <p className="lede">Use the optional <code>{"server"}</code> commands to run Syndroo in your own Cloudflare account. This path connects one Threads account and can publish from GitHub Actions. The local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> workflow remains separate.</p>
 
     <div className="tip" id="status">
-      <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages from a maintainer or internal registry; standard public npm installation is pending. See the <a href="/reference/cli/#server">CLI reference</a> for detailed release and acceptance limits.</p>
+      <p><strong>{versions.cli} self-hosted path.</strong> <code>{"server init"}</code> uses {versions.cli} <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages and installs project-local Wrangler. Cloudflare, GitHub, Meta and Threads acceptance remains unverified. See the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
     </div>
 
     <h2 id="prerequisites">What you need</h2>
     <ul>
-      <li>Node.js 24.19 or newer on macOS or Linux.</li>
+      <li>Node.js 24.19.0 or newer on macOS or Linux.</li>
       <li>Git with your name and email configured, plus npm.</li>
       <li>A Cloudflare account and a Threads app in Meta.</li>
       <li>GitHub CLI <code>{"gh"}</code> if you want a repository and manual CI.</li>
@@ -44,15 +46,17 @@ export const metadata = {
 
     <h2 id="agent-prompt">Let an agent run the setup</h2>
     <p>Paste this prompt into an agent:</p>
-    <pre data-label="agent prompt"><code>{`Help me deploy Syndroo's Server preview to my Cloudflare account and connect one Threads app.
-Use the packaged Syndroo skill and the Deploy a server guide at https://YOUR-DOCS-ORIGIN/getting-started/server/; replace YOUR-DOCS-ORIGIN with the configured docs origin.
-Ask once whether I want GitHub; if yes, get OWNER/REPO and private/public, defaulting to private.
-Reuse authorization I have already given and ask only when an action still lacks it.
-Use stable request IDs and stop for Wrangler login, Meta authorization or Git push when those actions still need me.
-Keep secrets out of chat, command arguments, logs and tracked files.`}</code></pre>
+    <pre data-label="agent prompt"><code>{`${SYNDROO_AGENT_PROMPT}
+
+For this task, use the self-hosted Server workflow, deploy to my Cloudflare account, and connect one Threads app.
+Follow https://YOUR-DOCS-ORIGIN/getting-started/server/ after replacing YOUR-DOCS-ORIGIN with the configured docs origin.
+Ask whether I want GitHub; if yes, get OWNER/REPO and private/public, defaulting to private.
+Use stable request IDs and stop for Wrangler login, Meta authorization or Git push when those actions still need me.`}</code></pre>
 
     <h2 id="initialize">1. Create the project</h2>
-    <p>Check the local tools first:</p>
+    <p>Install the CLI used by this guide, then check the local tools:</p>
+    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\nsyndroo --version`}</code></pre>
+    <p>Confirm that <code>{"syndroo --version"}</code> prints <code>{versions.cli}</code> before continuing.</p>
     <pre data-label="terminal"><code>{"node --version\ngit config --get user.name\ngit config --get user.email\nnpm --version"}</code></pre>
     <p>For a local-only project, run:</p>
     <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site"}</code></pre>

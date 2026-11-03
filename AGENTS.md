@@ -57,10 +57,17 @@
 
 ## Truthful claims
 
-- `0.7.0-rc.1` is the CLI candidate these docs describe. It is an unpublished
-  candidate: do not describe it as released, tagged, deployed or installable from
-  a registry. The packaged CLI declares `engines.node >= 24.19.0`, and its local
-  writes are POSIX-only: Windows writes are refused.
+- `0.7.0` is the npm release target these docs describe. Install the CLI,
+  provider SDK, and five official providers at that exact version with the one
+  shared command in `packages/content/site-data.ts`. The packaged CLI declares
+  `engines.node >= 24.19.0`, and its local writes are POSIX-only: Windows writes
+  are refused. Treat registry availability as a release fact to verify, not
+  something a website build proves.
+- An Agent setup prompt must send a local-shell Agent to `npm root --global`
+  and then to `@syndroo/cli/skills/syndroo/SKILL.md`. Never invent a separate
+  Skill-install command. Server setup keeps GitHub creation and pushes opt-in,
+  reuses existing authorization, and keeps secrets out of prompts, arguments,
+  logs and tracked files.
 - Five local providers publish in the foreground: Bluesky, Threads, LinkedIn,
   and Mastodon take plain text, and DEV.to takes articles. They are
   fixture-tested and still need live-account acceptance, so no page may claim a
@@ -74,9 +81,10 @@
   Cloudflare deployment slice, Threads connect/publish, and manual GitHub CI.
   Keep generic hosted HTTP API, SDK instructions, internal
   `@syndroo/cloudflare-worker` service details, and earlier-release walkthroughs
-  outside this surface. Do not claim live deployment, account acceptance, or a
-  public release.
+  outside this surface. Do not claim live deployment or account acceptance.
 - Report only checks that actually ran, and state the limits of the evidence.
+- Leave the product SHA in `.github/workflows/ci.yml` for ROOT to replace after
+  the corresponding product commit is available.
 
 ## Verification
 

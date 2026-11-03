@@ -5,9 +5,9 @@
 // imports and of TypeScript-only runtime syntax: Node's type stripping rewrites
 // it verbatim into generated browser JavaScript.
 //
-// What lives here: the candidate versions, the five supported platforms, the
-// shared navigation and the page registries used for sitemaps, expected build
-// output and the docs search index.
+// What lives here: the release and package metadata, the five supported
+// platforms, the shared navigation and the page registries used for sitemaps,
+// expected build output and the docs search index.
 
 /**
  * Origins written into authored sources. Both builds rewrite these to the
@@ -59,8 +59,8 @@ export type UiMessages = {
     mainNav: string;
     menu: string;
     close: string;
-    buildFromSource: string;
-    build: string;
+    installSyndroo: string;
+    install: string;
     sourceRepository: string;
     viewEnglish: string;
     viewChinese: string;
@@ -106,8 +106,8 @@ export const ui: Record<Locale, UiMessages> = {
       mainNav: "Main",
       menu: "Menu",
       close: "Close",
-      buildFromSource: "Build from source",
-      build: "Build",
+      installSyndroo: "Install Syndroo",
+      install: "Install",
       sourceRepository: "Syndroo source repository",
       viewEnglish: "View this page in English",
       viewChinese: "View this page in Simplified Chinese",
@@ -151,8 +151,8 @@ export const ui: Record<Locale, UiMessages> = {
       mainNav: "主导航",
       menu: "菜单",
       close: "关闭",
-      buildFromSource: "从源码构建",
-      build: "构建",
+      installSyndroo: "安装 Syndroo",
+      install: "安装",
       sourceRepository: "Syndroo 源码仓库",
       viewEnglish: "用英文查看此页",
       viewChinese: "用简体中文查看此页",
@@ -193,27 +193,66 @@ export const ui: Record<Locale, UiMessages> = {
 };
 export const PRODUCT_LICENSE_URL = `${PRODUCT_REPOSITORY}/blob/main/LICENSE`;
 
-/**
- * Version facts. The CLI is the documented product surface, and the docs site
- * describes the same candidate. No candidate is published to a registry.
- */
+/** Version facts shared by both sites and their release checks. */
 export type Versions = {
-  /** Candidate version of `@syndroo/cli`, whose local path needs no server. */
+  /** Release-target version of `@syndroo/cli`. */
   cli: string;
-  /** Version the documentation describes; the same CLI candidate. */
+  /** Version the documentation describes. */
   docs: string;
-  /** Publication state shared by the candidate. */
+  /** Release stage in English and Chinese. */
   releaseStage: string;
+  releaseStageZh: string;
 };
 
 export const versions: Versions = {
-  cli: "0.7.0-rc.1",
-  docs: "0.7.0-rc.1",
-  releaseStage: "unpublished release candidate",
+  cli: "0.7.0",
+  docs: "0.7.0",
+  releaseStage: "npm release target",
+  releaseStageZh: "npm 发布目标",
 };
 
 /** Minimum runtime the packaged CLI declares in its `engines` field. */
-export const PUBLIC_NODE_RUNTIME = "Node.js 24.19 or newer";
+export const PUBLIC_NODE_RUNTIME = "Node.js 24.19.0 or newer";
+
+/** Supported local-write platforms for 0.7.0. */
+export const SUPPORTED_LOCAL_SYSTEMS = "macOS and Linux";
+
+/** The CLI, provider SDK, and five explicit official providers. */
+export const SYNDROO_NPM_PACKAGES = [
+  "@syndroo/cli",
+  "@syndroo/provider-sdk",
+  "@syndroo/provider-bluesky",
+  "@syndroo/provider-threads",
+  "@syndroo/provider-linkedin",
+  "@syndroo/provider-mastodon",
+  "@syndroo/provider-devto",
+] as const;
+
+export const SYNDROO_INSTALL_COMMAND =
+  `npm install --global ${SYNDROO_NPM_PACKAGES.map((name) => `${name}@${versions.cli}`).join(" ")}`;
+
+/** Package-relative Skill path resolved below `npm root --global`. */
+export const SYNDROO_SKILL_PATH = "@syndroo/cli/skills/syndroo/SKILL.md";
+
+export const SYNDROO_AGENT_PROMPT = `You are a local-shell coding Agent. Set up Syndroo 0.7.0 for me.
+
+1. Check that Node.js 24.19.0 or newer and npm are available, and confirm that my platform is macOS or Linux for supported local writes.
+2. Install Syndroo and its official platform plugins with:
+   ${SYNDROO_INSTALL_COMMAND}
+3. Run \`syndroo --version\`. Resolve the global npm root with \`npm root --global\`, then read \`<global-root>/${SYNDROO_SKILL_PATH}\` and follow that bundled Skill. Do not run or invent a separate Skill-installer command.
+4. Ask whether I want the local workflow or the self-hosted Server workflow, then continue with my choice.
+5. For Server setup, ask whether I want GitHub. Create or push a repository only when I explicitly authorize it. Reuse authorization I have already given.
+6. Keep secrets out of prompts, command arguments, logs, and tracked files. Publish content only with authorization for that content and destination.`;
+
+export const SYNDROO_AGENT_PROMPT_ZH = `你是一名可在本地终端执行命令的智能体。请为我设置 Syndroo 0.7.0。
+
+1. 检查 Node.js 24.19.0 或更新版本以及 npm；确认我的平台是 macOS 或 Linux，以获得受支持的本地写入能力。
+2. 使用以下命令安装 Syndroo 及其官方平台插件：
+   ${SYNDROO_INSTALL_COMMAND}
+3. 运行 \`syndroo --version\`。先用 \`npm root --global\` 获取 npm 全局根目录，再读取 \`<global-root>/${SYNDROO_SKILL_PATH}\` 并遵循包内 Skill。不要运行或编造单独的 Skill 安装命令。
+4. 询问我要使用本地工作流还是自托管 Server 工作流，然后按我的选择继续。
+5. 对于 Server 设置，询问我是否需要 GitHub。只有在我明确授权时才创建或推送仓库。复用我已经给出的授权。
+6. 不要让机密出现在提示词、命令参数、日志或受版本跟踪的文件中。只有已获授权的内容和目标才能发布。`;
 
 /**
  * The accepted CLI surface the documentation is allowed to print.

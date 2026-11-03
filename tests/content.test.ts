@@ -27,6 +27,11 @@ import { repoRoot } from "../scripts/lib/paths.ts";
 import {
   ORIGIN_PLACEHOLDERS,
   PUBLIC_NODE_RUNTIME,
+  SYNDROO_AGENT_PROMPT,
+  SYNDROO_AGENT_PROMPT_ZH,
+  SYNDROO_INSTALL_COMMAND,
+  SYNDROO_NPM_PACKAGES,
+  SYNDROO_SKILL_PATH,
   docsNav,
   docsNavZh,
   docsPages,
@@ -649,8 +654,8 @@ test("both exports ship the shared theme control and its production cookie", asy
   }
 });
 
-test("version claims stay consistent and no unpublished surface is offered", async () => {
-  // The only product version any page may state is the local CLI candidate these
+test("version claims stay consistent across the npm release target", async () => {
+  // The only product version any page may state is the release version these
   // docs describe; everything else has to be quoted as a third-party version.
   const allowedVersions = new Set([versions.cli, versions.docs]);
   // The lookbehind keeps a version out of a dotted quad such as `127.0.0.1`.
@@ -678,18 +683,11 @@ test("version claims stay consistent and no unpublished surface is offered", asy
         );
       }
 
-      // Nothing is published to a registry, so no page may offer an install
-      // command for a package name.
-      const registryInstallPattern =
-        /npm (?:install|i|add) (?:-g |--global |-D |--save-dev )?(?:syndroo|@syndroo\/)|npx (?:-y |--yes )?@syndroo\/|pnpm (?:add|install) (?:syndroo|@syndroo\/)|yarn add (?:syndroo|@syndroo\/)/g;
-      for (const match of html.matchAll(registryInstallPattern)) {
-        const before = html.slice(Math.max(0, match.index - 24), match.index);
-        assert.match(
-          before,
-          /\b(no|not|never)\b/i,
-          `${page.path} offers an install command for an unpublished package`,
-        );
-      }
+      assert.ok(!html.includes("0.7.0-rc.1"), `${page.path} still names the old candidate`);
+      assert.ok(
+        !/git clone[^]*npm run build[^]*npm pack/i.test(decodeEntities(html).replace(/\s+/g, " ")),
+        `${page.path} still makes a source checkout the reader path`,
+      );
     }
   }
 
@@ -697,15 +695,64 @@ test("version claims stay consistent and no unpublished surface is offered", asy
     ["the English marketing home", await websitePage("index.html")],
     ["the English docs home", await docsPage("index.html")],
   ] as const) {
-    assert.ok(html.includes(versions.cli), `${label} should state the candidate version`);
+    assert.ok(html.includes(versions.cli), `${label} should state the release version`);
     assert.ok(html.includes(versions.releaseStage), `${label} should state the release stage`);
   }
   for (const [label, html] of [
     ["the Chinese marketing home", await websitePage("zh/index.html")],
     ["the Chinese docs home", await docsPage("zh/index.html")],
   ] as const) {
-    assert.ok(html.includes(versions.cli), `${label} should state the candidate version`);
-    assert.match(html, /候选版本|未发布/, `${label} should state the release stage`);
+    assert.ok(html.includes(versions.cli), `${label} should state the release version`);
+    assert.ok(html.includes(versions.releaseStageZh), `${label} should state the Chinese release stage`);
+  }
+});
+
+test("the seven-package install and Agent onboarding contract is complete", async () => {
+  assert.deepEqual(SYNDROO_NPM_PACKAGES, [
+    "@syndroo/cli",
+    "@syndroo/provider-sdk",
+    "@syndroo/provider-bluesky",
+    "@syndroo/provider-threads",
+    "@syndroo/provider-linkedin",
+    "@syndroo/provider-mastodon",
+    "@syndroo/provider-devto",
+  ]);
+  assert.match(
+    SYNDROO_INSTALL_COMMAND,
+    /^npm install --global @syndroo\/cli@0\.7\.0 @syndroo\/provider-sdk@0\.7\.0 @syndroo\/provider-bluesky@0\.7\.0 @syndroo\/provider-threads@0\.7\.0 @syndroo\/provider-linkedin@0\.7\.0 @syndroo\/provider-mastodon@0\.7\.0 @syndroo\/provider-devto@0\.7\.0$/,
+  );
+  assert.equal(PUBLIC_NODE_RUNTIME, "Node.js 24.19.0 or newer");
+
+  for (const prompt of [SYNDROO_AGENT_PROMPT, SYNDROO_AGENT_PROMPT_ZH]) {
+    assert.ok(prompt.includes("npm root --global"), "the Agent must resolve the global npm root");
+    assert.ok(prompt.includes(SYNDROO_SKILL_PATH), "the Agent must read the packaged Skill");
+    assert.ok(prompt.includes("Server"), "the Agent must offer the Server branch");
+    assert.ok(prompt.includes("GitHub"), "the Server branch must make GitHub explicit");
+    assert.match(prompt, /secrets|机密/i, "the prompt must protect secrets");
+  }
+
+  for (const [locale, html] of [
+    ["en", await websitePage("index.html")],
+    ["zh", await websitePage("zh/index.html")],
+  ] as const) {
+    const text = decodeEntities(html);
+    assert.ok(text.includes(SYNDROO_INSTALL_COMMAND), `${locale} home should copy one exact install command`);
+    assert.ok(text.includes("npm root --global"), `${locale} home should resolve the bundled Skill`);
+    assert.ok(text.includes(SYNDROO_SKILL_PATH), `${locale} home should name the bundled Skill`);
+    assert.ok(text.includes("24.19.0"), `${locale} home should state the runtime floor`);
+    assert.ok(text.includes("macOS"), `${locale} home should state supported local writes`);
+    assert.ok(text.includes('href="#install"'), `${locale} home should link to installation`);
+    assert.ok(text.includes('href="#agent"'), `${locale} home should link to Agent setup`);
+    assert.ok(text.includes('data-copy-target="install-command"'), `${locale} install command needs copy control`);
+    assert.ok(text.includes('data-copy-target="agent-prompt"'), `${locale} Agent prompt needs copy control`);
+  }
+
+  for (const file of ["getting-started/agent/index.html", "zh/getting-started/agent/index.html"]) {
+    const text = decodeEntities(await docsPage(file));
+    assert.ok(text.includes(SYNDROO_INSTALL_COMMAND), `${file} should include the exact install command`);
+    assert.ok(text.includes("npm root --global"), `${file} should resolve the Skill from the global root`);
+    assert.ok(text.includes(SYNDROO_SKILL_PATH), `${file} should name the bundled Skill`);
+    assert.ok(text.includes(`<pre data-label="agent prompt">`), `${file} should offer a copyable prompt`);
   }
 });
 

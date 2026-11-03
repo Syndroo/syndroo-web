@@ -1,7 +1,13 @@
+import {
+  SYNDROO_AGENT_PROMPT,
+  SYNDROO_SKILL_PATH,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "Use with an Agent - Syndroo docs",
   description:
-    "Drive the local syndroo CLI or optional Server preview from an agent: JSON envelopes, safe credentials, stable request identities and separate deployment steps.",
+    "Set up Syndroo with a local-shell Agent, then drive the local CLI or optional self-hosted Server workflow with JSON envelopes and safe credentials.",
   alternates: {
     canonical: "/getting-started/agent/",
     languages: {
@@ -15,7 +21,7 @@ export const metadata = {
     url: "/getting-started/agent/",
     title: "Use with an Agent - Syndroo docs",
     description:
-      "Drive the local syndroo CLI or optional Server preview from an agent: JSON envelopes, safe credentials, stable request identities and separate deployment steps.",
+      "Set up Syndroo with a local-shell Agent, then drive the local CLI or optional self-hosted Server workflow with JSON envelopes and safe credentials.",
   },
   twitter: { card: "summary" },
 };
@@ -28,7 +34,12 @@ export const metadata = {
       <span>Use with an Agent</span>
     </nav>
     <h1 id="agent">Use with an Agent</h1>
-    <p className="lede">Syndroo contains no language model and no natural-language step. For the local workflow, an agent calls <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> and reads a stable JSON envelope. The protocol is the contract; terminal prose is a convenience.</p>
+    <p className="lede">Syndroo contains no language model and no natural-language step. A local-shell Agent can check prerequisites, install {versions.cli}, read the bundled Skill, and ask whether you want the local workflow or the self-hosted Server workflow. After setup, the protocol is the contract; terminal prose is a convenience.</p>
+
+    <h2 id="setup">Set up with an Agent</h2>
+    <p>Paste this prompt into a local-shell Agent. It includes the install command, finds the bundled Skill through <code>{"npm root --global"}</code>, and keeps Server choices and authorization explicit.</p>
+    <pre data-label="agent prompt"><code>{SYNDROO_AGENT_PROMPT}</code></pre>
+    <p>For Server setup, the Agent asks whether GitHub is wanted before creating or pushing a repository. It reuses authorization you already gave and stops when an action still needs you. This prompt does not activate a Skill automatically in every Agent client; the Agent must read and follow the installed file.</p>
 
     <h2 id="json">Always ask for JSON</h2>
     <p><code>{"--json"}</code> is a global flag, so it is accepted before or after the command. On success the envelope carries the operation name and the result; on failure it carries a stable code and a fixed message that was never built from a stack, a path or an argument.</p>
@@ -51,11 +62,11 @@ export const metadata = {
     <p>Credentials travel in <code>{"SYNDROO_CREDENTIALS"}</code> or a private file, never in the publish document and never in <code>{"--data"}</code>. If the content must stay out of the process arguments, read the request from standard input with{" "} <code>{"--input -"}</code> instead of passing it inline.</p>
 
     <h2 id="skill">The packaged Skill</h2>
-    <p>The packed CLI ships a <code>{"skills/"}</code> directory, so an agent harness can install the Skill together with the binary. The Skill text itself is maintained in the product repository rather than duplicated here, and this site does not restate its workflow as verified. <strong>UNRESOLVED.</strong></p>
+    <p>The installed CLI package contains <code>{SYNDROO_SKILL_PATH}</code>. Resolve the package with <code>{"npm root --global"}</code>, then read <code>{`<global-root>/${SYNDROO_SKILL_PATH}`}</code> and follow it. There is no separate Skill-install or activation command to invent. Automatic discovery still depends on the Agent client.</p>
 
     <h2 id="server">Deploy a server</h2>
-    <p>When you want a user-owned Cloudflare Worker, deployed Threads OAuth or manual GitHub CI, follow <a href="/getting-started/server/">Deploy a server</a>. Reuse authorization you already have and stop only for actions that still need the user, such as Wrangler or Meta browser authorization.</p>
-    <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages from a maintainer or internal registry; public npm installation is pending. Release and acceptance limits are in the <a href="/reference/cli/#server">CLI reference</a>.</p>
+    <p>When you want a user-owned Cloudflare Worker, deployed Threads OAuth or manual GitHub CI, follow <a href="/getting-started/server/">Deploy a server</a>. GitHub repository creation and pushes are opt-in. Reuse authorization you already have and stop only for actions that still need the user, such as Wrangler or Meta browser authorization.</p>
+    <p><code>{"server init"}</code> uses {versions.cli} <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages and installs project-local Wrangler. Cloudflare, GitHub, Meta and Threads acceptance remains unverified in this project; see the <a href="/reference/cli/#server">CLI reference</a> for limits.</p>
 
     <h2 id="authorization">Confirmation is not user authorization</h2>
     <p>A confirmation prompt is a local guardrail, not a grant of authority. An agent that runs without a human present is responsible for deciding whether the publication is allowed in the first place; the CLI only guarantees that nothing is sent before the prepare phase has produced a token for exactly this content and these targets.</p>
@@ -65,6 +76,7 @@ export const metadata = {
 <nav className="toc" id="page-toc" aria-label="On this page">
   <p className="toc-title">On this page</p>
   <ul>
+    <li><a href="#setup">Set up with an Agent</a></li>
     <li><a href="#json">Always ask for JSON</a></li>
     <li><a href="#exit-codes">Read the exit code as a family</a></li>
     <li><a href="#two-phase">Two phases, and a token that stays on stdin</a></li>

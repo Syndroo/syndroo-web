@@ -124,7 +124,7 @@ test("the header CTA remains reachable from the menu once it is hidden", async (
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator("#site-menu")).toBeVisible();
-  await expect(page.locator("#site-menu a", { hasText: "Build from source" })).toBeVisible();
+  await expect(page.locator("#site-menu a", { hasText: "Install Syndroo" })).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");

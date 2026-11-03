@@ -1,7 +1,13 @@
+import {
+  SYNDROO_AGENT_PROMPT,
+  SYNDROO_INSTALL_COMMAND,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "Overview - Syndroo docs",
   description:
-    "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional preview Server deployment path.",
+    "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional self-hosted Server deployment path.",
   alternates: {
     canonical: "/",
     languages: {
@@ -15,7 +21,7 @@ export const metadata = {
     url: "/",
     title: "Overview - Syndroo docs",
     description:
-      "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional preview Server deployment path.",
+      "Syndroo is a local-first publish client with an independent connect, publish and status workflow, plus an optional self-hosted Server deployment path.",
   },
   twitter: { card: "summary" },
 };
@@ -24,11 +30,11 @@ export const metadata = {
   <article>
     <p className="eyebrow">Syndroo docs</p>
     <h1 id="overview">Overview</h1>
-    <p className="lede">The local <code>{"syndroo"}</code> workflow publishes from this machine, in the foreground, with no Syndroo server in the path. Its independent first-level commands are{" "} <code>{"syndroo connect"}</code>, <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional <code>{"syndroo server"}</code> command family may operate a user-owned Cloudflare deployment.{" "} <strong>0.7.0-rc.1 candidate; fixture-tested, unpublished, and live-account acceptance still pending.</strong></p>
+    <p className="lede">The local <code>{"syndroo"}</code> workflow publishes from this machine, in the foreground, with no Syndroo server in the path. Its independent first-level commands are{" "} <code>{"syndroo connect"}</code>, <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional <code>{"syndroo server"}</code> command family may operate a user-owned Cloudflare deployment.{" "} <strong>{versions.cli} {versions.releaseStage}; fixture-tested, with live-account acceptance still pending.</strong></p>
 
     <div className="tip">
       <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
-      <p>No live social-network call has been made from this project. Everything on this site describes the built candidate, its schemas and its fixture tests. Treat every platform guide as unverified against a real account until you run it yourself.</p>
+      <p>No live social-network call has been made from this project. Everything on this site describes the {versions.cli} release target, its schemas and its fixture tests. Treat every platform guide as unverified against a real account until you run it yourself.</p>
     </div>
 
     <h2 id="commands">The independent local commands</h2>
@@ -57,19 +63,25 @@ export const metadata = {
       </table>
     </div>
     <p>The full flag list, the exit codes and the global flags live in the{" "} <a href="/reference/cli/">CLI reference</a>. Every command and flag printed on this site is checked against the built CLI before the site is published.</p>
-    <p id="server"><strong>Optional Server preview.</strong> The <code>{"server"}</code> commands deploy to your own Cloudflare account. <code>{"server init"}</code> needs matching <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> candidate packages plus project-local Wrangler; standard public npm installation is pending. See the <a href="/getting-started/server/">Deploy a server</a> guide for the setup path and the <a href="/reference/cli/#server">CLI reference</a> for release and acceptance limits.</p>
+    <p id="server"><strong>Optional self-hosted Server.</strong> The <code>{"server"}</code> commands deploy to your own Cloudflare account. <code>{"server init"}</code> uses {versions.cli} <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages and installs project-local Wrangler. See the <a href="/getting-started/server/">Deploy a server</a> guide for the setup path and the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
 
-    <h2 id="install">1. Build the candidate</h2>
-    <p>Node.js 24.19 or newer on macOS or Linux. The candidate is not on a registry, so it is built from the product repository and packed from its workspace:</p>
-    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz"}</code></pre>
+    <h2 id="install">1. Install Syndroo</h2>
+    <p>Use Node.js 24.19.0 or newer and npm. Supported local writes require macOS or Linux. One command installs the CLI, provider SDK, and all five official platform plugins at {versions.cli}:</p>
+    <pre data-label="terminal"><code>{SYNDROO_INSTALL_COMMAND}</code></pre>
+    <p>Verify the install with <code>{"syndroo --version"}</code>; it should report {versions.cli}. Contributors who need a source build can follow the product repository README; readers do not need a checkout or build step.</p>
     <p><a href="/getting-started/local-cli/">Local CLI</a> covers the configuration file, the state root and the first run in full.</p>
 
-    <h2 id="connect">2. Connect one account</h2>
+    <h2 id="agent">2. Let an Agent set up</h2>
+    <p>Paste this prompt into a local-shell Agent. It checks prerequisites, installs the pinned packages, resolves the bundled Skill below <code>{"npm root --global"}</code>, and asks whether you want the local or self-hosted Server workflow.</p>
+    <pre data-label="agent prompt"><code>{SYNDROO_AGENT_PROMPT}</code></pre>
+    <p>The Server branch asks whether GitHub is wanted. Creating or pushing a repository remains opt-in; authorization already given is reused, and secrets must stay out of prompts, arguments, logs, and tracked files. Read the full <a href="/getting-started/agent/">Agent guide</a>.</p>
+
+    <h2 id="connect">3. Connect one account</h2>
     <p><code>{"syndroo connect"}</code> reads exactly one credential source: the environment variable <code>{"SYNDROO_CREDENTIALS"}</code> with <code>{"--from-env"}</code>, or a private JSON file with <code>{"--credential-file"}</code>. It never reads a{" "} <code>{".env"}</code> file and never guesses.</p>
     <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
     <p>The exact field names for all five providers are in{" "} <a href="/reference/credentials/">Credentials</a>, and each{" "} <a href="/platforms/">platform guide</a> shows where the credential comes from.</p>
 
-    <h2 id="publish">3. Prepare, then execute</h2>
+    <h2 id="publish">4. Prepare, then execute</h2>
     <p>A publication is two phases. Write a request document, prepare it, and read the approval token that comes back:</p>
     <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
     <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
@@ -78,7 +90,7 @@ export const metadata = {
     <pre data-label="terminal"><code>{"syndroo publish --input - < execute.json --json"}</code></pre>
     <p>An execute request is only ever read from standard input, never from a file path or{" "} <code>{"--data"}</code>, so a token cannot be left in a shell history or in process arguments.</p>
 
-    <h2 id="status">4. Read the result</h2>
+    <h2 id="status">5. Read the result</h2>
     <p><code>{"syndroo status"}</code> answers five queries. Pass the operation id from the publish result to see one operation, or page through the recent ones:</p>
     <pre data-label="terminal"><code>{"syndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
     <p>A delivery is <code>{"succeeded"}</code>, <code>{"failed"}</code> with disposition{" "} <code>{"not_applied"}</code>, <code>{"unknown"}</code>, or <code>{"not_started"}</code> when it never reached a call. Unknown and not sent are different facts: an unknown write may have been accepted, so it stays non-retryable and the platform is inspected by hand instead of resending, while a target that never started was plainly not sent. The exit code carries the same distinction, and <a href="/reference/cli/#exit-codes">the exit code table</a> lists it.</p>
@@ -99,8 +111,9 @@ export const metadata = {
   <p className="toc-title">On this page</p>
   <ul>
     <li><a href="#commands">The independent local commands</a></li>
-    <li><a href="#server">Optional Server preview</a></li>
-    <li><a href="#install">Build the candidate</a></li>
+    <li><a href="#server">Optional self-hosted Server</a></li>
+    <li><a href="#install">Install Syndroo</a></li>
+    <li><a href="#agent">Let an Agent set up</a></li>
     <li><a href="#connect">Connect one account</a></li>
     <li><a href="#publish">Prepare, then execute</a></li>
     <li><a href="#status">Read the result</a></li>

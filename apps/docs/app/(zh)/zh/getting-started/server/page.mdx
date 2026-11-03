@@ -1,3 +1,5 @@
+import { SYNDROO_AGENT_PROMPT_ZH, versions } from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "部署服务器 - Syndroo 文档",
   description:
@@ -31,12 +33,12 @@ export const metadata = {
     <p className="lede">使用可选的 <code>{"server"}</code> 命令，在你自己的 Cloudflare 账号中运行 Syndroo。此路径连接一个 Threads 账号，也可以从 GitHub Actions 发布。本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 工作流仍保持独立。</p>
 
     <div className="tip" id="status">
-      <p><strong>预览且未发布。</strong><code>{"server init"}</code> 需要来自维护者或内部注册表、版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 候选包；标准公共 npm 安装尚待提供。发布和验收的详细限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+      <p><strong>{versions.cli} 自托管路径。</strong><code>{"server init"}</code> 使用 {versions.cli} 版本的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包，并安装项目本地 Wrangler。本项目尚未完成 Cloudflare、GitHub、Meta 或 Threads 验收。验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
     </div>
 
     <h2 id="prerequisites">所需条件</h2>
     <ul>
-      <li>macOS 或 Linux 上的 Node.js 24.19 或更新版本。</li>
+      <li>macOS 或 Linux 上的 Node.js 24.19.0 或更新版本。</li>
       <li>已配置姓名和邮箱的 Git，以及 npm。</li>
       <li>一个 Cloudflare 账号，以及 Meta 中的一个 Threads 应用。</li>
       <li>如果需要仓库和手动 CI，还需要 GitHub CLI <code>{"gh"}</code>。</li>
@@ -44,15 +46,17 @@ export const metadata = {
 
     <h2 id="agent-prompt">让智能体执行设置</h2>
     <p>将以下提示词粘贴给智能体：</p>
-    <pre data-label="agent prompt"><code>{`帮我把 Syndroo 的 Server 预览部署到我的 Cloudflare 账号，并连接一个 Threads 应用。
-使用打包的 Syndroo Skill，以及 https://YOUR-DOCS-ORIGIN/zh/getting-started/server/ 上的“部署服务器”指南；请把 YOUR-DOCS-ORIGIN 替换为已配置的文档站网址。
-只询问一次我是否需要 GitHub；如果需要，请取得 OWNER/REPO 以及仓库应为私有还是公开，默认私有。
-复用我已经给出的授权，只在某项操作仍然缺少授权时询问。
-使用稳定的请求 ID；Wrangler 登录、Meta 授权或 Git 推送仍需要我操作时，请停下。
-不要让机密出现在聊天、命令参数、日志或受版本跟踪的文件中。`}</code></pre>
+    <pre data-label="agent prompt"><code>{`${SYNDROO_AGENT_PROMPT_ZH}
+
+本次任务选择自托管 Server 工作流，请部署到我的 Cloudflare 账号，并连接一个 Threads 应用。
+请遵循 https://YOUR-DOCS-ORIGIN/zh/getting-started/server/；把 YOUR-DOCS-ORIGIN 替换为已配置的文档站网址。
+询问我是否需要 GitHub；如果需要，请取得 OWNER/REPO 以及仓库应为私有还是公开，默认私有。
+使用稳定的请求 ID；Wrangler 登录、Meta 授权或 Git 推送仍需要我操作时，请停下。`}</code></pre>
 
     <h2 id="initialize">1. 创建项目</h2>
-    <p>先检查本地工具：</p>
+    <p>安装本指南使用的 CLI，然后检查本地工具：</p>
+    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\nsyndroo --version`}</code></pre>
+    <p>继续前，请确认 <code>{"syndroo --version"}</code> 输出 <code>{versions.cli}</code>。</p>
     <pre data-label="terminal"><code>{"node --version\ngit config --get user.name\ngit config --get user.email\nnpm --version"}</code></pre>
     <p>对于只在本地使用的项目，运行：</p>
     <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site"}</code></pre>

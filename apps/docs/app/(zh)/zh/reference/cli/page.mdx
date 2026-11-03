@@ -28,7 +28,7 @@ export const metadata = {
       <span>CLI</span>
     </nav>
     <h1 id="cli">CLI 参考</h1>
-    <p className="lede">本地工作流有三个一级命令：<code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的预览命令族 <code>{"syndroo server"}</code> 用于部署和操作由用户自己拥有的 Cloudflare Worker。重试是 <code>{"syndroo publish"}</code> 的一种模式，而 <code>{"syndroo status"}</code> 中的查询是只读的。站点发布时，本页的每条命令和每个参数都会对照已构建的 CLI 检查。</p>
+    <p className="lede">本地工作流有三个一级命令：<code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的 <code>{"syndroo server"}</code> 命令族用于部署和操作由用户自己拥有的 Cloudflare Worker。重试是 <code>{"syndroo publish"}</code> 的一种模式，而 <code>{"syndroo status"}</code> 中的查询是只读的。站点发布时，本页的每条命令和每个参数都会对照已构建的 CLI 检查。</p>
 
     <h2 id="global-flags">全局参数</h2>
     <p>这些参数会在命令之前解析，因此放在命令行任意位置都可以，并且绝不会传给命令。</p>
@@ -63,7 +63,7 @@ export const metadata = {
           </tr>
           <tr>
             <th scope="row"><code>{"--version"}</code></th>
-            <td>输出候选版本和运行它的 Node.js 版本。</td>
+            <td>输出已安装版本和运行它的 Node.js 版本。</td>
           </tr>
         </tbody>
       </table>
@@ -224,7 +224,7 @@ export const metadata = {
     <p><code>{"--connections"}</code>、<code>{"--operation"}</code> 和 <code>{"--operations"}</code> 互斥，<code>{"--provider"}</code> 不能与任一操作选择器组合，而未使用 <code>{"--operations"}</code> 却传入 <code>{"--limit"}</code> 或 <code>{"--cursor"}</code> 属于用法错误。</p>
 
     <h2 id="server">syndroo server</h2>
-    <p><strong>预览且未发布。</strong><code>{"server init"}</code> 会固定 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code>，以及项目本地的 Wrangler。目前需要使用维护者或内部注册表提供的匹配候选包；标准公共 npm 安装尚待提供。项目尚未证明公共 npm 可用，也未证明新的 Server 代码已在远程 <code>{"main"}</code> 上。该工作流在未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收的情况下完成了模拟测试，仅提供 CLI tarball 并不够。</p>
+    <p><code>{"server init"}</code> 会固定 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>，并安装项目本地 Wrangler。该工作流只在模拟环境中测试过，尚未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收。npm 发布和产品部署是彼此独立的发布操作。</p>
     <p>从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code> 明确选择项目。部署会复用现有 Wrangler 登录，不会启动登录流程。<a href="/zh/getting-started/server/">部署服务器</a>指南涵盖前提条件、授权和完整的首次运行步骤。</p>
     <div className="table-wrap">
       <table>

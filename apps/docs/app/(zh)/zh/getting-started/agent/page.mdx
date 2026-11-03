@@ -1,7 +1,13 @@
+import {
+  SYNDROO_AGENT_PROMPT_ZH,
+  SYNDROO_SKILL_PATH,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "与智能体配合使用 - Syndroo 文档",
   description:
-    "通过智能体驱动本地 syndroo CLI 或可选的 Server 预览：JSON 信封、安全的凭证处理、稳定的请求标识和分离的部署步骤。",
+    "使用可在本地终端执行命令的 Agent 设置 Syndroo，再通过 JSON 信封和安全凭证处理来操作本地 CLI 或可选的自托管 Server。",
   alternates: {
     canonical: "/zh/getting-started/agent/",
     languages: {
@@ -15,7 +21,7 @@ export const metadata = {
     url: "/zh/getting-started/agent/",
     title: "与智能体配合使用 - Syndroo 文档",
     description:
-      "通过智能体驱动本地 syndroo CLI 或可选的 Server 预览：JSON 信封、安全的凭证处理、稳定的请求标识和分离的部署步骤。",
+      "使用可在本地终端执行命令的 Agent 设置 Syndroo，再通过 JSON 信封和安全凭证处理来操作本地 CLI 或可选的自托管 Server。",
   },
   twitter: { card: "summary" },
 };
@@ -28,7 +34,12 @@ export const metadata = {
       <span>与智能体配合使用</span>
     </nav>
     <h1 id="agent">与智能体配合使用</h1>
-    <p className="lede">Syndroo 不包含语言模型，也没有自然语言处理步骤。在本地工作流中，智能体调用 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code>，并读取稳定的 JSON 信封。协议才是契约，终端里的文字只提供便利。</p>
+    <p className="lede">Syndroo 不包含语言模型，也没有自然语言处理步骤。可在本地终端执行命令的 Agent 可以检查前置条件、安装 {versions.cli}、读取包内 Skill，并询问你要使用本地还是自托管 Server 工作流。设置完成后，协议才是契约，终端里的文字只提供便利。</p>
+
+    <h2 id="setup">交给 Agent 设置</h2>
+    <p>将以下提示词粘贴给可在本地终端执行命令的 Agent。提示词包含安装命令，通过 <code>{"npm root --global"}</code> 查找包内 Skill，并说明 Server 选择和授权边界。</p>
+    <pre data-label="agent prompt"><code>{SYNDROO_AGENT_PROMPT_ZH}</code></pre>
+    <p>进行 Server 设置时，Agent 会先询问是否需要 GitHub，然后才创建或推送仓库。它会复用你已经给出的授权，并在某项操作仍需要你处理时停下。提示词不会让所有 Agent 客户端自动激活 Skill；Agent 必须读取并遵循已安装文件。</p>
 
     <h2 id="json">始终请求 JSON</h2>
     <p><code>{"--json"}</code> 是全局参数，因此放在命令前后都可以。成功时，信封包含操作名称和结果；失败时，信封包含稳定的代码和一条固定消息，后者绝不根据堆栈、路径或参数生成。</p>
@@ -51,11 +62,11 @@ export const metadata = {
     <p>凭证通过 <code>{"SYNDROO_CREDENTIALS"}</code> 或私有文件传递，绝不能放入发布文档或 <code>{"--data"}</code>。如果内容不能出现在进程参数中，请用 <code>{"--input -"}</code> 从标准输入读取请求，而不要内联传入。</p>
 
     <h2 id="skill">CLI 包内的 Skill</h2>
-    <p>打包后的 CLI 带有 <code>{"skills/"}</code> 目录，因此智能体运行环境可以把 Skill 和二进制文件一起安装。Skill 正文由产品仓库维护，本站不重复其内容，也不把其工作流表述为已经验证。<strong>未解决。</strong></p>
+    <p>安装后的 CLI 包包含 <code>{SYNDROO_SKILL_PATH}</code>。通过 <code>{"npm root --global"}</code> 解析包位置，再读取 <code>{`<global-root>/${SYNDROO_SKILL_PATH}`}</code> 并遵循它。不要编造单独的 Skill 安装或激活命令。是否自动发现仍取决于 Agent 客户端。</p>
 
     <h2 id="server">部署服务器</h2>
-    <p>如果需要使用自己拥有的 Cloudflare Worker、部署 Threads OAuth 或配置手动 GitHub CI，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。复用已有授权，只在 Wrangler 登录或 Meta 浏览器授权等操作仍需要用户时停下。</p>
-    <p><strong>预览且未发布。</strong><code>{"server init"}</code> 需要来自维护者或内部注册表、版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 候选包；公共 npm 安装尚待提供。发布与验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+    <p>如果需要使用自己拥有的 Cloudflare Worker、部署 Threads OAuth 或配置手动 GitHub CI，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。创建 GitHub 仓库和推送均为可选操作。复用已有授权，只在 Wrangler 登录或 Meta 浏览器授权等操作仍需要用户时停下。</p>
+    <p><code>{"server init"}</code> 使用 {versions.cli} 版本的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包，并安装项目本地 Wrangler。本项目尚未完成 Cloudflare、GitHub、Meta 或 Threads 验收；限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
 
     <h2 id="authorization">确认不等于用户授权</h2>
     <p>确认提示是本地保护措施，不是授权凭据。在没有人在场时运行的智能体，必须自行判断本次发布是否本来就获准。CLI 只保证：在准备阶段为这份确切内容和这些确切目标签发令牌之前，不会发送任何内容。</p>
@@ -65,6 +76,7 @@ export const metadata = {
 <nav className="toc" id="page-toc" aria-label="本页内容">
   <p className="toc-title">本页内容</p>
   <ul>
+    <li><a href="#setup">交给 Agent 设置</a></li>
     <li><a href="#json">始终请求 JSON</a></li>
     <li><a href="#exit-codes">把退出码作为一类信号理解</a></li>
     <li><a href="#two-phase">两个阶段，令牌留在标准输入</a></li>

@@ -72,17 +72,26 @@ change the source and rebuild instead of editing `apps/*/out`.
 
 ## Content status
 
-`0.7.0-rc.1` is the CLI candidate these docs describe: unpublished, untagged and
-undeployed, so the documentation installs a tarball built from the product
-repository rather than a package name. Five local providers are wired: Bluesky,
-Threads, LinkedIn, and Mastodon for plain text, and DEV.to for articles. They
-are fixture-tested rather than live-account accepted, so no page claims a
-verified publish. Each platform page states only what the provider source and
-the recorded provider evidence support and marks anything else **UNRESOLVED**.
+`0.7.0` is the npm release target these docs describe. The default install is
+one command containing `@syndroo/cli`, `@syndroo/provider-sdk`, and the five
+official provider packages, all pinned to `0.7.0`. Supported local writes need
+Node.js 24.19.0 or newer on macOS or Linux. Readers do not clone or build the
+product repository; source builds remain a contributor path.
+
+Five local providers are wired: Bluesky, Threads, LinkedIn, and Mastodon for
+plain text, and DEV.to for articles. They are fixture-tested rather than
+live-account accepted, so no page claims a verified publish. Each platform page
+states only what the provider source and the recorded provider evidence support
+and marks anything else **UNRESOLVED**.
 The approved self-hosted slice deploys to the reader's Cloudflare account and
 uses Threads connect/publish plus manual GitHub CI. It has not been accepted
 with live Meta, Cloudflare or GitHub accounts. The generic hosted HTTP API, SDK
 and earlier-release walkthroughs remain outside this public surface.
+
+The product checkout in `.github/workflows/ci.yml` is still pinned to
+`56d0e2f28065c1def17481e2e1121f5a9811af77`. ROOT updates it after the final
+product commit and npm publication are available. Do not push or deploy this
+release-target content before the seven public packages resolve from npm.
 
 ## License
 

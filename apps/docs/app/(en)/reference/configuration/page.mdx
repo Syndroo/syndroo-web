@@ -1,7 +1,7 @@
 export const metadata = {
   title: "Configuration - Syndroo docs",
   description:
-    "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional Server preview.",
+    "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional self-hosted Server.",
   alternates: {
     canonical: "/reference/configuration/",
     languages: {
@@ -15,7 +15,7 @@ export const metadata = {
     url: "/reference/configuration/",
     title: "Configuration - Syndroo docs",
     description:
-      "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional Server preview.",
+      "The local syndroo configuration file shape and state root, plus the separate tracked files used by the optional self-hosted Server.",
   },
   twitter: { card: "summary" },
 };
@@ -30,7 +30,7 @@ export const metadata = {
       <span>Configuration</span>
     </nav>
     <h1 id="configuration">Configuration</h1>
-    <p className="lede">This page describes the local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> workflow. It uses one configuration file and one state root, and never infers either from the current directory. The optional Server preview uses a project config instead.</p>
+    <p className="lede">This page describes the local <code>{"connect"}</code>, <code>{"publish"}</code> and <code>{"status"}</code> workflow. It uses one configuration file and one state root, and never infers either from the current directory. The optional self-hosted Server uses a project config instead.</p>
 
     <h2 id="file">The file</h2>
     <div className="table-wrap">
@@ -118,7 +118,7 @@ export const metadata = {
     <p>Nothing else is read from the environment: no <code>{".env"}</code> file, no per-provider variable registry, and no credential is ever taken from the configuration file.</p>
 
     <h2 id="server">Server configuration files</h2>
-    <p><strong>Preview and unpublished.</strong> Server commands require matching candidate <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages; public npm installation is pending. They use <code>{"syndroo.config.jsonc"}</code> for application settings and <code>{"wrangler.jsonc"}</code> for the Worker, D1, queues and cron. Do not commit generated <code>{"wrangler.effective.jsonc"}</code>, <code>{".syndroo/"}</code> or private server state.</p>
+    <p><strong>Self-hosted Server.</strong> Server commands use <code>{"@syndroo/cli@0.7.0"}</code> and <code>{"@syndroo/cloudflare@0.7.0"}</code>. They use <code>{"syndroo.config.jsonc"}</code> for application settings and <code>{"wrangler.jsonc"}</code> for the Worker, D1, queues and cron. Do not commit generated <code>{"wrangler.effective.jsonc"}</code>, <code>{".syndroo/"}</code> or private server state.</p>
     <p>The global <code>{"--config"}</code> flag is for the local workflow. For Server commands, run from the project or use <code>{"syndroo server --project <directory> <command>"}</code>. See <a href="/getting-started/server/">Deploy a server</a> and the <a href="/reference/cli/#server">Server command reference</a>.</p>
 
     <h2 id="fail-closed">Fail closed</h2>

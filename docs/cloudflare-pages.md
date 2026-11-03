@@ -178,7 +178,7 @@ currently fails the publishable-type rule.
 CI runs `npm ci`, `npm run build`, `npm run check` and `npm test` on every push
 with both origins configured, so the deployment gate is the same run a reviewer
 can reproduce locally. The documentation fixtures check the real CLI from a
-pinned product checkout, so a documented command, flag or candidate version that
+pinned product checkout, so a documented command, flag or release version that
 the CLI no longer has fails the build instead of reaching a reader.
 
 A successful `npm run build` is a statement about the build, not about what a

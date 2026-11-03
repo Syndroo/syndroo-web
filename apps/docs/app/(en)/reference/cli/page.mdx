@@ -28,7 +28,7 @@ export const metadata = {
       <span>CLI</span>
     </nav>
     <h1 id="cli">CLI reference</h1>
-    <p className="lede">The local workflow has three first-level commands: <code>{"syndroo connect"}</code>,{" "} <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional preview <code>{"syndroo server"}</code> family deploys and operates a user-owned Cloudflare Worker. Retrying is a mode of <code>{"syndroo publish"}</code>, and querying is read-only in <code>{"syndroo status"}</code>. Every command and flag on this page is checked against the built CLI when the site is published.</p>
+    <p className="lede">The local workflow has three first-level commands: <code>{"syndroo connect"}</code>,{" "} <code>{"syndroo publish"}</code> and <code>{"syndroo status"}</code>. An optional <code>{"syndroo server"}</code> family deploys and operates a user-owned Cloudflare Worker. Retrying is a mode of <code>{"syndroo publish"}</code>, and querying is read-only in <code>{"syndroo status"}</code>. Every command and flag on this page is checked against the built CLI when the site is published.</p>
 
     <h2 id="global-flags">Global flags</h2>
     <p>These are read before the command, so they work in any position on the line and are never passed to a command.</p>
@@ -63,7 +63,7 @@ export const metadata = {
           </tr>
           <tr>
             <th scope="row"><code>{"--version"}</code></th>
-            <td>Print the candidate version and the Node.js version that ran it.</td>
+            <td>Print the installed version and the Node.js version that ran it.</td>
           </tr>
         </tbody>
       </table>
@@ -224,7 +224,7 @@ export const metadata = {
     <p><code>{"--connections"}</code>, <code>{"--operation"}</code> and{" "} <code>{"--operations"}</code> are mutually exclusive, <code>{"--provider"}</code> cannot be combined with either operation selector, and <code>{"--limit"}</code> or{" "} <code>{"--cursor"}</code> without <code>{"--operations"}</code> is a usage error.</p>
 
     <h2 id="server">syndroo server</h2>
-    <p><strong>Preview and unpublished.</strong> <code>{"server init"}</code> pins both <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code>, plus project-local Wrangler. Current use needs matching candidate packages from a maintainer or internal registry; standard public npm installation is pending. This project has not proven public npm availability or that the new Server code is on remote <code>{"main"}</code>. The workflow is fixture-tested without live Cloudflare, GitHub, Meta or Threads acceptance, and a CLI-only tarball is insufficient.</p>
+    <p><code>{"server init"}</code> pins <code>{"@syndroo/cli@0.7.0"}</code> and <code>{"@syndroo/cloudflare@0.7.0"}</code>, and installs project-local Wrangler. The workflow is fixture-tested without live Cloudflare, GitHub, Meta or Threads acceptance. Registry publication and product deployment are separate release actions.</p>
     <p>Run from the project or select it explicitly with <code>{"syndroo server --project <directory> <command>"}</code>. Deployment reuses an existing Wrangler login and does not launch one. The <a href="/getting-started/server/">Deploy a server</a> guide covers prerequisites, authorization and the complete first-run sequence.</p>
     <div className="table-wrap">
       <table>

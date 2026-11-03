@@ -76,3 +76,27 @@ test("both mobile menus expose the language counterpart", async ({ page }) => {
   await page.locator("#menu-toggle").click();
   await expect(page.locator("#docs-sidebar").getByRole("link", { name: "用英文查看此页" })).toBeVisible();
 });
+
+test("bilingual install and Agent CTAs lead to localized copyable setup", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: WEBSITE });
+
+  for (const [path, installLabel, agentLabel, copyLabel] of [
+    ["/", "Install Syndroo", "Set up with an Agent", "Copied"],
+    ["/zh/", "安装 Syndroo", "交给 Agent 设置", "已复制"],
+  ] as const) {
+    await page.goto(`${WEBSITE}${path}`);
+    await page.getByRole("link", { name: installLabel }).first().click();
+    await expect(page).toHaveURL(/#install$/);
+    await expect(page.locator("#install-command")).toBeVisible();
+
+    await page.locator('[data-copy-target="install-command"]').click();
+    await expect(page.locator("#install .copy-status")).toHaveText(copyLabel);
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied.startsWith("npm install --global @syndroo/cli@0.7.0 ")).toBe(true);
+    expect(copied.match(/@syndroo\//g)).toHaveLength(7);
+
+    await page.getByRole("link", { name: agentLabel }).first().click();
+    await expect(page).toHaveURL(/#agent$/);
+    await expect(page.locator("#agent-prompt")).toBeVisible();
+  }
+});

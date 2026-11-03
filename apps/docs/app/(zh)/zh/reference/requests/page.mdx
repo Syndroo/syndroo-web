@@ -1,7 +1,7 @@
 export const metadata = {
   title: "请求与信封 - Syndroo 文档",
   description:
-    "本地 Syndroo 请求和结果结构，以及可选 Server 预览使用的独立 JSON 信封。",
+    "本地 Syndroo 请求和结果结构，以及可选自托管 Server 使用的独立 JSON 信封。",
   alternates: {
     canonical: "/zh/reference/requests/",
     languages: {
@@ -15,7 +15,7 @@ export const metadata = {
     url: "/zh/reference/requests/",
     title: "请求与信封 - Syndroo 文档",
     description:
-      "本地 Syndroo 请求和结果结构，以及可选 Server 预览使用的独立 JSON 信封。",
+      "本地 Syndroo 请求和结果结构，以及可选自托管 Server 使用的独立 JSON 信封。",
   },
   twitter: { card: "summary" },
 };
@@ -30,7 +30,7 @@ export const metadata = {
       <span>请求与信封</span>
     </nav>
     <h1 id="requests">请求与信封</h1>
-    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 请求。输入一个请求文档，返回一个 JSON 信封；智能体或脚本依据本文档记录的结构进行分支。可选的 Server 预览使用自己的信封。</p>
+    <p className="lede">本页介绍本地 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 请求。输入一个请求文档，返回一个 JSON 信封；智能体或脚本依据本文档记录的结构进行分支。可选的自托管 Server 使用自己的信封。</p>
 
     <h2 id="envelope">信封</h2>
     <pre data-label="success"><code>{"{\n  \"protocolVersion\": 1,\n  \"operation\": \"publish\",\n  \"ok\": true,\n  \"result\": {},\n  \"error\": null\n}"}</code></pre>
@@ -38,7 +38,7 @@ export const metadata = {
     <p>对于本地请求，<code>{"operation"}</code> 是 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 之一。消息是由代码选择的静态文本，绝不会根据堆栈、路径、响应正文或参数生成，因此诊断信息不会携带机密。</p>
 
     <h2 id="server">Server 信封</h2>
-    <p><strong>预览且未发布。</strong>Server 命令是独立的候选路径，需要版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包；公共 npm 安装尚待提供。其 JSON 使用 <code>{"operation: \"server\""}</code>，并通过 <code>{"result.subcommand"}</code> 区分 <code>{"init"}</code>、<code>{"doctor"}</code>、<code>{"deploy"}</code>、<code>{"connect"}</code>、<code>{"ci"}</code> 和 <code>{"publish"}</code>。</p>
+    <p><strong>自托管 Server。</strong>Server 命令是独立路径，使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。其 JSON 使用 <code>{"operation: \"server\""}</code>，并通过 <code>{"result.subcommand"}</code> 区分 <code>{"init"}</code>、<code>{"doctor"}</code>、<code>{"deploy"}</code>、<code>{"connect"}</code>、<code>{"ci"}</code> 和 <code>{"publish"}</code>。</p>
     <p>Server 请求和结果结构与下文的本地请求族不同。请按照<a href="/zh/getting-started/server/">部署服务器</a>操作；其结果、恢复 ID 和验收限制汇总在<a href="/zh/reference/cli/#server">Server 命令参考</a>中。</p>
 
     <h2 id="connect">connect</h2>

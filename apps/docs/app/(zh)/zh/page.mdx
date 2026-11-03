@@ -1,7 +1,13 @@
+import {
+  SYNDROO_AGENT_PROMPT_ZH,
+  SYNDROO_INSTALL_COMMAND,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "概览 - Syndroo 文档",
   description:
-    "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的预览版 Server 部署路径。",
+    "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的自托管 Server 部署路径。",
   alternates: {
     canonical: "/zh/",
     languages: { en: "/", "zh-CN": "/zh/", "x-default": "/" },
@@ -11,7 +17,7 @@ export const metadata = {
     url: "/zh/",
     title: "概览 - Syndroo 文档",
     description:
-      "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的预览版 Server 部署路径。",
+      "Syndroo 是一个本地优先的发布客户端，提供独立的 connect、publish 和 status 工作流，以及可选的自托管 Server 部署路径。",
   },
   twitter: { card: "summary" },
 };
@@ -20,11 +26,11 @@ export const metadata = {
   <article>
     <p className="eyebrow">Syndroo 文档</p>
     <h1 id="overview">概览</h1>
-    <p className="lede">本地 <code>{"syndroo"}</code> 工作流从当前机器在前台发布，链路中不需要 Syndroo 服务器。三个彼此独立的一级命令是{" "} <code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的 <code>{"syndroo server"}</code> 命令族可以运行由用户自行拥有的 Cloudflare 部署。{" "} <strong>0.7.0-rc.1 为候选版本；已完成模拟测试，尚未发布，真实账号验收仍待完成。</strong></p>
+    <p className="lede">本地 <code>{"syndroo"}</code> 工作流从当前机器在前台发布，链路中不需要 Syndroo 服务器。三个彼此独立的一级命令是{" "} <code>{"syndroo connect"}</code>、<code>{"syndroo publish"}</code> 和 <code>{"syndroo status"}</code>。可选的 <code>{"syndroo server"}</code> 命令族可以运行由用户自行拥有的 Cloudflare 部署。{" "} <strong>{versions.cli} {versions.releaseStageZh}；已完成模拟测试，真实账号验收仍待完成。</strong></p>
 
     <div className="tip">
       <img src="/assets/droo-queueing.png" alt="" width="84" height="84" />
-      <p>本项目尚未发起过真实的社交网络调用。本站内容描述的是已构建的候选版本、其模式和模拟测试。在你亲自运行之前，每份平台指南都应视为尚未通过真实账号验证。</p>
+      <p>本项目尚未发起过真实的社交网络调用。本站内容描述的是 {versions.cli} 发布目标、其模式和模拟测试。在你亲自运行之前，每份平台指南都应视为尚未通过真实账号验证。</p>
     </div>
 
     <h2 id="commands">彼此独立的本地命令</h2>
@@ -53,19 +59,25 @@ export const metadata = {
       </table>
     </div>
     <p>完整的参数列表、退出码和全局参数见{" "} <a href="/zh/reference/cli/">CLI 参考</a>。本站展示的每条命令和每个参数，都会在站点发布前对照已构建的 CLI 检查。</p>
-    <p id="server"><strong>可选的 Server 预览。</strong> <code>{"server"}</code> 命令会部署到你自己的 Cloudflare 账号。<code>{"server init"}</code> 需要版本匹配的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 候选包，以及项目本地安装的 Wrangler；标准公共 npm 安装尚不可用。设置路径见 <a href="/zh/getting-started/server/">部署服务器</a>，发布和验收限制见 <a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+    <p id="server"><strong>可选的自托管 Server。</strong> <code>{"server"}</code> 命令会部署到你自己的 Cloudflare 账号。<code>{"server init"}</code> 使用 {versions.cli} 版本的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包，并安装项目本地 Wrangler。设置路径见 <a href="/zh/getting-started/server/">部署服务器</a>，验收限制见 <a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
 
-    <h2 id="install">1. 构建候选版本</h2>
-    <p>需要 macOS 或 Linux 上的 Node.js 24.19 或更新版本。候选版本不在软件包注册表中，因此要从产品仓库构建，再从工作区打包：</p>
-    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz"}</code></pre>
+    <h2 id="install">1. 安装 Syndroo</h2>
+    <p>使用 Node.js 24.19.0 或更新版本以及 npm。受支持的本地写入需要 macOS 或 Linux。一条命令会安装 {versions.cli} 版本的 CLI、提供商 SDK 和全部五个官方平台插件：</p>
+    <pre data-label="terminal"><code>{SYNDROO_INSTALL_COMMAND}</code></pre>
+    <p>运行 <code>{"syndroo --version"}</code> 验证安装，输出应为 {versions.cli}。需要从源码构建的贡献者可以按照产品仓库 README 操作；普通读者不需要 checkout 或构建步骤。</p>
     <p><a href="/zh/getting-started/local-cli/">本地 CLI</a> 会完整介绍配置文件、状态根目录和首次运行。</p>
 
-    <h2 id="connect">2. 连接一个账号</h2>
+    <h2 id="agent">2. 交给 Agent 设置</h2>
+    <p>将以下提示词粘贴给可在本地终端执行命令的 Agent。它会检查前置条件、安装固定版本的包、在 <code>{"npm root --global"}</code> 下解析包内 Skill，并询问你要使用本地还是自托管 Server 工作流。</p>
+    <pre data-label="agent prompt"><code>{SYNDROO_AGENT_PROMPT_ZH}</code></pre>
+    <p>Server 分支会询问是否需要 GitHub。创建或推送仓库仍须明确授权；复用已经给出的授权，并确保机密不进入提示词、参数、日志或受版本跟踪的文件。完整说明见<a href="/zh/getting-started/agent/">Agent 指南</a>。</p>
+
+    <h2 id="connect">3. 连接一个账号</h2>
     <p><code>{"syndroo connect"}</code> 每次只读取一个凭证来源：使用 <code>{"--from-env"}</code> 时读取环境变量 <code>{"SYNDROO_CREDENTIALS"}</code>，使用 <code>{"--credential-file"}</code> 时读取一个私有 JSON 文件。它从不读取 <code>{".env"}</code> 文件，也不会猜测凭证。</p>
     <pre data-label="terminal"><code>{"export SYNDROO_CREDENTIALS='{\"identifier\":\"you.bsky.social\",\"password\":\"APP_PASSWORD_PLACEHOLDER\"}'\nsyndroo connect bluesky --from-env --label work"}</code></pre>
     <p>五个提供商的准确字段名见{" "} <a href="/zh/reference/credentials/">凭证</a>；每份{" "} <a href="/zh/platforms/">平台指南</a>都会说明凭证的来源。</p>
 
-    <h2 id="publish">3. 先准备，再执行</h2>
+    <h2 id="publish">4. 先准备，再执行</h2>
     <p>一次发布分为两个阶段。先编写请求文档并准备发布，再读取返回的审批令牌：</p>
     <pre data-label="post.json"><code>{"{\n  \"type\": \"prepare\",\n  \"content\": { \"text\": \"Syndroo publishes from the command line.\" },\n  \"targets\": [{ \"provider\": \"bluesky\" }]\n}"}</code></pre>
     <pre data-label="terminal"><code>{"syndroo publish --input post.json --json"}</code></pre>
@@ -74,7 +86,7 @@ export const metadata = {
     <pre data-label="terminal"><code>{"syndroo publish --input - < execute.json --json"}</code></pre>
     <p>执行请求只会从标准输入读取，绝不会从文件路径或 <code>{"--data"}</code> 读取，因此有效令牌不会留在 shell 历史或进程参数中。</p>
 
-    <h2 id="status">4. 读取结果</h2>
+    <h2 id="status">5. 读取结果</h2>
     <p><code>{"syndroo status"}</code> 可回答五种查询。传入发布结果中的操作 ID 可查看单个操作，也可分页查看最近的操作：</p>
     <pre data-label="terminal"><code>{"syndroo status --operation <operationId> --json\nsyndroo status --operations --limit 20 --json"}</code></pre>
     <p>一次投递的结果可能是 <code>{"succeeded"}</code>；带处置状态 <code>{"not_applied"}</code> 的 <code>{"failed"}</code>；<code>{"unknown"}</code>；或在从未进入调用时出现的 <code>{"not_started"}</code>。未知和未发送是不同事实：未知写入可能已被接受，因此它始终不可重试，应人工检查平台，而不是重新发送；从未开始的目标则明确没有发送。退出码保留同一区分，完整的值见{" "}<a href="/zh/reference/cli/#exit-codes">退出码表</a>。</p>
@@ -95,8 +107,9 @@ export const metadata = {
   <p className="toc-title">本页内容</p>
   <ul>
     <li><a href="#commands">彼此独立的本地命令</a></li>
-    <li><a href="#server">可选的 Server 预览</a></li>
-    <li><a href="#install">构建候选版本</a></li>
+    <li><a href="#server">可选的自托管 Server</a></li>
+    <li><a href="#install">安装 Syndroo</a></li>
+    <li><a href="#agent">交给 Agent 设置</a></li>
     <li><a href="#connect">连接一个账号</a></li>
     <li><a href="#publish">先准备，再执行</a></li>
     <li><a href="#status">读取结果</a></li>

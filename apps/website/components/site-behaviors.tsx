@@ -9,7 +9,14 @@ export function SiteBehaviors({ locale }: { locale: Locale }): null {
     let cancelled = false;
     void import("../src/js/site").then((module) => {
       if (!cancelled) {
-        module.bootWebsite({ menu: ui[locale].website.menu, close: ui[locale].website.close });
+        const messages = ui[locale];
+        module.bootWebsite({
+          menu: messages.website.menu,
+          close: messages.website.close,
+          copy: messages.docs.copy,
+          copied: messages.docs.copied,
+          copyManually: messages.docs.copyManually,
+        });
       }
     });
     return () => {

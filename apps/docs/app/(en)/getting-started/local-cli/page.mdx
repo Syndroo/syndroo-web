@@ -1,7 +1,13 @@
+import {
+  PUBLIC_NODE_RUNTIME,
+  SYNDROO_INSTALL_COMMAND,
+  versions,
+} from "@syndroo/content/site-data";
+
 export const metadata = {
   title: "Local CLI - Syndroo docs",
   description:
-    "Build the syndroo candidate, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
+    "Install syndroo, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
   alternates: {
     canonical: "/getting-started/local-cli/",
     languages: {
@@ -15,7 +21,7 @@ export const metadata = {
     url: "/getting-started/local-cli/",
     title: "Local CLI - Syndroo docs",
     description:
-      "Build the syndroo candidate, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
+      "Install syndroo, write its configuration file, connect one provider from an explicit credential source, and run the prepare, execute and status flow.",
   },
   twitter: { card: "summary" },
 };
@@ -28,12 +34,13 @@ export const metadata = {
       <span>Local CLI</span>
     </nav>
     <h1 id="local-cli">Run the CLI on this machine</h1>
-    <p className="lede">The candidate is a single Node.js program. It reads one configuration file, keeps its state under one state-root directory, and talks to platform APIs directly through an egress policy built from each provider's manifest. Nothing watches, schedules or runs in the background.</p>
+    <p className="lede">Syndroo is a single Node.js program. It reads one configuration file, keeps its state under one state-root directory, and talks to platform APIs directly through an egress policy built from each provider's manifest. Nothing watches, schedules or runs in the background.</p>
 
-    <h2 id="install">Build and install</h2>
-    <p>Node.js 24.19 or newer, on macOS or Linux. The package is not published to a registry, so the supported path is to build it and pack the workspace:</p>
-    <pre data-label="terminal"><code>{"git clone https://github.com/Syndroo/syndroo\ncd syndroo\nnpm ci\nnpm run build\nnpm pack --workspace @syndroo/cli --pack-destination ./artifacts\nnpm install --global ./artifacts/syndroo-cli-0.7.0-rc.1.tgz\nsyndroo --version"}</code></pre>
-    <p><code>{"--version"}</code> prints the candidate version and the Node.js version that ran it. <code>{"--help"}</code> prints the command list, and each command answers its own{" "} <code>{"--help"}</code>. Both work before any configuration exists and create nothing.</p>
+    <h2 id="install">Install</h2>
+    <p>Use {PUBLIC_NODE_RUNTIME} and npm. Supported local writes require macOS or Linux. Install the CLI, provider SDK, and all five official providers at {versions.cli} with one command:</p>
+    <pre data-label="terminal"><code>{SYNDROO_INSTALL_COMMAND}</code></pre>
+    <p>Run <code>{"syndroo --version"}</code>. <code>{"--version"}</code> prints the installed version and the Node.js version that ran it. <code>{"--help"}</code> prints the command list, and each command answers its own{" "} <code>{"--help"}</code>. Both work before any configuration exists and create nothing.</p>
+    <p>Contributors who need a source build can follow the product repository README; a checkout and build are not prerequisites for readers.</p>
 
     <h2 id="configuration">Configuration</h2>
     <p>There is one configuration source. Without <code>{"--config"}</code> the CLI reads{" "} <code>{"$XDG_CONFIG_HOME/syndroo/config.json"}</code>, falling back to{" "} <code>{"$HOME/.config/syndroo/config.json"}</code>. A missing default file is fine for the commands that resolve no provider; a missing file named by <code>{"--config"}</code> is an error. The path given to <code>{"--config"}</code> must be absolute.</p>
@@ -74,7 +81,7 @@ export const metadata = {
 <nav className="toc" id="page-toc" aria-label="On this page">
   <p className="toc-title">On this page</p>
   <ul>
-    <li><a href="#install">Build and install</a></li>
+    <li><a href="#install">Install</a></li>
     <li><a href="#configuration">Configuration</a></li>
     <li><a href="#state">Local state</a></li>
     <li><a href="#connect">Connect one provider</a></li>

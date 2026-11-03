@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { ORIGIN_PLACEHOLDERS, PRODUCT_REPOSITORY, platforms, versions } from "@syndroo/content/site-data";
+import {
+  ORIGIN_PLACEHOLDERS,
+  PUBLIC_NODE_RUNTIME,
+  SYNDROO_AGENT_PROMPT,
+  SYNDROO_INSTALL_COMMAND,
+  platforms,
+  versions,
+} from "@syndroo/content/site-data";
+import { CopyBlock } from "../../components/copy-block";
 
 const DESCRIPTION =
   "Syndroo is a command-line tool for publishing one document: plain text to Bluesky, Threads, LinkedIn, and Mastodon, and articles to DEV.to, from your machine or a self-hosted deployment.";
@@ -29,7 +37,7 @@ const docs = ORIGIN_PLACEHOLDERS.docs;
 const facts = [
   {
     term: "Runs as a command",
-    detail: "Installed by building this repository, not from a registry.",
+    detail: "Install Syndroo and its official platform plugins from npm.",
   },
   {
     term: "Direct local path",
@@ -43,8 +51,8 @@ const facts = [
 
 const faq = [
   {
-    question: "Is Syndroo released yet?",
-    answer: `Not yet. ${versions.cli} is an unpublished release candidate, and live-account acceptance is still pending. There is no registry install today, so the way to run it is to build it from source.`,
+    question: "How do I install Syndroo?",
+    answer: `Use the copyable npm command in Installation to install Syndroo and all five official providers at ${versions.cli}. Run the command on Node.js 24.19.0 or newer; supported local writes require macOS or Linux.`,
   },
   {
     question: "Which platforms does it publish to?",
@@ -98,17 +106,67 @@ export default function IndexPage() {
             LinkedIn, and Mastodon, and articles to DEV.to, from your terminal.
           </p>
           <div className="hero__cta">
-            <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
-              Build from source
+            <a className="button button--primary button--lg" href="#install">
+              Install Syndroo
             </a>
-            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
-              Server setup
+            <a className="button button--ghost button--lg" href="#agent">
+              Set up with an Agent
             </a>
           </div>
           <p className="note-line">
             v{versions.cli} &middot; {versions.releaseStage} &middot; live-account acceptance
             pending
           </p>
+        </div>
+      </section>
+
+      <section className="onboarding" id="install" aria-labelledby="install-title">
+        <div className="shell">
+          <h2 className="title title--left" id="install-title">
+            <span className="title__ink">Install.</span>{" "}
+            <span className="title__dim">Then let an Agent set up.</span>
+          </h2>
+          <div className="onboarding__grid">
+            <article className="onboarding__card">
+              <p className="eyebrow">Installation</p>
+              <h3>Install Syndroo</h3>
+              <p>
+                Use {PUBLIC_NODE_RUNTIME} and npm. Supported local writes require macOS or
+                Linux.
+              </p>
+              <p>
+                One command installs Syndroo and its official plugins at {versions.cli}.
+              </p>
+              <CopyBlock
+                locale="en"
+                id="install-command"
+                label="Terminal"
+                code={SYNDROO_INSTALL_COMMAND}
+              />
+              <p>
+                Verify the installation with <code>syndroo --version</code>. It should report{" "}
+                {versions.cli}.
+              </p>
+            </article>
+
+            <article className="onboarding__card" id="agent">
+              <p className="eyebrow">Agent setup</p>
+              <h3>Set up with an Agent</h3>
+              <p>
+                Paste this prompt into a terminal-capable Agent. It installs Syndroo and guides
+                your local or <a href={`${docs}/getting-started/server/`}>Server setup</a>.
+              </p>
+              <CopyBlock
+                locale="en"
+                id="agent-prompt"
+                label="Agent prompt"
+                code={SYNDROO_AGENT_PROMPT}
+              />
+              <a className="button button--ghost" href={`${docs}/getting-started/agent/`}>
+                Read the Agent guide
+              </a>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -314,7 +372,7 @@ export default function IndexPage() {
                   </pre>
                   <span className="panel__note">
                     An unknown outcome is reported as unknown and is never retried automatically.
-                    Live-account acceptance is still pending for this release candidate.
+                    Live-account acceptance is still pending for this release.
                   </span>
                 </div>
               </div>
@@ -408,7 +466,7 @@ export default function IndexPage() {
             FAQ
           </h2>
           <p className="lead lead--center">
-            Where this release candidate stands, and the questions that come up most.
+            How to install Syndroo, hand setup to an Agent, and use it safely.
           </p>
           <div className="faq__list">
             {faq.map((item) => (
@@ -438,19 +496,19 @@ export default function IndexPage() {
             Ready to get started
           </h2>
           <p className="lead lead--center">
-            Build the release candidate from source, then publish your first post from the terminal.
+            Install Syndroo, verify the CLI, then publish your first post from the terminal.
           </p>
           <div className="get-started__actions">
-            <a className="button button--primary button--lg" href={`${PRODUCT_REPOSITORY}#readme`}>
-              Start
+            <a className="button button--primary button--lg" href="#install">
+              Install Syndroo
             </a>
-            <a className="button button--ghost button--lg" href={`${docs}/getting-started/server/`}>
-              Server setup
+            <a className="button button--ghost button--lg" href="#agent">
+              Set up with an Agent
             </a>
           </div>
           <p className="note-line">
-            v{versions.cli} &middot; {versions.releaseStage} &middot; build from source &middot;
-            live-account acceptance pending
+            v{versions.cli} &middot; {versions.releaseStage} &middot; live-account acceptance
+            pending
           </p>
         </div>
       </section>
