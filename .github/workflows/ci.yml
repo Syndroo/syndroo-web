@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: Syndroo/syndroo
-          ref: 56d0e2f28065c1def17481e2e1121f5a9811af77
+          ref: c656b5ec999bb8363e0f63451df492b825d4ba2f
           path: syndroo
           persist-credentials: false
 

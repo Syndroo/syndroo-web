@@ -195,7 +195,7 @@ export const PRODUCT_LICENSE_URL = `${PRODUCT_REPOSITORY}/blob/main/LICENSE`;
 
 /** Version facts shared by both sites and their release checks. */
 export type Versions = {
-  /** Release-target version of `@syndroo/cli`. */
+  /** Published release version of `@syndroo/cli`. */
   cli: string;
   /** Version the documentation describes. */
   docs: string;
@@ -207,8 +207,8 @@ export type Versions = {
 export const versions: Versions = {
   cli: "0.7.0",
   docs: "0.7.0",
-  releaseStage: "npm release target",
-  releaseStageZh: "npm 发布目标",
+  releaseStage: "available on npm",
+  releaseStageZh: "已在 npm 发布",
 };
 
 /** Minimum runtime the packaged CLI declares in its `engines` field. */

@@ -57,12 +57,12 @@
 
 ## Truthful claims
 
-- `0.7.0` is the npm release target these docs describe. Install the CLI,
+- `0.7.0` is the published npm release these docs describe. Install the CLI,
   provider SDK, and five official providers at that exact version with the one
   shared command in `packages/content/site-data.ts`. The packaged CLI declares
   `engines.node >= 24.19.0`, and its local writes are POSIX-only: Windows writes
-  are refused. Treat registry availability as a release fact to verify, not
-  something a website build proves.
+  are refused. Treat registry availability as a release fact to verify before
+  rollout; a website build does not prove it.
 - An Agent setup prompt must send a local-shell Agent to `npm root --global`
   and then to `@syndroo/cli/skills/syndroo/SKILL.md`. Never invent a separate
   Skill-install command. Server setup keeps GitHub creation and pushes opt-in,
@@ -83,8 +83,7 @@
   `@syndroo/cloudflare-worker` service details, and earlier-release walkthroughs
   outside this surface. Do not claim live deployment or account acceptance.
 - Report only checks that actually ran, and state the limits of the evidence.
-- Leave the product SHA in `.github/workflows/ci.yml` for ROOT to replace after
-  the corresponding product commit is available.
+- Keep `.github/workflows/ci.yml` pinned to the final reviewed product commit.
 
 ## Verification
 

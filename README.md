@@ -72,7 +72,7 @@ change the source and rebuild instead of editing `apps/*/out`.
 
 ## Content status
 
-`0.7.0` is the npm release target these docs describe. The default install is
+`0.7.0` is the npm release these docs describe. The default install is
 one command containing `@syndroo/cli`, `@syndroo/provider-sdk`, and the five
 official provider packages, all pinned to `0.7.0`. Supported local writes need
 Node.js 24.19.0 or newer on macOS or Linux. Readers do not clone or build the
@@ -88,10 +88,9 @@ uses Threads connect/publish plus manual GitHub CI. It has not been accepted
 with live Meta, Cloudflare or GitHub accounts. The generic hosted HTTP API, SDK
 and earlier-release walkthroughs remain outside this public surface.
 
-The product checkout in `.github/workflows/ci.yml` is still pinned to
-`56d0e2f28065c1def17481e2e1121f5a9811af77`. ROOT updates it after the final
-product commit and npm publication are available. Do not push or deploy this
-release-target content before the seven public packages resolve from npm.
+The product checkout in `.github/workflows/ci.yml` is pinned to
+`c656b5ec999bb8363e0f63451df492b825d4ba2f`. ROOT verifies the seven public
+packages from a clean npm prefix before rollout.
 
 ## License
 
