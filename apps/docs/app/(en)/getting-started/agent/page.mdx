@@ -34,12 +34,13 @@ export const metadata = {
       <span>Use with an Agent</span>
     </nav>
     <h1 id="agent">Use with an Agent</h1>
-    <p className="lede">Syndroo contains no language model and no natural-language step. A local-shell Agent can check prerequisites, install {versions.cli}, read the bundled Skill, and ask whether you want the local workflow or the self-hosted Server workflow. After setup, the protocol is the contract; terminal prose is a convenience.</p>
+    <p className="lede">Syndroo contains no language model and no natural-language step. A local-shell Agent can establish the project and its runtime first, check that the resolved Node.js and npm are the ones the project uses, install {versions.cli}, read the bundled Skill, and ask whether you want the local workflow or the self-hosted Server workflow. After setup, the protocol is the contract; terminal prose is a convenience.</p>
 
     <h2 id="setup">Set up with an Agent</h2>
-    <p>Paste this prompt into a local-shell Agent. It includes the install command, finds the bundled Skill through <code>{"npm root --global"}</code>, and keeps Server choices and authorization explicit.</p>
+    <p>Paste this prompt into a local-shell Agent. It asks for the project directory and runtime manager before anything is installed, records the resolved <code>{"node"}</code> and <code>{"npm"}</code> versions and the global root and prefix in that directory, verifies the executable a shim resolves to, includes the install command, finds the bundled Skill through <code>{"npm root --global"}</code>, and keeps Server choices and authorization explicit.</p>
     <pre data-label="agent prompt"><code>{SYNDROO_AGENT_PROMPT}</code></pre>
-    <p>For Server setup, the Agent asks whether GitHub is wanted before creating or pushing a repository. It reuses authorization you already gave and stops when an action still needs you. This prompt does not activate a Skill automatically in every Agent client; the Agent must read and follow the installed file.</p>
+    <p>One runtime, chosen before the install, is used for the version check, the Skill lookup and every later command. mise is one example, not a requirement: the prompt tells the Agent to run <code>{"mise which"}</code> with a single argument per command and never to assume Homebrew, compare pathnames across managers or edit <code>{"PATH"}</code> around a shim.</p>
+    <p>For Server setup, the Agent asks whether GitHub is wanted before creating or pushing a repository. It reuses authorization you already gave and stops when an action still needs you. Because the published {versions.cli} release requires it for <code>{"connect threads"}</code> and <code>{"publish threads"}</code>, the Agent passes <code>{"--project ."}</code> before a Server subcommand instead of guessing the directory. This prompt does not activate a Skill automatically in every Agent client; the Agent must read and follow the installed file.</p>
 
     <h2 id="json">Always ask for JSON</h2>
     <p><code>{"--json"}</code> is a global flag, so it is accepted before or after the command. On success the envelope carries the operation name and the result; on failure it carries a stable code and a fixed message that was never built from a stack, a path or an argument.</p>
@@ -62,10 +63,11 @@ export const metadata = {
     <p>Credentials travel in <code>{"SYNDROO_CREDENTIALS"}</code> or a private file, never in the publish document and never in <code>{"--data"}</code>. If the content must stay out of the process arguments, read the request from standard input with{" "} <code>{"--input -"}</code> instead of passing it inline.</p>
 
     <h2 id="skill">The packaged Skill</h2>
-    <p>The installed CLI package contains <code>{SYNDROO_SKILL_PATH}</code>. Resolve the package with <code>{"npm root --global"}</code>, then read <code>{`<global-root>/${SYNDROO_SKILL_PATH}`}</code> and follow it. There is no separate Skill-install or activation command to invent. Automatic discovery still depends on the Agent client.</p>
+    <p>The installed CLI package contains <code>{SYNDROO_SKILL_PATH}</code>. Resolve the package with <code>{"npm root --global"}</code> from the same runtime that ran the install, then read <code>{`<global-root>/${SYNDROO_SKILL_PATH}`}</code> and follow it. There is no separate Skill-install or activation command to invent. Automatic discovery still depends on the Agent client.</p>
 
     <h2 id="server">Deploy a server</h2>
     <p>When you want a user-owned Cloudflare Worker, deployed Threads OAuth or manual GitHub CI, follow <a href="/getting-started/server/">Deploy a server</a>. GitHub repository creation and pushes are opt-in. Reuse authorization you already have and stop only for actions that still need the user, such as Wrangler or Meta browser authorization.</p>
+    <p>On the published {versions.cli} release, <code>{"connect threads"}</code> and <code>{"publish threads"}</code> need the project passed explicitly with <code>{"--project ."}</code> before the subcommand; <code>{"deploy"}</code> and <code>{"doctor"}</code> already use the current directory. Passing it on every project command stays correct. The reviewed fix makes the current directory the default, but it is not in a published release yet.</p>
     <p><code>{"server init"}</code> uses {versions.cli} <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages and installs project-local Wrangler. Cloudflare, GitHub, Meta and Threads acceptance remains unverified in this project; see the <a href="/reference/cli/#server">CLI reference</a> for limits.</p>
 
     <h2 id="authorization">Confirmation is not user authorization</h2>

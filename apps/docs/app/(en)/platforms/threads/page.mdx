@@ -75,7 +75,7 @@ export const metadata = {
     <p>The start step answers an authorization action that a browser completes at the Threads authorization host, and the local CLI completes that OAuth callback itself, with <code>{"--redirect-uri"}</code> and a controlling terminal or with <code>{"--callback-url -"}</code>, as the <a href="/reference/credentials/#browser">credential reference</a> describes. That local callback path is fixture-tested against local servers only; no live Threads account was connected.</p>
 
     <h2 id="server">Deploy a server</h2>
-    <p>This page's <code>{"syndroo connect"}</code> flow stays local. To run Threads OAuth through your own Cloudflare Worker and publish from GitHub Actions, follow <a href="/getting-started/server/">Deploy a server</a>. That flow registers <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code> with the confirmed host and runs <code>{"syndroo server connect threads --app-id APP_ID"}</code>.</p>
+    <p>This page's <code>{"syndroo connect"}</code> flow stays local. To run Threads OAuth through your own Cloudflare Worker and publish from GitHub Actions, follow <a href="/getting-started/server/">Deploy a server</a>. That flow registers <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code> with the confirmed host and runs <code>{"syndroo server --project . connect threads --app-id APP_ID"}</code>.</p>
     <p><strong>Self-hosted Server.</strong> The Server flow uses <code>{"@syndroo/cli@0.7.0"}</code> and <code>{"@syndroo/cloudflare@0.7.0"}</code>. See the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
 
     <h2 id="first-publish">First publish</h2>

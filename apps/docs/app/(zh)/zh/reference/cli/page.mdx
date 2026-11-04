@@ -225,7 +225,7 @@ export const metadata = {
 
     <h2 id="server">syndroo server</h2>
     <p><code>{"server init"}</code> 会固定 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>，并安装项目本地 Wrangler。该工作流只在模拟环境中测试过，尚未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收。npm 发布和产品部署是彼此独立的发布操作。</p>
-    <p>从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code> 明确选择项目。部署会复用现有 Wrangler 登录，不会启动登录流程。<a href="/zh/getting-started/server/">部署服务器</a>指南涵盖前提条件、授权和完整的首次运行步骤。</p>
+    <p>请在项目目录中运行 Server 命令，或用 <code>{"syndroo server --project <directory> <command>"}</code> 明确选择项目。<code>{"--project"}</code> 是 <code>{"server"}</code> 的参数，写在子命令之前；已安装的 CLI 也接受把它写在叶子命令之后。已发布的版本要求 <code>{"connect threads"}</code> 和 <code>{"publish threads"}</code> 显式传入它，而 <code>{"deploy"}</code> 和 <code>{"doctor"}</code> 已经使用当前目录。已评审的修复会把当前目录作为所有这些命令的默认值，因此在那里显式传入项目也同样正确。部署会复用现有 Wrangler 登录，不会启动登录流程。<a href="/zh/getting-started/server/">部署服务器</a>指南涵盖前提条件、授权和完整的首次运行步骤。</p>
     <div className="table-wrap">
       <table>
         <thead>
@@ -248,7 +248,7 @@ export const metadata = {
             <td>在用户授权目标后，创建缺失的自有资源并部署 Worker。</td>
           </tr>
           <tr>
-            <th scope="row"><code>{"syndroo server connect threads --app-id APP_ID"}</code></th>
+            <th scope="row"><code>{"syndroo server --project . connect threads --app-id APP_ID"}</code></th>
             <td>完成 Threads OAuth 并保存经过验证的连接引用。App Secret 使用隐藏输入、<code>{"THREADS_APP_SECRET"}</code> 或 <code>{"--app-secret-stdin"}</code>。</td>
           </tr>
           <tr>
@@ -256,7 +256,7 @@ export const metadata = {
             <td>安装手动 <code>{"Publish to Threads"}</code> 工作流并配置限定范围的 GitHub 环境，但不提交、不推送、也不发布。</td>
           </tr>
           <tr>
-            <th scope="row"><code>{"syndroo server publish threads --input FILE --request-id REQUEST_ID --yes --json"}</code></th>
+            <th scope="row"><code>{"syndroo server --project . publish threads --input FILE --request-id REQUEST_ID --yes --json"}</code></th>
             <td>使用限定范围的 CI 令牌发布一个严格 <code>{"{ \"text\": string }"}</code> 文档。复用请求 ID 可恢复同一逻辑发布。</td>
           </tr>
         </tbody>

@@ -34,15 +34,20 @@ export const metadata = {
 
     <div className="tip" id="status">
       <p><strong>{versions.cli} 自托管路径。</strong><code>{"server init"}</code> 使用 {versions.cli} 版本的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包，并安装项目本地 Wrangler。本项目尚未完成 Cloudflare、GitHub、Meta 或 Threads 验收。验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+      <p><strong>本版本中的项目范围。</strong>作用于项目的 Server 命令，本意是使用当前目录中的项目。已发布的 {versions.cli} 对 <code>{"deploy"}</code> 和 <code>{"doctor"}</code> 已经这样做，但 <code>{"connect threads"}</code> 和 <code>{"publish threads"}</code> 不猜测目录，而是要求显式传入项目。因此下文中作用于项目的示例都在子命令前传入 <code>{"--project ."}</code>，同一行在已发布版本和已评审修复上都能用。该修复尚未进入已发布的版本；无论如何，显式传入范围都同样正确。</p>
     </div>
 
     <h2 id="prerequisites">所需条件</h2>
     <ul>
-      <li>macOS 或 Linux 上的 Node.js 24.19.0 或更新版本。</li>
-      <li>已配置姓名和邮箱的 Git，以及 npm。</li>
+      <li>macOS 或 Linux 上的 Node.js 24.19.0 或更新版本，以及 npm。</li>
+      <li>已配置姓名和邮箱的 Git。</li>
       <li>一个 Cloudflare 账号，以及 Meta 中的一个 Threads 应用。</li>
       <li>如果需要仓库和手动 CI，还需要 GitHub CLI <code>{"gh"}</code>。</li>
+      <li>一个将拥有该部署的项目目录，以及该目录声明的运行时管理器。</li>
     </ul>
+    <p>安装前先选定运行时。在项目目录中记录实际生效的运行时，以及全局安装落在哪里：</p>
+    <pre data-label="terminal"><code>{"command -v node npm\nnode --version\nnpm --version\nnpm root --global\nnpm prefix --global"}</code></pre>
+    <p>安装、版本检查和之后的每条命令都使用这同一个运行时。使用 mise 时，请在命令前加上 <code>{"mise exec --"}</code>，并逐个确认路径，因为 <code>{"mise which"}</code> 每次只接受一个参数：<code>{"mise which node"}</code>、<code>{"mise which npm"}</code> 和 <code>{"mise which syndroo"}</code>。存在 shim 是正常的，请确认 shell 实际解析到的可执行文件，而不要跨管理器比较路径或改动 <code>{"PATH"}</code>。不要假设使用 Homebrew：多个 Node 环境可能同时存在，<code>{"command -v node"}</code> 决定哪一个生效。</p>
 
     <h2 id="agent-prompt">让智能体执行设置</h2>
     <p>将以下提示词粘贴给智能体：</p>
@@ -51,41 +56,48 @@ export const metadata = {
 本次任务选择自托管 Server 工作流，请部署到我的 Cloudflare 账号，并连接一个 Threads 应用。
 请遵循 https://YOUR-DOCS-ORIGIN/zh/getting-started/server/；把 YOUR-DOCS-ORIGIN 替换为已配置的文档站网址。
 询问我是否需要 GitHub；如果需要，请取得 OWNER/REPO 以及仓库应为私有还是公开，默认私有。
-使用稳定的请求 ID；Wrangler 登录、Meta 授权或 Git 推送仍需要我操作时，请停下。`}</code></pre>
+使用稳定的请求 ID；Wrangler 登录、Meta 授权或 Git 推送仍需要我操作时，请停下。
+每条作用于项目的 Server 命令都显式加上 --project .。请从项目本地 Wrangler whoami 输出列出的可访问账号中，选出我想要使用的账号，并用 --account 传入该账号 ID。如果其中没有我想用的账号，请停下并询问我；绝不要部署到另一个账号。只有在会话缺失或已过期时才进行认证。`}</code></pre>
 
     <h2 id="initialize">1. 创建项目</h2>
-    <p>安装本指南使用的 CLI，然后检查本地工具：</p>
-    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\nsyndroo --version`}</code></pre>
-    <p>继续前，请确认 <code>{"syndroo --version"}</code> 输出 <code>{versions.cli}</code>。</p>
-    <pre data-label="terminal"><code>{"node --version\ngit config --get user.name\ngit config --get user.email\nnpm --version"}</code></pre>
-    <p>对于只在本地使用的项目，运行：</p>
-    <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site"}</code></pre>
-    <p>如需使用 GitHub，请先登录，再在同一条命令加入仓库参数。仓库默认私有；只有在你明确选择时才使用 <code>{"--public"}</code>。</p>
-    <pre data-label="terminal"><code>{"gh auth login\nsyndroo server init ./syndroo-site --github OWNER/REPO --private"}</code></pre>
-    <p><code>{"server init"}</code> 会创建应用配置、Wrangler 配置、固定依赖版本的文件、示例帖子和首次 Git 提交。</p>
+    <p>请在所选运行时控制的父目录中执行。目标目录必须不存在、为空，或者是一个可以继续初始化的已有 Syndroo 项目；<code>{"server init"}</code> 会拒绝非空目录并报告 <code>{"SERVER_PROJECT_CONFLICT"}</code>。先检查本地工具：</p>
+    <pre data-label="terminal"><code>{"node --version\nnpm --version\nnpm root --global\ngit config --get user.name\ngit config --get user.email"}</code></pre>
+    <p>然后安装本指南使用的 CLI，并检查 shell 实际解析到什么：</p>
+    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\ncommand -v syndroo\nsyndroo --version`}</code></pre>
+    <p>确认 <code>{"syndroo --version"}</code> 报告的版本是 <code>{versions.cli}</code>；运行它的 Node.js 版本另外用 <code>{"node --version"}</code> 检查。只在本地使用的项目，请创建项目、进入目录，并确认同一个运行时和可执行文件仍然生效：</p>
+    <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site\ncd syndroo-site\ncommand -v syndroo\nnode --version\nnpm --version\nsyndroo --version"}</code></pre>
+    <p>如果 <code>{"cd"}</code> 之后 <code>{"command -v syndroo"}</code> 或 <code>{"node --version"}</code> 发生变化，请先用你的管理器激活项目运行时，再运行任何 Server 命令，例如 <code>{"mise exec -- syndroo --version"}</code>。</p>
+    <p>如需使用 GitHub，请在同一运行时控制的父目录中执行下面这个替代方案，而不要执行上面的本地项目方案；两者都执行会创建嵌套项目。复用已有的 <code>{"gh"}</code> 会话，只有当 <code>{"gh auth status"}</code> 报告没有会话时才运行 <code>{"gh auth login"}</code>。仓库默认私有；只有在你明确选择时才使用 <code>{"--public"}</code>。仓库参数加在同一条命令上，之后进入新项目，因此两个分支都会在运行 doctor 之前停在子目录中：</p>
+    <pre data-label="terminal"><code>{"gh auth status\nsyndroo server init ./syndroo-site --github OWNER/REPO --private\ncd syndroo-site\ncommand -v syndroo\nnode --version\nnpm --version\nsyndroo --version"}</code></pre>
+    <p><code>{"server init"}</code> 会创建应用配置、Wrangler 配置、固定依赖版本的文件、示例帖子和首次 Git 提交。目录通过位置参数传入，因此不使用 <code>{"--project"}</code>。</p>
 
     <h2 id="doctor">2. 运行 doctor</h2>
-    <pre data-label="terminal"><code>{"cd syndroo-site\nsyndroo server doctor --json"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . doctor --json"}</code></pre>
     <p>Doctor 只读，不会修复项目。部署前，请修复任何报告为 <code>{"missing"}</code> 或 <code>{"attention_required"}</code> 的本地检查。部署和凭证预期为 <code>{"not_configured"}</code>，而 OAuth 和发布就绪状态则保持 <code>{"unverified"}</code>。</p>
 
     <h2 id="deploy">3. 登录并部署</h2>
-    <p>Wrangler 必须已经登录。<code>{"server deploy"}</code> 会复用该登录状态，本身不会启动登录流程。</p>
-    <pre data-label="terminal"><code>{"npx wrangler login\nsyndroo server deploy --yes"}</code></pre>
-    <p>结果会报告已部署的 Worker 及其已确认的 HTTPS 地址（域名）。在执行 <code>{"--yes"}</code> 前，请核验 Cloudflare 账号和资源。</p>
+    <p><code>{"server deploy"}</code> 会复用现有的 Wrangler 登录状态，本身不会启动登录流程。请先运行项目本地的 Wrangler，并查看该会话可以访问哪些账号：</p>
+    <pre data-label="terminal"><code>{"./node_modules/.bin/wrangler whoami"}</code></pre>
+    <p>只有当 <code>{"whoami"}</code> 报告会话缺失或已过期时，才运行一次 <code>{"./node_modules/.bin/wrangler login"}</code>，之后再检查一次 <code>{"whoami"}</code>；否则沿用现有会话。</p>
+    <p><code>{"whoami"}</code> 会列出可访问的账号。请选择应拥有该 Worker 的账号，并记下它的 ACCOUNT ID；账号 ID 不是成员 ID 或用户 ID，CLI 会原样接受它。然后确认目标账号、Worker 和资源，再授权这一次部署：</p>
+    <pre data-label="terminal"><code>{"syndroo server --project . deploy --yes"}</code></pre>
+    <p>当该会话可以访问多个账号时，用 <code>{"--account <ACCOUNT_ID>"}</code> 传入所选账号。之后的部署可以省略 <code>{"--account"}</code>，以复用已验证并保存的账号；但显式传入的账号、<code>{"CLOUDFLARE_ACCOUNT_ID"}</code> 或 Wrangler 的 <code>{"account_id"}</code> 必须解析到同一个账号。</p>
+    <p>如果命令报告账号无法使用，那是账号选择问题，而不是认证失败：从 <code>{"whoami"}</code> 的输出中选一个可访问的账号，并用 <code>{"--account"}</code> 重试。只有当 <code>{"whoami"}</code> 显示会话缺失或已过期时才重新登录，而不是仅仅因为它列出的账号不是你想要的账号。</p>
+    <p>结果会报告已部署的 Worker 及其已确认的 HTTPS 地址（域名）。</p>
 
     <h2 id="callback">4. 注册回调地址</h2>
     <p>在 Meta 应用中，用 Worker 的 HTTPS 地址（域名）加上回调路径进行注册。请将示例主机替换为完整且已确认的 HTTPS 地址（域名），例如：</p>
     <pre data-label="callback"><code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code></pre>
 
     <h2 id="connect">5. 连接 Threads</h2>
-    <pre data-label="terminal"><code>{"syndroo server connect threads --app-id APP_ID"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . connect threads --app-id APP_ID"}</code></pre>
     <p>把 <code>{"APP_ID"}</code> 替换为 Threads 应用 ID，并完成 Meta 浏览器提示。终端读取 App Secret 时不回显；自动化流程可以使用 <code>{"THREADS_APP_SECRET"}</code> 或 <code>{"--app-secret-stdin"}</code>。命令会输出连接 ID，并将已验证的 App ID 和连接引用保存到 <code>{"syndroo.config.jsonc"}</code>。</p>
 
     <p><strong>第 6 步和第 7 步是可选的。</strong>如果不想配置 GitHub CI，完成第 5 步后设置就结束了。</p>
 
     <h2 id="ci">6. 可选：准备 GitHub Actions</h2>
     <p>尚未登录时，运行 <code>{"gh auth login"}</code>。然后配置仓库：</p>
-    <pre data-label="terminal"><code>{"syndroo server ci setup github --repo OWNER/REPO --yes"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . ci setup github --repo OWNER/REPO --yes"}</code></pre>
     <p>这会创建 <code>{".github/workflows/threads-publish.yml"}</code> 并配置 <code>{"threads-ci"}</code> GitHub 环境。它不会提交、推送或发布。</p>
     <p>帖子是严格 JSON，只包含一个 <code>{"text"}</code> 属性：</p>
     <pre data-label="posts/hello.json"><code>{"{\n  \"text\": \"Hello from Syndroo CI\"\n}"}</code></pre>
@@ -98,16 +110,29 @@ export const metadata = {
       <li><strong>post_path：</strong><code>{"posts/hello.json"}</code></li>
       <li><strong>request_id：</strong><code>{"threads-ci:hello-001"}</code></li>
     </ul>
-    <p>工作流使用限定范围的令牌调用 <code>{"syndroo server publish threads --input \"$INPUT_PATH\" --request-id \"$REQUEST_ID\" --yes --json"}</code>。只有最终结果为 <code>{"succeeded"}</code> 且至少有一次成功投递时，发布才算成功。</p>
+    <p>生成的工作流会带着限定范围的令牌、仓库中已提交的帖子路径和请求 ID 运行 <code>{"server publish threads"}</code>。只有最终结果为 <code>{"succeeded"}</code> 且至少有一次成功投递时，发布才算成功。</p>
+    <p>提交或运行前请检查生成的发布步骤。{versions.cli} 写出的命令没有带项目范围，而该版本又会拒绝执行它，因此请在这段步骤中 <code>{"server"}</code> 之后加上 <code>{"--project ."}</code>，与上面手动运行的命令一致。已评审的修复会把当前目录作为默认值，在那里这个范围是可选的。</p>
     <p>如果响应丢失或结果为 <code>{"unknown"}</code>，请检查该操作。用相同请求 ID 重跑同一帖子；不要为同一逻辑发布创建新 ID。</p>
 
     <h2 id="files">文件与密钥</h2>
     <p><code>{"syndroo.config.jsonc"}</code> 是受版本跟踪的应用配置。<code>{"wrangler.jsonc"}</code> 是受版本跟踪的 Cloudflare 配置。不要提交 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code>、<code>{"node_modules/"}</code>、环境文件或私有服务器状态。</p>
-    <p>App Secret、CI bearer、Cloudflare admin bearer、<code>{"SECRET_KEY"}</code> 和 <code>{"RUNTIME_KEY"}</code> 不得出现在参数、日志或仓库文件中。请使用隐藏的终端输入，或文档规定的标准输入、环境变量路径。</p>
+    <p>App Secret、CI bearer、Cloudflare admin bearer、<code>{"SECRET_KEY"}</code> 和 <code>{"RUNTIME_KEY"}</code> 不得出现在参数、日志或仓库文件中。请使用隐藏的终端输入，或文档规定的标准输入、环境变量路径。恢复证据只包含标识符，绝不包含令牌、密钥或机密。</p>
 
-    <h2 id="recovery">出现问题时的处理</h2>
+    <h2 id="deploy-recovery">部署结果不确定时</h2>
+    <p>中途停止的部署在获得已核实证据之前，结果都是未知的。请保留报告的操作 ID、已确认的资源和机器回执，然后在同一项目上重新运行：</p>
+    <pre data-label="terminal"><code>{"syndroo server --project . deploy --yes"}</code></pre>
+    <p>普通重跑仍可能直接失败并停止。完整的机器回执可以让重跑在不重新部署的情况下对齐状态；不可用的回执则会保留远端结果的未知状态，此时重跑会要求显式证据，而不是猜测。已发布的 {versions.cli} 已经会报告 <code>{"nextAction"}</code> 和 <code>{"failedStep"}</code>；用于区分失败阶段、部署子进程结束方式和各种回执状态的 <code>{"evidence"}</code> 字段属于已评审的修复，尚未进入已发布的版本。</p>
+    <p>显式恢复只校验标识符，无法修复已安装版本读取不了的私有记录。在 {versions.cli} 中，如果存储的回执或状态文件无法读取、过大或不是有效的 UTF-8，即使你已经持有已核实的证据，重跑也可能被阻断。请原样保留私有状态及其权限，绝不要通过删除文件、放宽权限或绕过检查来绕过它。请遵循报告的 <code>{"nextAction"}</code>；如果同样的格式故障重复出现，请停下来等待已核实的修复，而不要手动修改私有状态。</p>
+    <p>显式证据必须独立核实，不能靠推断。Worker 名称和 <code>{"/health"}</code> 响应都不是证明，Worker 标签也不是版本注记：<code>{"deployments list"}</code> 和 <code>{"versions view"}</code> 都不会返回它。请改从按账号限定的 Workers 服务元数据中读取，即 <code>{"GET /accounts/{account}/workers/services/{name}"}</code> 的 <code>{"result.default_environment.script.tag"}</code> 字段。然后再从最近的部署中读取活动版本并查看它，两者都要固定到同一个已核实账号：</p>
+    <pre data-label="terminal"><code>{"CLOUDFLARE_ACCOUNT_ID=<VERIFIED_ACCOUNT_ID> ./node_modules/.bin/wrangler deployments list --name <WORKER_NAME> --json\nCLOUDFLARE_ACCOUNT_ID=<VERIFIED_ACCOUNT_ID> ./node_modules/.bin/wrangler versions view <ACTIVE_VERSION_ID> --name <WORKER_NAME> --json"}</code></pre>
+    <p>取该部署中百分比大于零的版本 ID，并确认它属于这个 Worker。请使用项目本地的 Wrangler 以及你为该项目选定的运行时。公开访问目标要单独核对：在 Cloudflare 控制台中同一账号下该 Worker 的 <strong>Domains &amp; Routes</strong> 页面上确认；这里不为该检查提供任何 API。并把 Wrangler 报告的绑定与项目的 D1 数据库、队列和已记录的公开源地址对照。这些读取单独都不能确立所有权：CLI 仍会校验账号、项目、Worker、活动版本和目标。</p>
+    <p>最小证据恰好是两个已核实字段，且以 JSON 通过标准输入传入，而不是放在参数里：</p>
+    <pre data-label="terminal"><code>{"printf '%s\\n' '{\"workerTag\":\"<VERIFIED_WORKER_TAG>\",\"versionId\":\"<VERIFIED_VERSION_ID>\"}' | syndroo server --project . deploy --yes --recover -"}</code></pre>
+    <p>两项读取的完整只读流程，包括如何让 Wrangler 令牌不出现在参数、环境变量和日志中，写在包内 Skill 参考 <a href="https://github.com/Syndroo/syndroo/blob/c2d22c159ae79551b3aab92029a3bc8b0b2b6a8c/packages/cli/skills/syndroo/references/server.md">c2d22c1 提交中的 references/server.md</a>。请照它执行，不要从其他地方照抄令牌处理方式。</p>
+    <p>恢复只建立基线。命令随后会部署新版本，这本身就是一次新部署，需要与其他部署相同的明确授权。格式错误或过大的回执不会被当作证据采纳，只有你独立核实的标识符才会继续。在装上会报告这些字段的版本之前，请保留操作 ID 和回执，重跑同一项目，而不要编造标识符。</p>
+
+    <h2 id="recovery">其他故障</h2>
     <ul>
-      <li><strong>部署中断：</strong>保留操作 ID、已确认的资源和机器回执，然后在同一项目上重新运行。仅在证据已经核实且不含机密时使用 <code>{"--recover"}</code>。</li>
       <li><strong>发布结果未知：</strong>将其视为可能已经发布。检查该操作，并为相同内容复用相同请求 ID。</li>
       <li><strong>Doctor 尚未就绪：</strong>查看<a href="/zh/reference/cli/#server">CLI 参考</a>和<a href="/zh/reference/configuration/#server">服务器配置说明</a>中列出的检查项。</li>
       <li><strong>Meta 回调失败：</strong>比较已注册的回调与已确认的 HTTPS 地址（域名），并查看<a href="/zh/platforms/threads/#server">Threads 服务器说明</a>和<a href="/zh/reference/credentials/#server">凭证参考</a>。</li>
@@ -128,6 +153,7 @@ export const metadata = {
     <li><a href="#ci">6. 可选：准备 GitHub Actions</a></li>
     <li><a href="#publish">7. 可选：运行工作流</a></li>
     <li><a href="#files">文件与密钥</a></li>
-    <li><a href="#recovery">问题处理</a></li>
+    <li><a href="#deploy-recovery">部署结果不确定时</a></li>
+    <li><a href="#recovery">其他故障</a></li>
   </ul>
 </nav>

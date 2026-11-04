@@ -5,7 +5,10 @@
 // commands and the approved nested Server/Threads paths, plus the global
 // flags `--config`, `--json`, `--verbose`, `--no-color`, `--help` and
 // `--version`. It is declared once in `packages/content/site-data.ts` as
-// `cliSurface` and mirrored here as the audit's input.
+// `cliSurface` and mirrored here as the audit's input. A declared value-taking
+// group option, such as `server --project <directory>`, may be written before
+// the subcommand it scopes; the flag stays on the invocation and is validated
+// against the help of the group that declares it.
 //
 // Two things are checked, and neither is a rubber stamp:
 //
@@ -60,6 +63,26 @@ export const RETIRED_COMMANDS: readonly string[] = [
 /** Every flag the accepted surface allows, per command. */
 export function documentedFlagsFor(command: string): readonly string[] {
   return cliSurface.commands.find((entry) => entry.name === command)?.flags ?? [];
+}
+
+/**
+ * The value-taking options `command` declares. Only a declared option may stand
+ * between a command and the subcommand it scopes, because only then does the
+ * reader know that the next token is the option's value rather than a command
+ * word. A flag that is not declared here is read as boolean.
+ */
+function declaredValueFlagsFor(command: string): readonly string[] {
+  return cliSurface.commands.find((entry) => entry.name === command)?.valueFlags ?? [];
+}
+
+/**
+ * The options declared by the command groups that contain `command`. A group
+ * option scopes its subcommands, whose own help lists only their own options,
+ * so it is valid on the leaf while remaining unknown on unrelated commands.
+ */
+export function parentFlagsFor(command: string): readonly string[] {
+  return ACCEPTED_COMMANDS.filter((candidate) => command.startsWith(`${candidate} `))
+    .flatMap((candidate) => [...documentedFlagsFor(candidate)]);
 }
 
 /** The union of every flag the accepted surface allows. */
@@ -143,8 +166,25 @@ function inlineCodeSpans(html: string): { body: string; before: string }[] {
 }
 
 /**
+ * The value-taking option in `token` that `command` declares, matched as
+ * `--flag value` or `--flag=value`.
+ */
+function declaredValueFlagOf(command: string, token: string): string | undefined {
+  const name = /^(--[a-z][a-z0-9-]*)(?:=|$)/.exec(token)?.[1];
+  if (name === undefined || !declaredValueFlagsFor(command).includes(name)) {
+    return undefined;
+  }
+  return name;
+}
+
+/**
  * Read one shell command. Parent commands consume only registered child names;
  * a leaf leaves positional arguments and flags to the command-specific audit.
+ *
+ * A declared value-taking group option may be written before the subcommand it
+ * scopes, as in `server --project . connect threads`. The installed CLI also
+ * accepts that option after the leaf; both placements keep the same command
+ * path and are collected from the original line.
  */
 function parseInvocation(line: string): { command: string; flags: string[] } | null {
   const match = INVOCATION_LINE.exec(line);
@@ -159,8 +199,22 @@ function parseInvocation(line: string): { command: string; flags: string[] } | n
 
   const words = [tokens[0] as string];
   let index = 1;
-  while (index < tokens.length && /^[a-z][a-z-]*$/.test(tokens[index] as string)) {
+  while (index < tokens.length) {
+    const token = tokens[index] as string;
     const current = words.join(" ");
+
+    const valueFlag = declaredValueFlagOf(current, token);
+    if (valueFlag !== undefined) {
+      // Skip the option and its value while the command path is resolved. The
+      // flag itself is still collected from the unmodified line below.
+      index += token.startsWith(`${valueFlag}=`) ? 1 : 2;
+      continue;
+    }
+
+    if (!/^[a-z][a-z-]*$/.test(token)) {
+      break;
+    }
+
     const children = ACCEPTED_COMMANDS.filter(
       (command) =>
         command.startsWith(`${current} `) &&
@@ -170,7 +224,7 @@ function parseInvocation(line: string): { command: string; flags: string[] } | n
       break;
     }
 
-    words.push(tokens[index] as string);
+    words.push(token);
     index += 1;
     if (!ACCEPTED_COMMANDS.includes(words.join(" "))) {
       break;
@@ -303,7 +357,11 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
       continue;
     }
 
-    const allowed = new Set([...global, ...documentedFlagsFor(invocation.command)]);
+    const allowed = new Set([
+      ...global,
+      ...documentedFlagsFor(invocation.command),
+      ...parentFlagsFor(invocation.command),
+    ]);
     for (const flag of invocation.flags) {
       if (!allowed.has(flag)) {
         issues.push(
@@ -365,9 +423,12 @@ export async function checkCliContract(options: CliContractOptions): Promise<str
 
   for (const invocation of invocations) {
     const help = helpByCommand.get(invocation.command) ?? "";
+    const inherited = new Set(parentFlagsFor(invocation.command));
     for (const flag of invocation.flags) {
       const isGlobal = ACCEPTED_GLOBAL_FLAGS.includes(flag) && !globalFlagProblems.has(flag);
-      if (!help.includes(flag) && !isGlobal) {
+      // An inherited group option is listed by the help of the group that
+      // declares it, which the mirror above checks, not by the leaf's own help.
+      if (!help.includes(flag) && !isGlobal && !inherited.has(flag)) {
         issues.push(
           `${invocation.page} documents "${flag}" on "syndroo ${invocation.command}", but that command's help does not accept it`,
         );

@@ -104,7 +104,7 @@ function decodeEntities(value: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/&#(?:39|x27);/gi, "'")
     .replace(/&amp;/g, "&");
 }
 
@@ -753,6 +753,155 @@ test("the seven-package install and Agent onboarding contract is complete", asyn
     assert.ok(text.includes("npm root --global"), `${file} should resolve the Skill from the global root`);
     assert.ok(text.includes(SYNDROO_SKILL_PATH), `${file} should name the bundled Skill`);
     assert.ok(text.includes(`<pre data-label="agent prompt">`), `${file} should offer a copyable prompt`);
+  }
+});
+
+test("the Agent prompt settles the project runtime before it installs", () => {
+  const cases = [
+    {
+      label: "English",
+      prompt: SYNDROO_AGENT_PROMPT,
+      project: /project directory/,
+      manager: /runtime manager/,
+      homebrew: /Do not assume Homebrew/,
+    },
+    {
+      label: "Chinese",
+      prompt: SYNDROO_AGENT_PROMPT_ZH,
+      project: /项目目录/,
+      manager: /运行时管理器/,
+      homebrew: /不要假设使用 Homebrew/,
+    },
+  ];
+
+  for (const { label, prompt, project, manager, homebrew } of cases) {
+    const installAt = prompt.indexOf(SYNDROO_INSTALL_COMMAND);
+    assert.ok(installAt > 0, `${label} prompt should carry the one shared install command`);
+
+    // Order is the contract: the project directory and the runtime that will
+    // receive the install are settled before the install runs, so a later
+    // command cannot resolve a different Node installation.
+    const before = prompt.slice(0, installAt);
+    assert.match(before, project, `${label} prompt should establish the project directory first`);
+    assert.match(before, manager, `${label} prompt should ask for the runtime manager first`);
+
+    for (const marker of [
+      "command -v node npm",
+      "node --version",
+      "npm --version",
+      "npm root --global",
+      "npm prefix --global",
+    ]) {
+      const at = prompt.indexOf(marker);
+      assert.ok(at !== -1, `${label} prompt should record ${marker}`);
+      assert.ok(at < installAt, `${label} prompt should record ${marker} before installing`);
+    }
+
+    assert.match(prompt, /mise exec --/, `${label} prompt should show the optional mise prefix`);
+    assert.match(prompt, homebrew, `${label} prompt should refuse to assume Homebrew`);
+    assert.ok(!/brew install/i.test(prompt), `${label} prompt must not install with a Homebrew formula`);
+
+    // `mise which` takes a single argument, so each lookup is its own command.
+    const whichSpans = [...prompt.matchAll(/`([^`]+)`/g)]
+      .map((match) => match[1] as string)
+      .filter((span) => span.startsWith("mise which "));
+    assert.ok(whichSpans.length >= 3, `${label} prompt should check each resolved executable`);
+    for (const span of whichSpans) {
+      assert.equal(
+        span.trim().split(/\s+/).length,
+        3,
+        `${label} prompt must pass one argument to "${span}"`,
+      );
+    }
+
+    assert.match(prompt, /--project \./, `${label} prompt should scope Server commands in 0.7.0`);
+    assert.match(prompt, /secrets|机密/i, `${label} prompt should keep secrets out of arguments`);
+  }
+});
+
+test("the Server guide keeps the 0.7.0 project scope and the release boundary", async () => {
+  const reviewUrl =
+    "https://github.com/Syndroo/syndroo/blob/c2d22c159ae79551b3aab92029a3bc8b0b2b6a8c/packages/cli/skills/syndroo/references/server.md";
+  const evidence = '{"workerTag":"<VERIFIED_WORKER_TAG>","versionId":"<VERIFIED_VERSION_ID>"}';
+
+  for (const { file, unreleased, member, tag, homebrew } of [
+    {
+      file: "getting-started/server/index.html",
+      unreleased: /not in a published release/,
+      member: /not a member or user ID/,
+      tag: /Worker tag is not a version annotation/,
+      homebrew: /Do not assume Homebrew/,
+    },
+    {
+      file: "zh/getting-started/server/index.html",
+      unreleased: /尚未进入已发布的版本/,
+      member: /不是成员 ID 或用户 ID/,
+      tag: /Worker 标签也不是版本注记/,
+      homebrew: /不要假设使用 Homebrew/,
+    },
+  ] as const) {
+    const flat = authoredText(await docsPage(file)).replace(/\s+/g, " ");
+
+    for (const command of [
+      "syndroo server --project . deploy --yes",
+      "syndroo server --project . connect threads --app-id APP_ID",
+      "syndroo server --project . doctor --json",
+      "./node_modules/.bin/wrangler whoami",
+    ]) {
+      assert.ok(flat.includes(command), `${file} should keep the 0.7.0-safe "${command}"`);
+    }
+
+    assert.ok(flat.includes(evidence), `${file} should show the minimal recovery evidence`);
+    assert.ok(flat.includes(reviewUrl), `${file} should link the reviewed recovery procedure`);
+    assert.match(flat, unreleased, `${file} should say the fix is not released`);
+    assert.match(flat, member, `${file} should keep an account ID apart from a member ID`);
+    assert.match(flat, tag, `${file} should say a Worker tag is not a version annotation`);
+    assert.match(flat, homebrew, `${file} should not assume Homebrew`);
+    assert.ok(
+      flat.includes("Domains & Routes"),
+      `${file} should use the dashboard for the public target`,
+    );
+
+    // The project is created as a new directory below the runtime-controlled
+    // parent and entered afterwards, so a manager config in the parent is not a
+    // conflict and the runtime is checked again inside the project.
+    for (const command of [
+      "syndroo server init ./syndroo-site",
+      "cd syndroo-site",
+      "command -v syndroo",
+      "node --version",
+    ]) {
+      assert.ok(flat.includes(command), `${file} should keep the initialization step "${command}"`);
+    }
+
+    // The evidence is piped to stdin. A rendered newline escape instead of a
+    // literal backslash-n would reach printf as a character sequence that does
+    // not end the JSON line, so the page must show exactly one backslash.
+    const separator = /printf '%s(.*?)' '\{/.exec(flat)?.[1];
+    assert.equal(separator, "\\n", `${file} should render the printf newline as one backslash-n`);
+  }
+
+  // The command reference carries the same 0.7.0 scope for the two affected
+  // commands and names the reviewed fix instead of implying it is published.
+  for (const file of ["reference/cli/index.html", "zh/reference/cli/index.html"]) {
+    const flat = authoredText(await docsPage(file)).replace(/\s+/g, " ");
+    assert.ok(
+      flat.includes(
+        "syndroo server --project . connect threads --app-id APP_ID",
+      ),
+      `${file} should scope connect threads`,
+    );
+    assert.ok(
+      flat.includes(
+        "syndroo server --project . publish threads --input FILE --request-id REQUEST_ID --yes --json",
+      ),
+      `${file} should scope publish threads`,
+    );
+    assert.ok(
+      flat.includes("reviewed fix makes the current directory the default") ||
+        flat.includes("已评审的修复会把当前目录"),
+      `${file} should name the reviewed fix`,
+    );
   }
 });
 

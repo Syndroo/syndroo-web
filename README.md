@@ -89,8 +89,12 @@ with live Meta, Cloudflare or GitHub accounts. The generic hosted HTTP API, SDK
 and earlier-release walkthroughs remain outside this public surface.
 
 The product checkout in `.github/workflows/ci.yml` is pinned to
-`c656b5ec999bb8363e0f63451df492b825d4ba2f`. ROOT verifies the seven public
-packages from a clean npm prefix before rollout.
+`c2d22c159ae79551b3aab92029a3bc8b0b2b6a8c`. That pin carries the reviewed Server
+onboarding and deployment-recovery fix; it is not a published release, so
+`0.7.0` remains the release these pages describe. The Server guide therefore
+keeps the `--project .` scope that `0.7.0` requires, and states that the recovery
+evidence the fix reports is not in the published package yet. ROOT verifies the
+seven public packages from a clean npm prefix before rollout.
 
 ## License
 
