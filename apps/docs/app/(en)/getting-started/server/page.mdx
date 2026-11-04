@@ -34,15 +34,20 @@ export const metadata = {
 
     <div className="tip" id="status">
       <p><strong>{versions.cli} self-hosted path.</strong> <code>{"server init"}</code> uses {versions.cli} <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code> packages and installs project-local Wrangler. Cloudflare, GitHub, Meta and Threads acceptance remains unverified. See the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
+      <p><strong>Project scope in this release.</strong> A Server command that works on a project is meant to use the project in the current directory. The published {versions.cli} release already does that for <code>{"deploy"}</code> and <code>{"doctor"}</code>, but <code>{"connect threads"}</code> and <code>{"publish threads"}</code> refuse to guess and ask for the project explicitly. Every example that operates on the project therefore passes <code>{"--project ."}</code> before the subcommand, so the same lines work on both the published release and the reviewed fix. That fix is not in a published release yet; explicit scope stays correct either way.</p>
     </div>
 
     <h2 id="prerequisites">What you need</h2>
     <ul>
-      <li>Node.js 24.19.0 or newer on macOS or Linux.</li>
-      <li>Git with your name and email configured, plus npm.</li>
+      <li>Node.js 24.19.0 or newer on macOS or Linux, with npm.</li>
+      <li>Git with your name and email configured.</li>
       <li>A Cloudflare account and a Threads app in Meta.</li>
       <li>GitHub CLI <code>{"gh"}</code> if you want a repository and manual CI.</li>
+      <li>A project directory that will own the deployment, and the runtime manager that directory declares.</li>
     </ul>
+    <p>Choose the runtime before installing. From the project directory, record the runtime that is actually in effect and where a global install lands:</p>
+    <pre data-label="terminal"><code>{"command -v node npm\nnode --version\nnpm --version\nnpm root --global\nnpm prefix --global"}</code></pre>
+    <p>Use that same runtime for the install, the version check and every later command. With mise, prefix each command with <code>{"mise exec --"}</code> and resolve the paths one at a time, because <code>{"mise which"}</code> takes a single argument: <code>{"mise which node"}</code>, <code>{"mise which npm"}</code> and <code>{"mise which syndroo"}</code>. A shim is expected, so check the executable the shell resolves instead of comparing pathnames or editing <code>{"PATH"}</code>. Do not assume Homebrew: several Node installations can coexist, and <code>{"command -v node"}</code> says which one wins.</p>
 
     <h2 id="agent-prompt">Let an agent run the setup</h2>
     <p>Paste this prompt into an agent:</p>
@@ -51,41 +56,48 @@ export const metadata = {
 For this task, use the self-hosted Server workflow, deploy to my Cloudflare account, and connect one Threads app.
 Follow https://YOUR-DOCS-ORIGIN/getting-started/server/ after replacing YOUR-DOCS-ORIGIN with the configured docs origin.
 Ask whether I want GitHub; if yes, get OWNER/REPO and private/public, defaulting to private.
-Use stable request IDs and stop for Wrangler login, Meta authorization or Git push when those actions still need me.`}</code></pre>
+Use stable request IDs and stop for Wrangler login, Meta authorization or Git push when those actions still need me.
+Pass the project explicitly with --project . on every Server command that works on the project. Select my intended account from the accessible accounts listed by the project-local Wrangler whoami output, and pass that account ID with --account. If my intended account is not listed, stop and ask me; never deploy to another account. Authenticate only when the session is missing or expired.`}</code></pre>
 
     <h2 id="initialize">1. Create the project</h2>
-    <p>Install the CLI used by this guide, then check the local tools:</p>
-    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\nsyndroo --version`}</code></pre>
-    <p>Confirm that <code>{"syndroo --version"}</code> prints <code>{versions.cli}</code> before continuing.</p>
-    <pre data-label="terminal"><code>{"node --version\ngit config --get user.name\ngit config --get user.email\nnpm --version"}</code></pre>
-    <p>For a local-only project, run:</p>
-    <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site"}</code></pre>
-    <p>For GitHub, log in first and add the repository flags to the same command. Private is the default; use <code>{"--public"}</code> only when that is your choice.</p>
-    <pre data-label="terminal"><code>{"gh auth login\nsyndroo server init ./syndroo-site --github OWNER/REPO --private"}</code></pre>
-    <p><code>{"server init"}</code> creates the application and Wrangler configs, pinned dependency files, a sample post and the first Git commit.</p>
+    <p>Run this from the parent directory that the runtime you selected controls. Choose a destination that is missing or empty, or an existing Syndroo project whose initialization can be resumed; <code>{"server init"}</code> refuses a nonempty directory and reports <code>{"SERVER_PROJECT_CONFLICT"}</code>. Check the local tools first:</p>
+    <pre data-label="terminal"><code>{"node --version\nnpm --version\nnpm root --global\ngit config --get user.name\ngit config --get user.email"}</code></pre>
+    <p>Then install the CLI used by this guide and check what the shell resolves:</p>
+    <pre data-label="terminal"><code>{`npm install --global @syndroo/cli@${versions.cli}\ncommand -v syndroo\nsyndroo --version`}</code></pre>
+    <p>Confirm that <code>{"syndroo --version"}</code> reports <code>{versions.cli}</code>; the Node.js that ran it is checked separately with <code>{"node --version"}</code>. For a local-only project, create it, enter it, and confirm that the same runtime and executable are still in effect:</p>
+    <pre data-label="terminal"><code>{"syndroo server init ./syndroo-site\ncd syndroo-site\ncommand -v syndroo\nnode --version\nnpm --version\nsyndroo --version"}</code></pre>
+    <p>If <code>{"command -v syndroo"}</code> or <code>{"node --version"}</code> changes after the <code>{"cd"}</code>, activate the project runtime with your manager before running any Server command, for example <code>{"mise exec -- syndroo --version"}</code>.</p>
+    <p>For GitHub, run this alternative instead of the local-only block above, from the same runtime-controlled parent; running both would create a nested project. Reuse an existing <code>{"gh"}</code> session and run <code>{"gh auth login"}</code> only when <code>{"gh auth status"}</code> reports that none exists. Private is the default; use <code>{"--public"}</code> only when that is your choice. The repository flags go on the same command, and the new project is entered afterwards, so either branch ends inside the child directory before doctor:</p>
+    <pre data-label="terminal"><code>{"gh auth status\nsyndroo server init ./syndroo-site --github OWNER/REPO --private\ncd syndroo-site\ncommand -v syndroo\nnode --version\nnpm --version\nsyndroo --version"}</code></pre>
+    <p><code>{"server init"}</code> creates the application and Wrangler configs, pinned dependency files, a sample post and the first Git commit. It takes the directory as its argument, so it does not use <code>{"--project"}</code>.</p>
 
     <h2 id="doctor">2. Run doctor</h2>
-    <pre data-label="terminal"><code>{"cd syndroo-site\nsyndroo server doctor --json"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . doctor --json"}</code></pre>
     <p>Doctor is read-only and does not repair the project. Fix any local check reported as <code>{"missing"}</code> or <code>{"attention_required"}</code> before deploying. Deployment and credentials are expected to be <code>{"not_configured"}</code>, while OAuth and publication readiness remain <code>{"unverified"}</code>.</p>
 
     <h2 id="deploy">3. Log in and deploy</h2>
-    <p>Wrangler must already be logged in. <code>{"server deploy"}</code> reuses that login and does not launch a login flow itself.</p>
-    <pre data-label="terminal"><code>{"npx wrangler login\nsyndroo server deploy --yes"}</code></pre>
-    <p>The result reports a deployed Worker and its confirmed HTTPS origin. Review the Cloudflare account and resources before running <code>{"--yes"}</code>.</p>
+    <p><code>{"server deploy"}</code> reuses an existing Wrangler login and does not launch one itself. Run the project-local Wrangler first and read which accounts the session can reach:</p>
+    <pre data-label="terminal"><code>{"./node_modules/.bin/wrangler whoami"}</code></pre>
+    <p>Run <code>{"./node_modules/.bin/wrangler login"}</code> once only when <code>{"whoami"}</code> reports that the session is missing or expired, and recheck with <code>{"whoami"}</code> afterwards; otherwise keep the session you already have.</p>
+    <p><code>{"whoami"}</code> lists the accessible accounts. Choose the ACCOUNT ID of the account that should own the Worker; an account ID is not a member or user ID, and the CLI accepts it verbatim. Then review the target account, Worker and resources and authorize this one deployment:</p>
+    <pre data-label="terminal"><code>{"syndroo server --project . deploy --yes"}</code></pre>
+    <p>Pass the chosen account with <code>{"--account <ACCOUNT_ID>"}</code> when the session can reach more than one. On a later deploy, omit <code>{"--account"}</code> to reuse the verified stored account; an explicit account, <code>{"CLOUDFLARE_ACCOUNT_ID"}</code> or a Wrangler <code>{"account_id"}</code> must resolve to that same account.</p>
+    <p>If the command reports that the account cannot be used, that is a selection problem rather than an authentication failure: pick an accessible account from the <code>{"whoami"}</code> output and retry with <code>{"--account"}</code>. Sign in again only when <code>{"whoami"}</code> shows that the session is missing or expired, not merely because it lists an account other than the one you meant.</p>
+    <p>The result reports a deployed Worker and its confirmed HTTPS origin.</p>
 
     <h2 id="callback">4. Register the callback</h2>
     <p>In your Meta app, register the Worker origin followed by the callback path. For example, replace the example host with your complete confirmed origin:</p>
     <pre data-label="callback"><code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code></pre>
 
     <h2 id="connect">5. Connect Threads</h2>
-    <pre data-label="terminal"><code>{"syndroo server connect threads --app-id APP_ID"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . connect threads --app-id APP_ID"}</code></pre>
     <p>Replace <code>{"APP_ID"}</code> with the Threads app ID and complete the Meta browser prompt. A terminal reads the App Secret without echo; automation can use <code>{"THREADS_APP_SECRET"}</code> or <code>{"--app-secret-stdin"}</code>. The command prints the connection ID and saves the verified App ID and connection reference in <code>{"syndroo.config.jsonc"}</code>.</p>
 
     <p><strong>Steps 6 and 7 are optional.</strong> If you do not want GitHub CI, setup is complete after step 5.</p>
 
     <h2 id="ci">6. Optionally prepare GitHub Actions</h2>
     <p>Run <code>{"gh auth login"}</code> if you have not already. Then configure the repository:</p>
-    <pre data-label="terminal"><code>{"syndroo server ci setup github --repo OWNER/REPO --yes"}</code></pre>
+    <pre data-label="terminal"><code>{"syndroo server --project . ci setup github --repo OWNER/REPO --yes"}</code></pre>
     <p>This creates <code>{".github/workflows/threads-publish.yml"}</code> and configures the <code>{"threads-ci"}</code> GitHub environment. It does not commit, push or publish.</p>
     <p>Your post is strict JSON with one <code>{"text"}</code> property:</p>
     <pre data-label="posts/hello.json"><code>{"{\n  \"text\": \"Hello from Syndroo CI\"\n}"}</code></pre>
@@ -98,16 +110,29 @@ Use stable request IDs and stop for Wrangler login, Meta authorization or Git pu
       <li><strong>post_path:</strong> <code>{"posts/hello.json"}</code></li>
       <li><strong>request_id:</strong> <code>{"threads-ci:hello-001"}</code></li>
     </ul>
-    <p>The workflow invokes <code>{"syndroo server publish threads --input \"$INPUT_PATH\" --request-id \"$REQUEST_ID\" --yes --json"}</code> with a scoped token. Publication succeeds only with a settled <code>{"succeeded"}</code> result and at least one successful delivery.</p>
+    <p>The generated workflow runs <code>{"server publish threads"}</code> with a scoped token, the checked-in post path and the request ID. Publication succeeds only with a settled <code>{"succeeded"}</code> result and at least one successful delivery.</p>
+    <p>Review the generated publish step before you commit or run it. The {versions.cli} release writes the command without the project scope and then refuses to run it, so add <code>{"--project ."}</code> after <code>{"server"}</code> in that step, exactly as in the manual commands above. The reviewed fix makes the current directory the default, so the scope is optional there.</p>
     <p>If the response is lost or the result is <code>{"unknown"}</code>, inspect the operation. Rerun the same post with the same request ID; do not create a new ID for the same logical publication.</p>
 
     <h2 id="files">Files and secrets</h2>
     <p><code>{"syndroo.config.jsonc"}</code> is the tracked application config. <code>{"wrangler.jsonc"}</code> is the tracked Cloudflare config. Do not commit <code>{"wrangler.effective.jsonc"}</code>, <code>{".syndroo/"}</code>, <code>{"node_modules/"}</code>, environment files or private server state.</p>
-    <p>The App Secret, CI bearer, Cloudflare admin bearer, <code>{"SECRET_KEY"}</code> and <code>{"RUNTIME_KEY"}</code> must not appear in arguments, logs or repository files. Use hidden terminal input or the documented stdin or environment paths.</p>
+    <p>The App Secret, CI bearer, Cloudflare admin bearer, <code>{"SECRET_KEY"}</code> and <code>{"RUNTIME_KEY"}</code> must not appear in arguments, logs or repository files. Use hidden terminal input or the documented stdin or environment paths. Recovery evidence is identifiers only: it never carries a token, a key or a secret.</p>
 
-    <h2 id="recovery">If something goes wrong</h2>
+    <h2 id="deploy-recovery">If a deploy is uncertain</h2>
+    <p>A deploy that stops midway has an unknown result until verified evidence says otherwise. Keep the reported operation ID, the confirmed resources and the machine receipt, then rerun the same project:</p>
+    <pre data-label="terminal"><code>{"syndroo server --project . deploy --yes"}</code></pre>
+    <p>An ordinary rerun may still fail closed. A complete machine receipt can let it reconcile without a new deployment, while an unusable receipt leaves the remote result unknown and the rerun asks for explicit evidence instead of guessing. The published {versions.cli} release already reports <code>{"nextAction"}</code> and <code>{"failedStep"}</code>; the <code>{"evidence"}</code> fields that separate the failing stage, the deploy subprocess ending and each receipt state are part of the reviewed fix and are not in a published release.</p>
+    <p>Explicit recovery verifies identifiers; it cannot repair a private record that the installed release fails to read. In {versions.cli} a stored receipt or state file that is unreadable, oversized or not valid UTF-8 can block a rerun even when you already hold verified evidence. Keep the private state and its permissions exactly as they are, and never delete files, loosen permissions or bypass a guard to get past a check. Follow the reported <code>{"nextAction"}</code>; if the same format failure repeats, stop and wait for the verified fix rather than editing private state by hand.</p>
+    <p>Explicit evidence has to be verified independently, never inferred. A Worker name and a <code>{"/health"}</code> response are not proof, and a Worker tag is not a version annotation: <code>{"deployments list"}</code> and <code>{"versions view"}</code> do not return it. Read the tag from the account-scoped Workers service metadata instead, field <code>{"result.default_environment.script.tag"}</code> of <code>{"GET /accounts/{account}/workers/services/{name}"}</code>. Then read the active version from the most recent deployment and inspect it, both pinned to the same verified account:</p>
+    <pre data-label="terminal"><code>{"CLOUDFLARE_ACCOUNT_ID=<VERIFIED_ACCOUNT_ID> ./node_modules/.bin/wrangler deployments list --name <WORKER_NAME> --json\nCLOUDFLARE_ACCOUNT_ID=<VERIFIED_ACCOUNT_ID> ./node_modules/.bin/wrangler versions view <ACTIVE_VERSION_ID> --name <WORKER_NAME> --json"}</code></pre>
+    <p>Take the version ID whose percentage is greater than zero in that deployment and confirm it belongs to this Worker. Use the project-local Wrangler and the runtime you selected for the project. Check the public target separately on the Worker's <strong>Domains &amp; Routes</strong> page in the Cloudflare dashboard for the same account; no API for that check is documented here. Compare the bindings Wrangler reports with the project's D1 database, queues and recorded origin. None of these reads establishes ownership on its own: the CLI still verifies account, project, Worker, active version and target.</p>
+    <p>The minimal evidence is exactly two verified fields, supplied as JSON on standard input rather than in an argument:</p>
+    <pre data-label="terminal"><code>{"printf '%s\\n' '{\"workerTag\":\"<VERIFIED_WORKER_TAG>\",\"versionId\":\"<VERIFIED_VERSION_ID>\"}' | syndroo server --project . deploy --yes --recover -"}</code></pre>
+    <p>The reviewed read-only procedure for both reads, including how the Wrangler token is kept out of arguments, environment variables and logs, is in the packaged Skill reference <a href="https://github.com/Syndroo/syndroo/blob/c2d22c159ae79551b3aab92029a3bc8b0b2b6a8c/packages/cli/skills/syndroo/references/server.md">references/server.md at commit c2d22c1</a>. Follow it instead of copying token handling from anywhere else.</p>
+    <p>Recovery only establishes a baseline. The command then deploys a new version, which is a new deployment and needs the same explicit authorization as any other. A malformed or oversized receipt is not adopted as evidence, and only identifiers you verified independently continue. Until a release that reports these fields is installed, keep the operation ID and the receipt, rerun the same project, and stop rather than inventing identifiers.</p>
+
+    <h2 id="recovery">Other failures</h2>
     <ul>
-      <li><strong>Interrupted deploy:</strong> preserve its operation ID, confirmed resources and machine receipt, then rerun the same project. Use <code>{"--recover"}</code> only with verified non-secret evidence.</li>
       <li><strong>Unknown publication:</strong> treat it as possibly published. Inspect the operation and reuse the same request ID for the same content.</li>
       <li><strong>Doctor is not ready:</strong> read the named checks in the <a href="/reference/cli/#server">CLI reference</a> and the <a href="/reference/configuration/#server">server configuration notes</a>.</li>
       <li><strong>Meta callback fails:</strong> compare the registered callback with your confirmed origin and see the <a href="/platforms/threads/#server">Threads server notes</a> and <a href="/reference/credentials/#server">credential reference</a>.</li>
@@ -128,6 +153,7 @@ Use stable request IDs and stop for Wrangler login, Meta authorization or Git pu
     <li><a href="#ci">6. Optional: prepare GitHub Actions</a></li>
     <li><a href="#publish">7. Optional: run the workflow</a></li>
     <li><a href="#files">Files and secrets</a></li>
-    <li><a href="#recovery">Recovery</a></li>
+    <li><a href="#deploy-recovery">If a deploy is uncertain</a></li>
+    <li><a href="#recovery">Other failures</a></li>
   </ul>
 </nav>

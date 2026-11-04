@@ -75,7 +75,7 @@ export const metadata = {
     <p>启动步骤会返回一个授权动作，由浏览器在 Threads 授权主机完成；本地 CLI 会自行完成该 OAuth 回调，使用 <code>{"--redirect-uri"}</code> 和控制终端，或使用 <code>{"--callback-url -"}</code>，如<a href="/zh/reference/credentials/#browser">凭证参考</a>所述。这条本地回调路径只针对本地服务器做了模拟测试；尚未连接真实的 Threads 账号。</p>
 
     <h2 id="server">部署服务器</h2>
-    <p>本页的 <code>{"syndroo connect"}</code> 流程保持在本地。如需通过自己的 Cloudflare Worker 运行 Threads OAuth，并从 GitHub Actions 发布，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。该流程使用已确认的主机注册 <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code>，并运行 <code>{"syndroo server connect threads --app-id APP_ID"}</code>。</p>
+    <p>本页的 <code>{"syndroo connect"}</code> 流程保持在本地。如需通过自己的 Cloudflare Worker 运行 Threads OAuth，并从 GitHub Actions 发布，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。该流程使用已确认的主机注册 <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code>，并运行 <code>{"syndroo server --project . connect threads --app-id APP_ID"}</code>。</p>
     <p><strong>自托管 Server。</strong>Server 流程使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
 
     <h2 id="first-publish">首次发布</h2>
