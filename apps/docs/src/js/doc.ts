@@ -8,6 +8,10 @@
  */
 import { docsPagesByLocale, ui } from "@syndroo/content/site-data";
 import type { Locale } from "@syndroo/content/site-data";
+import hljs from "highlight.js/lib/core";
+import bash from "highlight.js/lib/languages/bash";
+import json from "highlight.js/lib/languages/json";
+import typescript from "highlight.js/lib/languages/typescript";
 import { localizeCodeLabel } from "../../lib/code-labels";
 import { matchesSearch, normalizeSearchText, searchTokens } from "../../lib/search";
 
@@ -820,6 +824,95 @@ function wireCopyButtons(): void {
 }
 
 /* ------------------------------------------------------------------ */
+/* Syntax highlighting                                                 */
+/* ------------------------------------------------------------------ */
+
+// Only the grammars the published samples need are registered: the export has
+// plain-text samples too, and shipping every grammar would grow the bundle.
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("typescript", typescript);
+
+/** Authored shell samples: a command line, its transcript, or its usage text. */
+const BASH_LABELS = new Set(["terminal", "usage", "retry and confirm", "SYNDROO_CREDENTIALS"]);
+
+/**
+ * A label that names a JSON document, such as `connect.json`, is JSON even when
+ * the sample is a fragment. Labels that are prose instead of a file name are
+ * decided by `looksLikeJson`, so a renamed sample stays correct.
+ */
+function labelNamesJson(label: string): boolean {
+  return label.endsWith(".json");
+}
+
+/** A whole sample that parses as one JSON document is JSON. */
+function looksLikeJson(source: string): boolean {
+  const trimmed = source.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return false;
+  }
+  try {
+    JSON.parse(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Map an authored `data-label` onto a registered highlight.js grammar.
+ * Samples that are neither shell nor JSON nor TypeScript - an Agent prompt, a
+ * callback URL - stay plain, which is the honest rendering for prose.
+ */
+function highlightLanguage(label: string, source: string): string | null {
+  const normalized = label.trim().toLowerCase();
+
+  if (normalized.endsWith(".ts") || normalized.endsWith(".tsx")) {
+    return "typescript";
+  }
+  if (labelNamesJson(normalized) || looksLikeJson(source)) {
+    return "json";
+  }
+  if (BASH_LABELS.has(normalized)) {
+    return "bash";
+  }
+  return null;
+}
+
+/*
+ * Highlighting runs on the already-exported markup, so the static HTML stays the
+ * authored source: copy buttons read `textContent`, and a reader without
+ * JavaScript still sees every sample. `data-highlighted` makes the step
+ * idempotent for the pages that boot more than once.
+ */
+function wireSyntaxHighlighting(): void {
+  const blocks = document.querySelectorAll<HTMLPreElement>("main article pre");
+
+  for (let i = 0; i < blocks.length; i += 1) {
+    const pre = blocks[i];
+    const code = pre.querySelector("code");
+    if (!code || code.getAttribute("data-highlighted") === "true") {
+      continue;
+    }
+
+    const source = code.textContent || "";
+    if (!source.trim()) {
+      continue;
+    }
+
+    const label = pre.getAttribute("data-label") || "";
+    const language = highlightLanguage(label, source);
+    if (!language) {
+      continue;
+    }
+
+    code.innerHTML = hljs.highlight(source, { language, ignoreIllegals: true }).value;
+    code.setAttribute("data-highlighted", "true");
+    pre.setAttribute("data-language", language);
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Boot                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -879,6 +972,7 @@ export function bootDocs(locale: Locale): void {
   wireSidebar();
   wireToc();
   wireCopyButtons();
+  wireSyntaxHighlighting();
 
   // Warm the index so the first open is instant; failures are handled per page.
   if ("requestIdleCallback" in window) {

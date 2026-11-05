@@ -38,7 +38,7 @@ export const metadata = {
     <p>对于本地请求，<code>{"operation"}</code> 是 <code>{"connect"}</code>、<code>{"publish"}</code> 和 <code>{"status"}</code> 之一。消息是由代码选择的静态文本，绝不会根据堆栈、路径、响应正文或参数生成，因此诊断信息不会携带机密。</p>
 
     <h2 id="server">Server 信封</h2>
-    <p><strong>自托管 Server。</strong>Server 命令是独立路径，使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。其 JSON 使用 <code>{"operation: \"server\""}</code>，并通过 <code>{"result.subcommand"}</code> 区分 <code>{"init"}</code>、<code>{"doctor"}</code>、<code>{"deploy"}</code>、<code>{"connect"}</code>、<code>{"ci"}</code> 和 <code>{"publish"}</code>。</p>
+    <p><strong>自托管 Server。</strong>Server 命令是独立路径，使用 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code>。其 JSON 使用 <code>{"operation: \"server\""}</code>，并通过 <code>{"result.subcommand"}</code> 区分 <code>{"init"}</code>、<code>{"doctor"}</code>、<code>{"deploy"}</code>、<code>{"connect"}</code>、<code>{"ci"}</code> 和 <code>{"publish"}</code>。</p>
     <p>Server 请求和结果结构与下文的本地请求族不同。请按照<a href="/zh/getting-started/server/">部署服务器</a>操作；其结果、恢复 ID 和验收限制汇总在<a href="/zh/reference/cli/#server">Server 命令参考</a>中。</p>
 
     <h2 id="connect">connect</h2>

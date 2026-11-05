@@ -43,6 +43,7 @@ export function DocsTopbar({
             <img src="/assets/logo.svg" alt="" width="26" height="26" />
             <span className="brand-name">Syndroo</span>
             <span className="brand-suffix">{messages.docs.suffix}</span>
+            <span className="brand-version">v{versions.docs}</span>
           </a>
           <div className="topbar-actions">
             <button
@@ -86,6 +87,12 @@ export function DocsTopbar({
           </div>
         </div>
       </header>
+      <div className="docs-development-warning" role="note" aria-label={locale === "en" ? "Development warning" : "开发阶段提示"}>
+        <span aria-hidden="true">⚠</span>{" "}
+        {locale === "en"
+          ? "Syndroo is under active development. Documentation and CLI behavior may change, and features are not guaranteed to work reliably."
+          : "Syndroo 仍处于积极开发阶段。文档与 CLI 行为可能随时调整，暂不保证所有功能都能正常、稳定运行。"}
+      </div>
     </>
   );
 }
@@ -135,11 +142,7 @@ export function DocsFooter({ locale }: { locale: Locale }): React.JSX.Element {
   return (
     <footer className="site-footer">
       <div className="footer-inner">
-        <span>
-          {locale === "en"
-            ? `Syndroo ${versions.docs} docs (${versions.releaseStage}). Apache-2.0. Copyright 2026 Syndroo.`
-            : `Syndroo ${versions.docs} 文档（${versions.releaseStageZh}）。Apache-2.0。2026 Syndroo 版权所有。`}
-        </span>
+        <span>&copy; 2026 Syndroo</span>
         <nav aria-label={messages.docs.footer}>
           <a href={`${prefix}/`}>{messages.docs.overview}</a>
           <a href={`${prefix}/getting-started/local-cli/`}>{locale === "en" ? "Local CLI" : "本地 CLI"}</a>

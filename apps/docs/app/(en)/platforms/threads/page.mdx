@@ -76,7 +76,7 @@ export const metadata = {
 
     <h2 id="server">Deploy a server</h2>
     <p>This page's <code>{"syndroo connect"}</code> flow stays local. To run Threads OAuth through your own Cloudflare Worker and publish from GitHub Actions, follow <a href="/getting-started/server/">Deploy a server</a>. That flow registers <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code> with the confirmed host and runs <code>{"syndroo server --project . connect threads --app-id APP_ID"}</code>.</p>
-    <p><strong>Self-hosted Server.</strong> The Server flow uses <code>{"@syndroo/cli@0.7.0"}</code> and <code>{"@syndroo/cloudflare@0.7.0"}</code>. See the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
+    <p><strong>Self-hosted Server.</strong> The Server flow uses <code>{"@syndroo/cli"}</code> and <code>{"@syndroo/cloudflare"}</code>. See the <a href="/reference/cli/#server">CLI reference</a> for acceptance limits.</p>
 
     <h2 id="first-publish">First publish</h2>
     <p>The text that is sent is the target's <code>{"text"}</code> publish option:</p>

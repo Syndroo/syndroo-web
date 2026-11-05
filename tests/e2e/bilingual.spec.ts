@@ -167,9 +167,9 @@ test("bilingual install and Agent CTAs lead to localized copyable setup", async 
     await expect(page.locator("#install-command")).toBeVisible();
 
     await page.locator('[data-copy-target="install-command"]').click();
-    await expect(page.locator("#install .copy-status")).toHaveText(copyLabel);
+    await expect(page.locator("#install .copy-status").first()).toHaveText(copyLabel);
     const copied = await page.evaluate(() => navigator.clipboard.readText());
-    expect(copied.startsWith("npm install --global @syndroo/cli@0.7.0 ")).toBe(true);
+    expect(copied.startsWith("npm install --global @syndroo/cli@0.7.2 ")).toBe(true);
     expect(copied.match(/@syndroo\//g)).toHaveLength(7);
 
     await page.getByRole("link", { name: agentLabel }).first().click();

@@ -211,8 +211,8 @@ export type Versions = {
 };
 
 export const versions: Versions = {
-  cli: "0.7.0",
-  docs: "0.7.0",
+  cli: "0.7.2",
+  docs: "0.7.2",
   releaseStage: "available on npm",
   releaseStageZh: "已在 npm 发布",
 };
@@ -220,7 +220,7 @@ export const versions: Versions = {
 /** Minimum runtime the packaged CLI declares in its `engines` field. */
 export const PUBLIC_NODE_RUNTIME = "Node.js 24.19.0 or newer";
 
-/** Supported local-write platforms for 0.7.0. */
+/** Supported local-write platforms for the documented release. */
 export const SUPPORTED_LOCAL_SYSTEMS = "macOS and Linux";
 
 /** The CLI, provider SDK, and five explicit official providers. */
@@ -240,7 +240,7 @@ export const SYNDROO_INSTALL_COMMAND =
 /** Package-relative Skill path resolved below `npm root --global`. */
 export const SYNDROO_SKILL_PATH = "@syndroo/cli/skills/syndroo/SKILL.md";
 
-export const SYNDROO_AGENT_PROMPT = `You are a local-shell coding Agent. Set up Syndroo 0.7.0 for me.
+export const SYNDROO_AGENT_PROMPT = `You are a local-shell coding Agent. Set up Syndroo ${versions.cli} for me.
 
 1. Before installing anything, establish where Syndroo will run. If I have not said, ask me which project directory will use Syndroo and which runtime manager that directory declares (mise, asdf, Volta, nvm, Homebrew or a system Node), and stay in that directory. A chat scratch directory or my home directory is not the project.
 2. In that directory, record the runtime that is actually in effect: \`command -v node npm\`, \`node --version\` (24.19.0 or newer), \`npm --version\`, \`npm root --global\` and \`npm prefix --global\`. Confirm macOS or Linux for supported local writes.
@@ -248,10 +248,10 @@ export const SYNDROO_AGENT_PROMPT = `You are a local-shell coding Agent. Set up 
 4. Install Syndroo and its official platform plugins with:
    ${SYNDROO_INSTALL_COMMAND}
 5. Check what the shell resolves, then read and follow the packaged Skill: \`command -v syndroo\`, \`syndroo --version\`, then \`npm root --global\` and read \`<global-root>/${SYNDROO_SKILL_PATH}\`. Do not run or invent a separate Skill-installer command.
-6. Ask whether I want the local workflow or the self-hosted Server workflow, then continue with my choice. For Server setup, ask whether I want GitHub; create or push a repository only when I explicitly authorize it, and reuse authorization I have already given. In 0.7.0, \`connect threads\` and \`publish threads\` need the project passed explicitly, for example \`syndroo server --project . connect threads --app-id <app-id>\`. Select my intended account from the accessible accounts listed by the project-local \`wrangler whoami\` output and pass that account ID with \`--account\`; if my intended account is not listed, stop and ask me instead of deploying to another account. Authenticate only when the session is missing or expired.
+6. Ask whether I want the local workflow or the self-hosted Server workflow, then continue with my choice. For Server setup, ask whether I want GitHub; create or push a repository only when I explicitly authorize it, and reuse authorization I have already given. In ${versions.cli}, \`connect threads\` and \`publish threads\` need the project passed explicitly, for example \`syndroo server --project . connect threads --app-id <app-id>\`. Select my intended account from the accessible accounts listed by the project-local \`wrangler whoami\` output and pass that account ID with \`--account\`; if my intended account is not listed, stop and ask me instead of deploying to another account. Authenticate only when the session is missing or expired.
 7. Keep secrets out of prompts, command arguments, logs, and tracked files. Publish content only with authorization for that content and destination.`;
 
-export const SYNDROO_AGENT_PROMPT_ZH = `你是一名可在本地终端执行命令的智能体。请为我设置 Syndroo 0.7.0。
+export const SYNDROO_AGENT_PROMPT_ZH = `你是一名可在本地终端执行命令的智能体。请为我设置 Syndroo ${versions.cli}。
 
 1. 安装之前先确定 Syndroo 要在哪里运行。如果我没有说明，请询问哪个项目目录会使用 Syndroo，以及该项目声明的是哪种运行时管理器（mise、asdf、Volta、nvm、Homebrew 或系统 Node），并始终留在该目录中操作。聊天临时目录或我的主目录都不是项目目录。
 2. 在该目录记录实际生效的运行时：\`command -v node npm\`、\`node --version\`（24.19.0 或更新版本）、\`npm --version\`、\`npm root --global\` 和 \`npm prefix --global\`；并确认平台是 macOS 或 Linux，以获得受支持的本地写入能力。
@@ -259,7 +259,7 @@ export const SYNDROO_AGENT_PROMPT_ZH = `你是一名可在本地终端执行命�
 4. 使用以下命令安装 Syndroo 及其官方平台插件：
    ${SYNDROO_INSTALL_COMMAND}
 5. 检查 shell 实际解析到的可执行文件，然后读取并遵循包内 Skill：先运行 \`command -v syndroo\` 和 \`syndroo --version\`，再用 \`npm root --global\` 取到全局根目录，读取 \`<global-root>/${SYNDROO_SKILL_PATH}\`。不要运行或编造单独的 Skill 安装命令。
-6. 询问我要使用本地工作流还是自托管 Server 工作流，然后按我的选择继续。对于 Server 设置，询问我是否需要 GitHub；只有在我明确授权时才创建或推送仓库，并复用我已经给出的授权。在 0.7.0 中，\`connect threads\` 和 \`publish threads\` 需要显式传入项目，例如 \`syndroo server --project . connect threads --app-id <app-id>\`。请从项目本地 \`wrangler whoami\` 输出列出的可访问账号中，选出我想要使用的账号，并用 \`--account\` 传入该账号 ID；如果其中没有我想用的账号，请停下并询问我，绝不要部署到另一个账号。只有在会话缺失或已过期时才进行认证。
+6. 询问我要使用本地工作流还是自托管 Server 工作流，然后按我的选择继续。对于 Server 设置，询问我是否需要 GitHub；只有在我明确授权时才创建或推送仓库，并复用我已经给出的授权。在 ${versions.cli} 中，\`connect threads\` 和 \`publish threads\` 需要显式传入项目，例如 \`syndroo server --project . connect threads --app-id <app-id>\`。请从项目本地 \`wrangler whoami\` 输出列出的可访问账号中，选出我想要使用的账号，并用 \`--account\` 传入该账号 ID；如果其中没有我想用的账号，请停下并询问我，绝不要部署到另一个账号。只有在会话缺失或已过期时才进行认证。
 7. 不要让机密出现在提示词、命令参数、日志或受版本跟踪的文件中。只有已获授权的内容和目标才能发布。`;
 
 /**

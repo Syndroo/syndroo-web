@@ -147,6 +147,7 @@ async function report(page: Page): Promise<Report> {
 }
 
 test("docs pages hold the shared shell metrics without viewport overflow", async ({ page }, testInfo) => {
+  test.setTimeout(120_000); // 22 viewport widths across all bilingual documentation routes
   const paths = docsPages.map((entry) => entry.path);
 
   for (const width of WIDTHS) {

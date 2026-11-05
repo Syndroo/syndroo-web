@@ -118,7 +118,7 @@ export const metadata = {
     <p>不会从环境读取其他内容：不读取 <code>{".env"}</code> 文件，没有逐提供商变量注册表，也绝不会从配置文件获取凭证。</p>
 
     <h2 id="server">Server 配置文件</h2>
-    <p><strong>自托管 Server。</strong>Server 命令使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。它们使用 <code>{"syndroo.config.jsonc"}</code> 保存应用设置，使用 <code>{"wrangler.jsonc"}</code> 保存 Worker、D1、队列和 cron 配置。不要提交生成的 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code> 或私有服务器状态。</p>
+    <p><strong>自托管 Server。</strong>Server 命令使用 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code>。它们使用 <code>{"syndroo.config.jsonc"}</code> 保存应用设置，使用 <code>{"wrangler.jsonc"}</code> 保存 Worker、D1、队列和 cron 配置。不要提交生成的 <code>{"wrangler.effective.jsonc"}</code>、<code>{".syndroo/"}</code> 或私有服务器状态。</p>
     <p>全局 <code>{"--config"}</code> 参数用于本地工作流。对于 Server 命令，请从项目运行，或使用 <code>{"syndroo server --project <directory> <command>"}</code>。参见<a href="/zh/getting-started/server/">部署服务器</a>和<a href="/zh/reference/cli/#server">Server 命令参考</a>。</p>
 
     <h2 id="fail-closed">安全失败</h2>

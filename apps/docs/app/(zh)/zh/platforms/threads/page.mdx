@@ -76,7 +76,7 @@ export const metadata = {
 
     <h2 id="server">部署服务器</h2>
     <p>本页的 <code>{"syndroo connect"}</code> 流程保持在本地。如需通过自己的 Cloudflare Worker 运行 Threads OAuth，并从 GitHub Actions 发布，请按照<a href="/zh/getting-started/server/">部署服务器</a>操作。该流程使用已确认的主机注册 <code>{"https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev/oauth/callback/threads"}</code>，并运行 <code>{"syndroo server --project . connect threads --app-id APP_ID"}</code>。</p>
-    <p><strong>自托管 Server。</strong>Server 流程使用 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>。验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
+    <p><strong>自托管 Server。</strong>Server 流程使用 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code>。验收限制见<a href="/zh/reference/cli/#server">CLI 参考</a>。</p>
 
     <h2 id="first-publish">首次发布</h2>
     <p>发送的文本来自目标的 <code>{"text"}</code> 发布选项：</p>
