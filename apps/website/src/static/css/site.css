@@ -1039,7 +1039,11 @@ pre {
 
 .get-started__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  /* Only takes effect once the paired CTAs wrap onto separate rows, so the
+     single-row layout at wider viewports keeps its zero column gap. */
+  row-gap: 12px;
   margin-top: clamp(28px, 3vw, 40px);
 }
 

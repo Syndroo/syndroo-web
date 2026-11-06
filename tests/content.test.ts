@@ -719,7 +719,7 @@ test("the seven-package install and Agent onboarding contract is complete", asyn
   ]);
   assert.match(
     SYNDROO_INSTALL_COMMAND,
-    /^npm install --global @syndroo\/cli@0\.7\.0 @syndroo\/provider-sdk@0\.7\.0 @syndroo\/provider-bluesky@0\.7\.0 @syndroo\/provider-threads@0\.7\.0 @syndroo\/provider-linkedin@0\.7\.0 @syndroo\/provider-mastodon@0\.7\.0 @syndroo\/provider-devto@0\.7\.0$/,
+    /^npm install --global @syndroo\/cli@0\.7\.2 @syndroo\/provider-sdk@0\.7\.2 @syndroo\/provider-bluesky@0\.7\.2 @syndroo\/provider-threads@0\.7\.2 @syndroo\/provider-linkedin@0\.7\.2 @syndroo\/provider-mastodon@0\.7\.2 @syndroo\/provider-devto@0\.7\.2$/,
   );
   assert.equal(PUBLIC_NODE_RUNTIME, "Node.js 24.19.0 or newer");
 

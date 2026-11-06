@@ -224,7 +224,7 @@ export const metadata = {
     <p><code>{"--connections"}</code>、<code>{"--operation"}</code> 和 <code>{"--operations"}</code> 互斥，<code>{"--provider"}</code> 不能与任一操作选择器组合，而未使用 <code>{"--operations"}</code> 却传入 <code>{"--limit"}</code> 或 <code>{"--cursor"}</code> 属于用法错误。</p>
 
     <h2 id="server">syndroo server</h2>
-    <p><code>{"server init"}</code> 会固定 <code>{"@syndroo/cli@0.7.0"}</code> 和 <code>{"@syndroo/cloudflare@0.7.0"}</code>，并安装项目本地 Wrangler。该工作流只在模拟环境中测试过，尚未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收。npm 发布和产品部署是彼此独立的发布操作。</p>
+    <p><code>{"server init"}</code> 会安装已发布的 <code>{"@syndroo/cli"}</code> 和 <code>{"@syndroo/cloudflare"}</code> 包，并安装项目本地 Wrangler。该工作流只在模拟环境中测试过，尚未进行真实 Cloudflare、GitHub、Meta 或 Threads 验收。npm 发布和产品部署是彼此独立的发布操作。</p>
     <p>请在项目目录中运行 Server 命令，或用 <code>{"syndroo server --project <directory> <command>"}</code> 明确选择项目。<code>{"--project"}</code> 是 <code>{"server"}</code> 的参数，写在子命令之前；已安装的 CLI 也接受把它写在叶子命令之后。已发布的版本要求 <code>{"connect threads"}</code> 和 <code>{"publish threads"}</code> 显式传入它，而 <code>{"deploy"}</code> 和 <code>{"doctor"}</code> 已经使用当前目录。已评审的修复会把当前目录作为所有这些命令的默认值，因此在那里显式传入项目也同样正确。部署会复用现有 Wrangler 登录，不会启动登录流程。<a href="/zh/getting-started/server/">部署服务器</a>指南涵盖前提条件、授权和完整的首次运行步骤。</p>
     <div className="table-wrap">
       <table>
